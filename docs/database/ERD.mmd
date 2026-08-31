@@ -1,0 +1,91 @@
+erDiagram
+    USERS ||--o{ APPOINTMENTS : "doctor"
+    USERS ||--o{ ENCOUNTERS : "doctor"
+    USERS ||--o{ PATIENTS : "created_by"
+    USERS ||--o{ ADMISSIONS : "admitted_by"
+    USERS ||--o{ AUDIT_LOGS : "performed_by"
+
+    PATIENTS ||--o{ APPOINTMENTS : has
+    PATIENTS ||--o{ ENCOUNTERS : has
+    PATIENTS ||--o{ ADMISSIONS : has
+
+    APPOINTMENTS ||--o| ENCOUNTERS : "may_generate"
+
+    ENCOUNTERS ||--o{ PRESCRIPTIONS : includes
+
+    DEPARTMENTS ||--o{ BEDS : contains
+    DEPARTMENTS ||--o{ APPOINTMENTS : "at_department"
+
+    BEDS ||--o{ ADMISSIONS : "assigned_to"
+
+    USERS {
+        uuid id PK
+        string username UK
+        string password_hash
+        string full_name
+        enum role
+        bool is_active
+    }
+    PATIENTS {
+        uuid id PK
+        string mrn UK
+        string full_name
+        date date_of_birth
+        enum gender
+        string national_id
+        string phone
+        uuid created_by FK
+    }
+    APPOINTMENTS {
+        uuid id PK
+        uuid patient_id FK
+        uuid doctor_id FK
+        uuid department_id FK
+        timestamp scheduled_at
+        enum status
+    }
+    ENCOUNTERS {
+        uuid id PK
+        uuid patient_id FK
+        uuid doctor_id FK
+        uuid appointment_id FK
+        string chief_complaint
+        string diagnosis
+        timestamp deleted_at
+    }
+    PRESCRIPTIONS {
+        uuid id PK
+        uuid encounter_id FK
+        string medication_name
+        string dosage
+        string duration
+    }
+    DEPARTMENTS {
+        uuid id PK
+        string name_ar
+        string name_en
+        int total_beds
+    }
+    BEDS {
+        uuid id PK
+        uuid department_id FK
+        string bed_number
+        enum status
+    }
+    ADMISSIONS {
+        uuid id PK
+        uuid patient_id FK
+        uuid bed_id FK
+        uuid admitted_by FK
+        timestamp admitted_at
+        timestamp discharged_at
+    }
+    AUDIT_LOGS {
+        uuid id PK
+        uuid user_id FK
+        string action
+        string entity_type
+        uuid entity_id
+        jsonb old_value
+        jsonb new_value
+    }

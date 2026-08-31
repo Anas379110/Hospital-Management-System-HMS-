@@ -1,0 +1,31 @@
+sequenceDiagram
+    participant U as ممرض/ة
+    participant FE as Frontend
+    participant AUTH as Auth Middleware
+    participant BED as Departments & Beds Module
+    participant DB as PostgreSQL
+    participant LOG as Audit Logging
+
+    U->>FE: طلب تسكين مريض في سرير
+    FE->>AUTH: POST /admissions (مع Token)
+    AUTH->>AUTH: التحقق من الجلسة والصلاحية
+    alt غير مخوَّل
+        AUTH-->>FE: 403 Forbidden
+    else مخوَّل
+        AUTH->>BED: تمرير الطلب
+        BED->>DB: BEGIN TRANSACTION
+        BED->>DB: قفل السرير والتحقق من "متاح"
+        alt السرير مشغول
+            DB-->>BED: فشل
+            BED->>DB: ROLLBACK
+            BED-->>FE: 409 Conflict — السرير مشغول
+        else السرير متاح
+            BED->>DB: تحديث حالة السرير = "مشغول"
+            BED->>DB: إنشاء سجل Admission
+            BED->>LOG: تسجيل العملية (من/متى/ماذا)
+            LOG->>DB: كتابة Audit Log
+            DB-->>BED: COMMIT
+            BED-->>FE: 200 OK — تم التسكين
+        end
+    end
+    FE-->>U: عرض النتيجة

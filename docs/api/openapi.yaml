@@ -1,0 +1,526 @@
+openapi: 3.0.3
+info:
+  title: HMS API — نظام إدارة المشافي
+  version: "1.0.0"
+  description: كل الوحدات — MVP (Auth, Patients, EMR, Appointments, Departments/Admissions) + MMP (Pharmacy, Lab, Billing)
+servers:
+  - url: https://hms.local/api/v1
+security:
+  - bearerAuth: []
+
+paths:
+  # ===== Auth =====
+  /auth/login:
+    post:
+      tags: [auth]
+      summary: تسجيل دخول
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username: { type: string }
+                password: { type: string, format: password }
+      responses:
+        "200":
+          description: نجاح
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken: { type: string }
+                  user: { $ref: "#/components/schemas/User" }
+        "401": { description: بيانات دخول غير صحيحة }
+
+  /auth/logout:
+    post:
+      tags: [auth]
+      summary: تسجيل خروج (Stateless JWT — راجع Decision 009/010)
+      responses:
+        "200": { description: تم تسجيل الخروج }
+
+  /auth/me:
+    get:
+      tags: [auth]
+      summary: بيانات المستخدم الحالي
+      responses:
+        "200": { description: نجاح }
+
+  # ===== Users =====
+  /users:
+    post:
+      tags: [users]
+      summary: إنشاء مستخدم جديد (Admin فقط)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateUser" }
+      responses:
+        "201": { description: تم الإنشاء }
+        "409": { description: اسم المستخدم مستخدَم بالفعل }
+
+  /users/{id}/status:
+    patch:
+      tags: [users]
+      summary: تفعيل/تعطيل مستخدم (Admin فقط)
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        "200": { description: تم التحديث }
+
+  # ===== Patients =====
+  /patients:
+    post:
+      tags: [patients]
+      summary: تسجيل مريض جديد (يُنشئ MRN تلقائياً)
+      parameters:
+        - name: force
+          in: query
+          schema: { type: boolean }
+          description: تجاوز تنبيه التكرار المحتمل (FR-2.5)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PatientCreate" }
+      responses:
+        "201": { description: تم الإنشاء, content: { application/json: { schema: { $ref: "#/components/schemas/Patient" } } } }
+        "409": { description: تطابق محتمل (POSSIBLE_DUPLICATE_PATIENT) }
+    get:
+      tags: [patients]
+      summary: بحث عن مرضى
+      parameters:
+        - name: search
+          in: query
+          schema: { type: string }
+      responses:
+        "200": { description: نتائج البحث }
+
+  /patients/{id}:
+    get:
+      tags: [patients]
+      summary: بيانات مريض كاملة
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        "200": { description: نجاح }
+        "404": { description: غير موجود }
+    patch:
+      tags: [patients]
+      summary: تعديل بيانات مريض
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        "200": { description: تم التحديث }
+
+  /patients/{id}/records:
+    get:
+      tags: [patients]
+      summary: السجل الطبي الكامل (Encounters + Prescriptions)
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        "200": { description: نجاح }
+
+  /patients/{id}/test-results:
+    get:
+      tags: [lab]
+      summary: نتائج المختبر/الأشعة المكتملة لمريض (FR-7.4)
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        "200": { description: نجاح }
+
+  # ===== Encounters (EMR) =====
+  /encounters:
+    post:
+      tags: [encounters]
+      summary: تسجيل زيارة طبية جديدة (Doctor فقط)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/EncounterCreate" }
+      responses:
+        "201": { description: تم الإنشاء }
+
+  /encounters/{id}:
+    get:
+      tags: [encounters]
+      summary: تفاصيل زيارة
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        "200": { description: نجاح }
+        "404": { description: غير موجود أو محذوف منطقياً }
+    delete:
+      tags: [encounters]
+      summary: حذف منطقي (Soft Delete) بسبب إلزامي — لصاحب السجل أو Admin فقط
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties: { reason: { type: string, minLength: 5 } }
+      responses:
+        "200": { description: تم الحذف المنطقي }
+        "403": { description: ليس صاحب السجل (FORBIDDEN_ENCOUNTER_DELETE) }
+
+  /encounters/{id}/prescriptions:
+    post:
+      tags: [encounters]
+      summary: إضافة وصفة لزيارة (Doctor فقط)
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PrescriptionCreate" }
+      responses:
+        "201": { description: تم الإنشاء }
+
+  # ===== Appointments =====
+  /appointments:
+    post:
+      tags: [appointments]
+      summary: حجز موعد جديد
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AppointmentCreate" }
+      responses:
+        "201": { description: تم الحجز }
+        "409": { description: "تعارض — الطبيب محجوز بهذا الوقت (APPOINTMENT_CONFLICT)" }
+    get:
+      tags: [appointments]
+      summary: جدول مواعيد ليوم/طبيب محددين
+      parameters:
+        - name: doctor_id
+          in: query
+          schema: { type: string }
+        - name: date
+          in: query
+          schema: { type: string, format: date }
+      responses:
+        "200": { description: نجاح }
+
+  /appointments/{id}:
+    patch:
+      tags: [appointments]
+      summary: تعديل موعد (إعادة فحص تعارض إن تغيّر الوقت)
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        "200": { description: تم التحديث }
+        "409": { description: تعارض جديد }
+
+  /appointments/{id}/cancel:
+    post:
+      tags: [appointments]
+      summary: إلغاء موعد
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        "200": { description: تم الإلغاء }
+
+  # ===== Departments & Beds =====
+  /departments:
+    get:
+      tags: [departments]
+      summary: قائمة الأقسام
+      responses:
+        "200": { description: نجاح }
+
+  /departments/{id}/beds:
+    get:
+      tags: [departments]
+      summary: أسرّة قسم وحالتها
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        "200": { description: نجاح }
+
+  /departments/{id}/beds/summary:
+    get:
+      tags: [departments]
+      summary: إحصائية سريعة (متاح/مشغول/صيانة) — Manager/Admin
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        "200": { description: نجاح }
+
+  # ===== Admissions =====
+  /admissions:
+    post:
+      tags: [admissions]
+      summary: تسكين مريض في سرير — UC-1 كاملاً، Transaction ذرية
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [patientId, bedId]
+              properties:
+                patientId: { type: string, format: uuid }
+                bedId: { type: string, format: uuid }
+      responses:
+        "201": { description: تم التسكين }
+        "409": { description: "السرير مشغول أو تحت الصيانة (BED_NOT_AVAILABLE)" }
+
+  /admissions/{id}/discharge:
+    post:
+      tags: [admissions]
+      summary: تفريغ/خروج مريض
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        "200": { description: تم التفريغ }
+        "409": { description: مُفرَّغ مسبقاً (ALREADY_DISCHARGED) }
+
+  # ===== Pharmacy (MMP) =====
+  /medications:
+    get:
+      tags: [pharmacy]
+      summary: قائمة المخزون
+      responses:
+        "200": { description: نجاح }
+    post:
+      tags: [pharmacy]
+      summary: إضافة دواء جديد للمخزون
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/MedicationCreate" }
+      responses:
+        "201": { description: تم الإنشاء }
+
+  /medications/low-stock:
+    get:
+      tags: [pharmacy]
+      summary: أدوية بحاجة لإعادة طلب (FR-6.5)
+      responses:
+        "200": { description: نجاح }
+
+  /medications/{id}/stock:
+    patch:
+      tags: [pharmacy]
+      summary: تعديل رصيد المخزون (إعادة تعبئة/تصحيح)
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        "200": { description: تم التحديث }
+        "409": { description: "رصيد سالب (STOCK_CANNOT_BE_NEGATIVE)" }
+
+  /prescriptions/pending:
+    get:
+      tags: [pharmacy]
+      summary: وصفات بانتظار الصرف (FR-6.2)
+      responses:
+        "200": { description: نجاح }
+
+  /prescriptions/{id}/dispense:
+    post:
+      tags: [pharmacy]
+      summary: صرف وصفة — خصم مخزون ذري
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [medicationId, quantityDispensed]
+              properties:
+                medicationId: { type: string, format: uuid }
+                quantityDispensed: { type: integer, minimum: 1 }
+      responses:
+        "200": { description: تم الصرف }
+        "409": { description: "نقص مخزون (INSUFFICIENT_STOCK) أو وصفة مُعالَجة مسبقاً" }
+
+  # ===== Lab/Radiology (MMP) =====
+  /test-orders:
+    post:
+      tags: [lab]
+      summary: طلب فحص جديد (Doctor فقط)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TestOrderCreate" }
+      responses:
+        "201": { description: تم الإنشاء }
+
+  /test-orders/pending:
+    get:
+      tags: [lab]
+      summary: طلبات فحص معلَّقة (LabTech/Admin)
+      responses:
+        "200": { description: نجاح }
+
+  /test-orders/{id}/result:
+    post:
+      tags: [lab]
+      summary: تسجيل نتيجة فحص
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [result]
+              properties:
+                result: { type: string }
+                resultNotes: { type: string }
+      responses:
+        "200": { description: تم التسجيل }
+        "409": { description: طلب مُعالَج مسبقاً }
+
+  # ===== Billing (MMP) =====
+  /invoices:
+    post:
+      tags: [billing]
+      summary: إنشاء فاتورة ببنود
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/InvoiceCreate" }
+      responses:
+        "201": { description: تم الإنشاء (مع subtotal/patientResponsibility/remaining محسوبة) }
+
+  /invoices/{id}:
+    get:
+      tags: [billing]
+      summary: تفاصيل فاتورة مع الإجماليات المحسوبة حياً
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        "200": { description: نجاح }
+
+  /invoices/{id}/items:
+    post:
+      tags: [billing]
+      summary: إضافة بند لفاتورة قائمة
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        "201": { description: تم الإضافة }
+        "409": { description: "فاتورة مقفلة (INVOICE_LOCKED) — مدفوعة أو ملغاة" }
+
+  /invoices/{id}/payments:
+    post:
+      tags: [billing]
+      summary: تسجيل دفعة — رفض قاطع لأي تجاوز للمتبقي
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount, method]
+              properties:
+                amount: { type: integer, minimum: 1 }
+                method: { type: string, enum: [cash, card, insurance] }
+      responses:
+        "201": { description: تم التسجيل }
+        "409": { description: "المبلغ أكبر من المتبقي (PAYMENT_EXCEEDS_REMAINING)" }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    User:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        username: { type: string }
+        fullName: { type: string }
+        role:
+          type: string
+          enum: [admin, receptionist, doctor, nurse, manager, pharmacist, lab_tech, billing_clerk]
+    CreateUser:
+      type: object
+      required: [username, password, fullName, role]
+      properties:
+        username: { type: string, minLength: 3 }
+        password: { type: string, minLength: 8 }
+        fullName: { type: string }
+        role: { $ref: "#/components/schemas/User/properties/role" }
+    PatientCreate:
+      type: object
+      required: [fullName, dateOfBirth, gender, phone]
+      properties:
+        fullName: { type: string }
+        dateOfBirth: { type: string, format: date }
+        gender: { type: string, enum: [male, female] }
+        nationalId: { type: string, nullable: true }
+        phone: { type: string }
+        address: { type: string, nullable: true }
+    Patient:
+      allOf:
+        - $ref: "#/components/schemas/PatientCreate"
+        - type: object
+          properties:
+            id: { type: string, format: uuid }
+            mrn: { type: string }
+    EncounterCreate:
+      type: object
+      required: [patientId, chiefComplaint, diagnosis]
+      properties:
+        patientId: { type: string, format: uuid }
+        appointmentId: { type: string, format: uuid, nullable: true }
+        chiefComplaint: { type: string }
+        diagnosis: { type: string }
+        notes: { type: string, nullable: true }
+    PrescriptionCreate:
+      type: object
+      required: [medicationName, dosage, duration]
+      properties:
+        medicationName: { type: string }
+        dosage: { type: string }
+        duration: { type: string }
+        notes: { type: string, nullable: true }
+    AppointmentCreate:
+      type: object
+      required: [patientId, doctorId, departmentId, scheduledAt]
+      properties:
+        patientId: { type: string, format: uuid }
+        doctorId: { type: string, format: uuid }
+        departmentId: { type: string, format: uuid }
+        scheduledAt: { type: string, format: date-time }
+    MedicationCreate:
+      type: object
+      required: [name, unit, currentStock]
+      properties:
+        name: { type: string }
+        unit: { type: string }
+        currentStock: { type: integer, minimum: 0 }
+        reorderThreshold: { type: integer, minimum: 0, default: 10 }
+    TestOrderCreate:
+      type: object
+      required: [patientId, encounterId, testType, testName]
+      properties:
+        patientId: { type: string, format: uuid }
+        encounterId: { type: string, format: uuid }
+        testType: { type: string, enum: [lab, radiology] }
+        testName: { type: string }
+    InvoiceCreate:
+      type: object
+      required: [patientId, items]
+      properties:
+        patientId: { type: string, format: uuid }
+        admissionId: { type: string, format: uuid, nullable: true }
+        insuranceCoveragePercent: { type: integer, minimum: 0, maximum: 100, default: 0 }
+        items:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [description, quantity, unitPrice]
+            properties:
+              description: { type: string }
+              quantity: { type: integer, minimum: 1 }
+              unitPrice: { type: integer, minimum: 0 }

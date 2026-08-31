@@ -1,0 +1,31 @@
+graph TB
+    FE["Frontend SPA<br/>React — عربي/إنجليزي"]
+
+    subgraph App["Application Server (Monolith واحد)"]
+        AUTH[Auth & RBAC Module]
+        PAT[Patients Module]
+        APP[Appointments Module]
+        EMR[EMR Module]
+        DEPT[Departments & Beds Module]
+        AUDIT[Audit Logging<br/>Cross-cutting]
+        JOBS[Background Jobs<br/>Backup/Cleanup]
+    end
+
+    DB[(PostgreSQL<br/>Single Instance)]
+    BACKUP[(نسخ احتياطي محلي<br/>قرص/خادم منفصل)]
+
+    FE -->|REST API HTTPS<br/>شبكة داخلية| AUTH
+    AUTH --> PAT
+    AUTH --> APP
+    AUTH --> EMR
+    AUTH --> DEPT
+    PAT --> DB
+    APP --> DB
+    EMR --> DB
+    DEPT --> DB
+    AUDIT --> DB
+    JOBS --> DB
+    JOBS --> BACKUP
+
+    style App fill:#122436,stroke:#6fd8f0,color:#fff
+    style DB fill:#0f2032,stroke:#e8a33d,color:#e8b96a

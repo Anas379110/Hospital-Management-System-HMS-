@@ -1,0 +1,331 @@
+// database/schema.prisma — مصدر الحقيقة لبنية قاعدة البيانات (MVP)
+// يُستخدم مع: npx prisma migrate dev / npx prisma migrate deploy
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  admin
+  receptionist
+  doctor
+  nurse
+  manager
+  pharmacist
+  lab_tech
+  billing_clerk
+}
+
+enum Gender {
+  male
+  female
+}
+
+enum AppointmentStatus {
+  scheduled
+  completed
+  no_show
+  cancelled
+}
+
+enum BedStatus {
+  available
+  occupied
+  maintenance
+}
+
+enum PrescriptionStatus {
+  pending
+  dispensed
+  unavailable
+}
+
+enum TestType {
+  lab
+  radiology
+}
+
+enum TestOrderStatus {
+  pending
+  completed
+  cancelled
+}
+
+enum InvoiceStatus {
+  unpaid
+  partial
+  paid
+  cancelled
+}
+
+enum PaymentMethod {
+  cash
+  card
+  insurance
+}
+
+model User {
+  id           String   @id @default(uuid())
+  username     String   @unique
+  passwordHash String   @map("password_hash")
+  fullName     String   @map("full_name")
+  role         Role
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  createdPatients Patient[]      @relation("PatientCreatedBy")
+  appointments    Appointment[]  @relation("DoctorAppointments")
+  encounters      Encounter[]    @relation("DoctorEncounters")
+  admissions      Admission[]    @relation("AdmittedBy")
+  auditLogs       AuditLog[]
+  dispensedPrescriptions Prescription[] @relation("DispensedBy")
+  orderedTestOrders     TestOrder[]     @relation("TestOrderedBy")
+  completedTestOrders   TestOrder[]     @relation("TestCompletedBy")
+  createdInvoices       Invoice[]       @relation("InvoiceCreatedBy")
+  recordedPayments      Payment[]       @relation("PaymentRecordedBy")
+
+  @@map("users")
+}
+
+model Patient {
+  id                    String   @id @default(uuid())
+  mrn                   String   @unique
+  fullName              String   @map("full_name")
+  dateOfBirth           DateTime @map("date_of_birth")
+  gender                Gender
+  nationalId             String?  @map("national_id")
+  phone                 String
+  address               String?
+  emergencyContactName  String?  @map("emergency_contact_name")
+  emergencyContactPhone String?  @map("emergency_contact_phone")
+  createdBy             String   @map("created_by")
+  createdByUser         User     @relation("PatientCreatedBy", fields: [createdBy], references: [id])
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  appointments Appointment[]
+  encounters   Encounter[]
+  admissions   Admission[]
+  testOrders   TestOrder[]
+  invoices     Invoice[]
+
+  @@index([fullName, dateOfBirth])
+  @@map("patients")
+}
+
+model Appointment {
+  id           String            @id @default(uuid())
+  patientId    String            @map("patient_id")
+  patient      Patient           @relation(fields: [patientId], references: [id])
+  doctorId     String            @map("doctor_id")
+  doctor       User              @relation("DoctorAppointments", fields: [doctorId], references: [id])
+  departmentId String            @map("department_id")
+  department   Department        @relation(fields: [departmentId], references: [id])
+  scheduledAt  DateTime          @map("scheduled_at")
+  status       AppointmentStatus @default(scheduled)
+  cancelReason String?           @map("cancel_reason")
+  createdAt    DateTime          @default(now()) @map("created_at")
+  updatedAt    DateTime          @updatedAt @map("updated_at")
+
+  encounter Encounter?
+
+  @@index([patientId])
+  @@map("appointments")
+  // ملاحظة: Unique Partial Index (doctor_id, scheduled_at) WHERE status != 'cancelled'
+  // يُضاف يدوياً في ملف Migration SQL لأن Prisma لا يدعم Partial Index مباشرة بعد بشكل كامل حسب النسخة.
+}
+
+model Encounter {
+  id              String       @id @default(uuid())
+  patientId       String       @map("patient_id")
+  patient         Patient      @relation(fields: [patientId], references: [id])
+  doctorId        String       @map("doctor_id")
+  doctor          User         @relation("DoctorEncounters", fields: [doctorId], references: [id])
+  appointmentId   String?      @unique @map("appointment_id")
+  appointment     Appointment? @relation(fields: [appointmentId], references: [id])
+  chiefComplaint  String       @map("chief_complaint")
+  diagnosis       String
+  notes           String?
+  encounterDate   DateTime     @default(now()) @map("encounter_date")
+  deletedAt       DateTime?    @map("deleted_at")
+  deleteReason    String?      @map("delete_reason")
+  createdAt       DateTime     @default(now()) @map("created_at")
+
+  prescriptions Prescription[]
+  testOrders    TestOrder[]
+
+  @@index([patientId, encounterDate])
+  @@map("encounters")
+}
+
+model Prescription {
+  id              String    @id @default(uuid())
+  encounterId     String    @map("encounter_id")
+  encounter       Encounter @relation(fields: [encounterId], references: [id])
+  medicationName  String    @map("medication_name")
+  dosage          String
+  duration        String
+  notes           String?
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  // Slice 5 (MMP) — راجع Decision 013/015 وdocs/requirements/SRS-PHARMACY.md
+  // كل الحقول التالية Expand فقط، لا تكسر أي بيانات Slice 2 القائمة
+  status            PrescriptionStatus @default(pending)
+  medicationId      String?            @map("medication_id")
+  medication        Medication?        @relation(fields: [medicationId], references: [id])
+  quantityDispensed Int?               @map("quantity_dispensed")
+  dispensedAt       DateTime?          @map("dispensed_at")
+  dispensedBy       String?            @map("dispensed_by")
+  dispensedByUser   User?              @relation("DispensedBy", fields: [dispensedBy], references: [id])
+
+  @@map("prescriptions")
+}
+
+model Medication {
+  id               String   @id @default(uuid())
+  name             String   @unique
+  unit             String
+  currentStock     Int      @default(0) @map("current_stock")
+  reorderThreshold Int      @default(10) @map("reorder_threshold")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  prescriptions Prescription[]
+
+  @@index([currentStock])
+  @@map("medications")
+}
+
+model TestOrder {
+  id              String          @id @default(uuid())
+  patientId       String          @map("patient_id")
+  patient         Patient         @relation(fields: [patientId], references: [id])
+  encounterId     String          @map("encounter_id")
+  encounter       Encounter       @relation(fields: [encounterId], references: [id])
+  orderedBy       String          @map("ordered_by")
+  orderedByUser   User            @relation("TestOrderedBy", fields: [orderedBy], references: [id])
+  testType        TestType        @map("test_type")
+  testName        String          @map("test_name")
+  status          TestOrderStatus @default(pending)
+  orderedAt       DateTime        @default(now()) @map("ordered_at")
+  result          String?
+  resultNotes     String?         @map("result_notes")
+  completedBy     String?         @map("completed_by")
+  completedByUser User?           @relation("TestCompletedBy", fields: [completedBy], references: [id])
+  completedAt     DateTime?       @map("completed_at")
+
+  @@index([status])
+  @@index([patientId])
+  @@map("test_orders")
+}
+
+model Invoice {
+  id                       String        @id @default(uuid())
+  patientId                String        @map("patient_id")
+  patient                  Patient       @relation(fields: [patientId], references: [id])
+  admissionId              String?       @map("admission_id")
+  admission                Admission?    @relation(fields: [admissionId], references: [id])
+  status                   InvoiceStatus @default(unpaid)
+  insuranceCoveragePercent Int           @default(0) @map("insurance_coverage_percent")
+  createdBy                String        @map("created_by")
+  createdByUser            User          @relation("InvoiceCreatedBy", fields: [createdBy], references: [id])
+  createdAt                DateTime      @default(now()) @map("created_at")
+  updatedAt                DateTime      @updatedAt @map("updated_at")
+
+  items    InvoiceItem[]
+  payments Payment[]
+
+  @@index([patientId])
+  @@index([status])
+  @@map("invoices")
+}
+
+model InvoiceItem {
+  id          String  @id @default(uuid())
+  invoiceId   String  @map("invoice_id")
+  invoice     Invoice @relation(fields: [invoiceId], references: [id])
+  description String
+  quantity    Int
+  unitPrice   Int     @map("unit_price") // بالليرة السورية، رقم صحيح — راجع Decision 020
+
+  @@map("invoice_items")
+}
+
+model Payment {
+  id          String        @id @default(uuid())
+  invoiceId   String        @map("invoice_id")
+  invoice     Invoice       @relation(fields: [invoiceId], references: [id])
+  amount      Int
+  method      PaymentMethod
+  recordedBy  String        @map("recorded_by")
+  recordedByUser User       @relation("PaymentRecordedBy", fields: [recordedBy], references: [id])
+  paidAt      DateTime      @default(now()) @map("paid_at")
+
+  @@map("payments")
+}
+
+model Department {
+  id         String   @id @default(uuid())
+  nameAr     String   @map("name_ar")
+  nameEn     String   @map("name_en")
+  totalBeds  Int      @map("total_beds")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  beds         Bed[]
+  appointments Appointment[]
+
+  @@map("departments")
+}
+
+model Bed {
+  id           String    @id @default(uuid())
+  departmentId String    @map("department_id")
+  department   Department @relation(fields: [departmentId], references: [id])
+  bedNumber    String    @map("bed_number")
+  status       BedStatus @default(available)
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  admissions Admission[]
+
+  @@index([departmentId, status])
+  @@map("beds")
+}
+
+model Admission {
+  id              String    @id @default(uuid())
+  patientId       String    @map("patient_id")
+  patient         Patient   @relation(fields: [patientId], references: [id])
+  bedId           String    @map("bed_id")
+  bed             Bed       @relation(fields: [bedId], references: [id])
+  admittedBy      String    @map("admitted_by")
+  admittedByUser  User      @relation("AdmittedBy", fields: [admittedBy], references: [id])
+  admittedAt      DateTime  @default(now()) @map("admitted_at")
+  dischargedAt    DateTime? @map("discharged_at")
+  dischargeNotes  String?   @map("discharge_notes")
+
+  invoices Invoice[]
+
+  @@map("admissions")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String   @map("user_id")
+  user       User     @relation(fields: [userId], references: [id])
+  action     String
+  entityType String   @map("entity_type")
+  entityId   String   @map("entity_id")
+  oldValue   Json?    @map("old_value")
+  newValue   Json?    @map("new_value")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([entityType, entityId])
+  @@map("audit_logs")
+}

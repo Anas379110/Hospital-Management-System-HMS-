@@ -1,0 +1,20 @@
+graph TB
+    subgraph Users["مستخدمو النظام"]
+        R[موظف استقبال]
+        D[طبيب]
+        N[ممرض/ة]
+        M[مدير مشفى]
+    end
+
+    HMS[نظام إدارة المشافي HMS<br/>Modular Monolith]
+
+    MOH[وزارة الصحة<br/>مستقبلي — HL7 FHIR]
+
+    R -->|يستخدم| HMS
+    D -->|يستخدم| HMS
+    N -->|يستخدم| HMS
+    M -->|يستخدم| HMS
+    HMS -.->|تكامل مستقبلي MLP| MOH
+
+    style HMS fill:#122436,stroke:#6fd8f0,color:#fff
+    style MOH fill:#0f2032,stroke:#8a642b,color:#e8b96a,stroke-dasharray: 5 5

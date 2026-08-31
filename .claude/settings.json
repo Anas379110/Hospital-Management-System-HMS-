@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "edit": "ask",
+    "bash": "ask",
+    "allowedDirectories": ["src", "frontend/src", "docs", "database", "tests"]
+  },
+  "notes": "لا يُمنح وصول تلقائي كامل — كل تعديل أو أمر Bash يحتاج تأكيداً صريحاً، نظراً لحساسية بيانات المشروع (نظام صحي). راجع CLAUDE.md قبل أي مهمة."
+}

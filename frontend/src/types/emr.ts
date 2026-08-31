@@ -1,0 +1,19 @@
+export interface Prescription {
+  id: string;
+  medicationName: string;
+  dosage: string;
+  duration: string;
+  notes?: string | null;
+  createdAt: string;
+}
+
+export interface Encounter {
+  id: string;
+  patientId: string;
+  doctorId: string;
+  chiefComplaint: string;
+  diagnosis: string;
+  notes?: string | null;
+  encounterDate: string;
+  prescriptions: Prescription[];
+}

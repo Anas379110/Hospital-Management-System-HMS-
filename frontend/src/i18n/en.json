@@ -1,0 +1,35 @@
+{
+  "app": { "title": "Hospital Management System" },
+  "auth": {
+    "username": "Username",
+    "password": "Password",
+    "login": "Log In",
+    "loginError": "Incorrect username or password",
+    "logout": "Log Out"
+  },
+  "nav": { "patients": "Patients", "newPatient": "New Patient" },
+  "patients": {
+    "title": "Patients",
+    "search": "Search by name, MRN, or phone",
+    "mrn": "Medical Record Number",
+    "fullName": "Full Name",
+    "dateOfBirth": "Date of Birth",
+    "gender": "Gender",
+    "genderMale": "Male",
+    "genderFemale": "Female",
+    "phone": "Phone",
+    "nationalId": "National ID",
+    "address": "Address",
+    "save": "Save",
+    "createSuccess": "Patient registered successfully",
+    "duplicateWarning": "This patient may already be registered — review below",
+    "duplicateContinue": "Continue registration anyway",
+    "duplicateCancel": "Cancel and go back",
+    "noResults": "No matching results",
+    "loading": "Loading..."
+  },
+  "errors": {
+    "generic": "An unexpected error occurred, please try again later or contact support",
+    "unauthorized": "Session expired, please log in again"
+  }
+}

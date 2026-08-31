@@ -1,0 +1,22 @@
+node_modules/
+dist/
+build/
+*.log
+
+.env
+.env.local
+.env.*.local
+
+.claude/settings.local.json
+
+# بيانات حساسة محتملة — لا تُرفع أبداً
+*.csv
+*.sql.bak
+/database/backups/
+
+# سجلات احتياطية للتدقيق — تحتوي بيانات حساسة، راجع Finding #4 (RESOLVED)
+logs/
+
+.DS_Store
+__pycache__/
+coverage/
