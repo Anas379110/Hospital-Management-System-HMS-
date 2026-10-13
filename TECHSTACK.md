@@ -1,4 +1,4 @@
-# 🛠️ التقنيات المستخدمة — نظام إدارة المشافي (HMS)
+# 🛠️ Technologies Used — Hospital Management System (HMS)
 - NestJS
 - TypeScript
 - PostgreSQL
