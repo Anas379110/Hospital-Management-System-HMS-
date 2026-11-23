@@ -18,28 +18,28 @@ export default function AppLayout() {
   return (
     <Box>
       <AppBar position="static" color="primary">
-        <Toolbar sx={{ justifyContent: 'space-between' }}>
-          <Box display="flex" alignItems="center" gap={3}>
+        <Toolbar sx={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: 2, py: 1 }}>
+          <Box display="flex" alignItems="center" gap={3} flexWrap="wrap" minWidth={0}>
             <Typography variant="h6">{t('app.title')}</Typography>
             {user && (
-              <Box display="flex" gap={1}>
+              <Box display="flex" gap={1} flexWrap="wrap">
                 <Button color="inherit" component={RouterLink} to="/patients">
                   {t('nav.patients')}
                 </Button>
                 <Button color="inherit" component={RouterLink} to="/appointments">
-                  المواعيد
+                  {t('appointments.title')}
                 </Button>
                 <Button color="inherit" component={RouterLink} to="/departments">
-                  الأقسام والأسرّة
+                  {t('nav.departments')}
                 </Button>
                 <Button color="inherit" component={RouterLink} to="/pharmacy">
-                  الصيدلية
+                  {t('nav.pharmacy')}
                 </Button>
                 <Button color="inherit" component={RouterLink} to="/lab">
-                  المختبر والأشعة
+                  {t('nav.lab')}
                 </Button>
                 <Button color="inherit" component={RouterLink} to="/billing">
-                  الفوترة
+                  {t('nav.billing')}
                 </Button>
               </Box>
             )}
