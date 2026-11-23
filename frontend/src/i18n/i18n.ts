@@ -15,3 +15,10 @@ i18n.use(initReactI18next).init({
 });
 
 export default i18n;
+
+function syncDocumentLanguage(language: string) {
+  document.documentElement.lang = language;
+  document.documentElement.dir = language.startsWith('ar') ? 'rtl' : 'ltr';
+}
+syncDocumentLanguage(i18n.language);
+i18n.on('languageChanged', syncDocumentLanguage);
