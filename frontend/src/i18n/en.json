@@ -1,5 +1,7 @@
 {
-  "app": { "title": "Hospital Management System" },
+  "app": {
+    "title": "Hospital Management System"
+  },
   "auth": {
     "username": "Username",
     "password": "Password",
@@ -7,7 +9,14 @@
     "loginError": "Incorrect username or password",
     "logout": "Log Out"
   },
-  "nav": { "patients": "Patients", "newPatient": "New Patient" },
+  "nav": {
+    "patients": "Patients",
+    "newPatient": "New Patient",
+    "departments": "Departments and beds",
+    "pharmacy": "Pharmacy",
+    "lab": "Laboratory and imaging",
+    "billing": "Billing"
+  },
   "patients": {
     "title": "Patients",
     "search": "Search by name, MRN, or phone",
@@ -31,5 +40,40 @@
   "errors": {
     "generic": "An unexpected error occurred, please try again later or contact support",
     "unauthorized": "Session expired, please log in again"
+  },
+  "appointments": {
+    "title": "Appointments",
+    "new": "New appointment",
+    "day": "Day",
+    "doctorFilter": "Doctor ID optional",
+    "time": "Time",
+    "status": "Status",
+    "cancel": "Cancel appointment",
+    "close": "Back",
+    "book": "Book",
+    "patient": "Patient ID",
+    "doctor": "Doctor ID",
+    "department": "Department ID",
+    "datetime": "Appointment in local time",
+    "localTime": "Device local timezone",
+    "empty": "No appointments for this day",
+    "loadError": "Could not load appointments",
+    "retry": "Retry",
+    "createError": "Could not book appointment",
+    "created": "Appointment booked",
+    "cancelError": "Could not cancel appointment",
+    "cancelledSuccess": "Appointment cancelled",
+    "confirmTitle": "Confirm cancellation",
+    "confirmBody": "Cancel this appointment",
+    "confirm": "Confirm cancellation",
+    "required": "This field is required",
+    "uuid": "Enter a valid UUID",
+    "invalidDate": "Enter a valid date and time",
+    "scheduled": "Scheduled",
+    "completed": "Completed",
+    "no_show": "No show",
+    "cancelled": "Cancelled",
+    "loading": "Loading",
+    "chooseDay": "Choose a day to view appointments"
   }
 }
