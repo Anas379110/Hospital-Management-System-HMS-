@@ -1,6 +1,33 @@
-# DEPLOYMENT.md — خطة النشر
+# HMS deployment scope and review status
 
-**الحالة:** لم يُنشر على خادم مشفى. نُفذت ترحيلات واختبارات محلية بقاعدة PostgreSQL وبيانات خيالية، واختبار نسخ واستعادة إلى قاعدة منفصلة. راجع HMS-QUALIFICATION-20261124.md وBACKUP-RESTORE-QUALIFICATION.md للنتائج وحدودها. بوابة التحقق النهائي للمرشح ما زالت غير مكتملة.
+Updated24November2026. Planning and source review only, not a deployment approval.
+
+## Current intended use: fictional demo
+
+The owner has stated that the GitHub projects are for trial and demonstration. A real hospital host, clinical approval and medical-record operating policy are not requirements for that fictional-demo goal. They remain necessary considerations before any separate real-world hospital use, which is not authorized by this demo plan.
+
+The current source candidate is uploaded for review only. See [REVIEW-STATUS-20261124.md](REVIEW-STATUS-20261124.md) for earlier separate checks and the remaining qualification gaps. The final combined validation result is unavailable; the later production-startup path correction has not been runtime-qualified. No launch-readiness claim follows from source upload or documentation changes.
+
+### Proposed free-only demo route, not yet selected or provisioned
+
+- Static React frontend on Render, Nest API on a Free Render web service, and a separate Neon Free PostgreSQL database.
+- Keep the existing Nest/React/Prisma/PostgreSQL technology. Treat cloud hosting for this demo as separate from the historical on-premise architecture below.
+- Check actual account plans and remaining quotas before creating resources. Render Free hours are shared across a workspace, and idle services sleep. Neon Free imposes compute/storage/transfer quotas. Do not add a payment method, paid plan or converting trial.
+- Free Render PostgreSQL expires after30days, so it is not the preferred database for an ongoing portfolio demo.
+- Official policies checked24November2026: https://render.com/docs/free , https://neon.com/pricing , https://neon.com/faqs/free-plan-limits-and-quotas . These do not establish available account quota.
+
+### Boundaries still to implement and qualify before public demo launch
+
+- Visible Arabic/English fictional-demo warning. No real patient, staff, identity or clinical records.
+- Separate demo database and secrets. No known seeded administrator password exposed for public access; use restricted demo access with minimum necessary permissions.
+- No real payments, outgoing messages or live external services. Do not imply backend clinical capability or security certification.
+- Explicit fictional-data retention/reset behavior, separate from legal medical-record retention.
+- Consistent appointment input/display/day-query timezone behavior. Existing browser-local input and UTC server day filtering remain unresolved; do not infer a hospital timezone.
+- A permitted qualification path, including the unqualified production-startup change. This document does not repeat, replace or recover the restricted validation.
+
+## Historical on-premise hospital plan
+
+The material below records the original hospital architecture and is retained for context. It is not the selected demo runbook, not an instruction to deploy, and not an assertion that a real hospital environment is ready.
 
 ## 1. Hosting
 On-Premise بالكامل داخل المشفى (Decision 003) — لا Cloud، لا اعتماد إنترنت خارجي للوظائف الأساسية.
@@ -26,8 +53,8 @@ sudo -u postgres createuser hms_user --pwprompt
 cd backend
 npm install
 cp ../.env.example .env  # عدّل DATABASE_URL, JWT_SECRET (قيمة عشوائية قوية فعلية)، FRONTEND_URL
-npx prisma migrate deploy   # ⚠️ أول تنفيذ فعلي لهذا الأمر بكل تاريخ المشروع — راجع النتيجة بعناية
-# طبّق يدوياً: database/migrations/manual-sql/appointments_unique_partial_index.sql
+npx prisma migrate deploy   # لا تنفّذ على قاعدة مأهولة قبل فحص التعارضات وقرار مسؤولها
+# فهرس المواعيد الجزئي مضمّن الآن في migration متتبعة، لا تطبّق النسخة اليدوية القديمة
 # لا تشغّل seed في الإنتاج، فهو ينشئ حسابات تطوير بكلمة مرور افتراضية
 npm run build
 pm2 start dist/src/main.js --name hms-backend   # أو systemd، راجع TECH-STACK.md
@@ -56,7 +83,7 @@ npm run build
 - **الاحتفاظ:** **NEEDS USER DECISION** — كم يوم/شهر يُحتفَظ بالنسخ؟ (يتقاطع مع سياسة الاحتفاظ القانونية بقانون سوريا 12/2024، راجع SECURITY.md)
 - **التخزين:** وسيط منفصل فعلياً عن خادم الإنتاج (قرص خارجي/خادم ثانٍ) — لا نسخ احتياطي على نفس القرص فقط
 - **RTO/RPO:** **NEEDS USER DECISION** — لم تُحدَّد أرقام مستهدفة بعد
-- **⚠️ لا تُعتبر أي استراتيجية Backup ناجحة حتى يُختبَر الاستعادة (Restore) فعلياً** — لم يحدث بعد
+- **⚠️ لا تُعتبر استراتيجية النسخ التشغيلية ناجحة دون اختبار استعادة في بيئتها**. نجحت تجربة محلية وهمية إلى قاعدة منفصلة، لكنها لا تثبت نسخاً دورية أو استعادة بيئة مستشفى.
 
 ## 6. Monitoring & Logging
 - Health Check: `GET /health` (يُضاف إن لم يوجد بعد — تحقق قبل الاعتماد عليه)
