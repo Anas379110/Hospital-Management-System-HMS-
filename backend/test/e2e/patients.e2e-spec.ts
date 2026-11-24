@@ -20,7 +20,7 @@ describe('Patients (e2e)', () => {
       count: jest.fn().mockResolvedValue(0),
       findFirst: jest.fn().mockResolvedValue(null),
       findUnique: jest.fn(),
-      create: jest.fn().mockImplementation(({ data }) => Promise.resolve({ id: 'p1', ...data })),
+      create: jest.fn().mockImplementation(({ data }) => Promise.resolve({ id: '10000000-0000-4000-8000-000000000001', ...data })),
       update: jest.fn(),
       findMany: jest.fn(),
     },
@@ -45,7 +45,7 @@ describe('Patients (e2e)', () => {
       .compile();
 
     app = moduleRef.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+    app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
     app.useGlobalFilters(new AllExceptionsFilter());
     app.setGlobalPrefix('api/v1');
     await app.init();

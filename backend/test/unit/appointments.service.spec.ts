@@ -105,4 +105,22 @@ describe('AppointmentsService', () => {
       }),
     );
   });
+  it('maps a database race conflict to409without hiding other database failures', async () => {
+    prisma.appointment.findFirst.mockResolvedValue(null);
+    prisma.appointment.create.mockRejectedValue({ code: 'P2002', meta: { target: ['doctor_id', 'scheduled_at'] } });
+    await expect(service.create(createDto)).rejects.toThrow(ConflictException);
+    const unrelated = { code: 'P2002', meta: { target: ['id'] } };
+    prisma.appointment.create.mockRejectedValue(unrelated);
+    await expect(service.create(createDto)).rejects.toEqual(unrelated);
+  });
+
+  it('maps a reschedule race to409after the pre-check succeeds', async () => {
+    prisma.appointment.findUnique.mockResolvedValue({
+      id: 'appt-1', doctorId: 'doctor-1', departmentId: 'dept-1', scheduledAt: new Date(createDto.scheduledAt),
+    });
+    prisma.appointment.findFirst.mockResolvedValue(null);
+    prisma.appointment.update.mockRejectedValue({ code: 'P2002', meta: { target: 'appointments_doctor_time_unique' } });
+    await expect(service.update('appt-1', { scheduledAt: '2027-01-21T10:00:00Z' })).rejects.toThrow(ConflictException);
+  });
+
 });

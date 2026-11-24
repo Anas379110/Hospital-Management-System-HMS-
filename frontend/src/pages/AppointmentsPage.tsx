@@ -26,6 +26,7 @@ import {
   useCancelAppointment,
 } from '../hooks/useAppointments';
 import { getApiErrorMessage } from '../api/client';
+import { validateAppointment, localDateInput, type AppointmentFieldErrors } from '../lib/appointmentForm';
 
 const statusColor: Record<string, 'default' | 'success' | 'error' | 'warning'> = {
   scheduled: 'default',
@@ -35,14 +36,18 @@ const statusColor: Record<string, 'default' | 'success' | 'error' | 'warning'> =
 };
 
 export default function AppointmentsPage() {
-  const { i18n } = useTranslation();
-  const today = new Date().toISOString().slice(0, 10);
+  const { i18n, t } = useTranslation();
+  const today = localDateInput();
 
   const [date, setDate] = useState(today);
   const [doctorId, setDoctorId] = useState('');
-  const { data: appointments, isLoading } = useAppointments(doctorId || undefined, date);
+  const { data: appointments, isLoading, isError, error, refetch, isFetching } = useAppointments(doctorId || undefined, date);
 
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<AppointmentFieldErrors>({});
+  const [cancelId, setCancelId] = useState<string | null>(null);
+  const [cancelError, setCancelError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [patientId, setPatientId] = useState('');
   const [formDoctorId, setFormDoctorId] = useState('');
@@ -53,62 +58,85 @@ export default function AppointmentsPage() {
   const cancelAppointment = useCancelAppointment();
 
   const locale = i18n.language === 'ar' ? 'ar-SY' : 'en-US';
+  const cancellationTarget = appointments?.find(appointment => appointment.id === cancelId);
 
   async function handleCreate() {
+    if (createAppointment.isPending) return;
     setFormError(null);
+    const errors = validateAppointment({ patientId, doctorId: formDoctorId, departmentId, scheduledAt });
+    setFieldErrors(errors);
+    if (Object.keys(errors).length) return;
     try {
       await createAppointment.mutateAsync({
-        patientId,
-        doctorId: formDoctorId,
-        departmentId,
+        patientId: patientId.trim(),
+        doctorId: formDoctorId.trim(),
+        departmentId: departmentId.trim(),
         scheduledAt: new Date(scheduledAt).toISOString(),
       });
       setDialogOpen(false);
+      setNotice('appointments.created');
       setPatientId('');
       setFormDoctorId('');
       setDepartmentId('');
       setScheduledAt('');
     } catch (err) {
       // FR-3.2: رسالة واضحة عند تعارض الحجز (409) — راجع API.md
-      setFormError(getApiErrorMessage(err, 'تعذَّر حجز الموعد'));
+      setFormError(getApiErrorMessage(err, t('appointments.createError')));
     }
   }
 
+
+  async function handleCancel() {
+    if (!cancelId || cancelAppointment.isPending) return;
+    setCancelError(null);
+    try {
+      await cancelAppointment.mutateAsync({ id: cancelId });
+      setCancelId(null);
+      setNotice('appointments.cancelledSuccess');
+    } catch (err) {
+      setCancelError(getApiErrorMessage(err, t('appointments.cancelError')));
+    }
+  }
+  const fieldMessage = (name: keyof AppointmentFieldErrors) => fieldErrors[name] ? t(`appointments.${fieldErrors[name] === 'datetime' ? 'invalidDate' : fieldErrors[name]}`) : '';
+
   return (
-    <Box p={4}>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+    <Box p={{ xs: 2, md: 4 }}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2} mb={3}>
         <Typography variant="h5" fontWeight={700}>
-          المواعيد
+          {t('appointments.title')}
         </Typography>
-        <Button variant="contained" onClick={() => setDialogOpen(true)}>
-          حجز موعد جديد
+        <Button variant="contained" onClick={() => { setFormError(null); setFieldErrors({}); setDialogOpen(true); }}>
+          {t('appointments.new')}
         </Button>
       </Box>
 
-      <Box display="flex" gap={2} mb={3}>
+      <Box display="flex" gap={2} flexWrap="wrap" mb={3}>
         <TextField
           type="date"
-          label="اليوم"
+          label={t('appointments.day')}
           value={date}
           onChange={(e) => setDate(e.target.value)}
           InputLabelProps={{ shrink: true }}
         />
         {/* ملاحظة MVP: فلترة بمعرف الطبيب مباشرة — لا توجد بعد شاشة قائمة أطباء منفصلة (خارج نطاق Slice 3) */}
         <TextField
-          label="معرّف الطبيب (اختياري)"
+          label={t('appointments.doctorFilter')}
           value={doctorId}
           onChange={(e) => setDoctorId(e.target.value)}
         />
       </Box>
 
+      {notice && <Alert severity="success" onClose={() => setNotice(null)} sx={{ mb: 2 }}>{t(notice)}</Alert>}
+      {!date && <Alert severity="info" sx={{ mb: 2 }}>{t('appointments.chooseDay')}</Alert>}
+      {isError && <Alert severity="error" sx={{ mb: 2 }} action={<Button onClick={() => refetch()} disabled={isFetching}>{t('appointments.retry')}</Button>}>{getApiErrorMessage(error, t('appointments.loadError'))}</Alert>}
       {isLoading && (
         <Box display="flex" justifyContent="center" py={4}>
-          <CircularProgress />
+          <CircularProgress aria-label={t('appointments.loading')} />
         </Box>
       )}
 
       {!isLoading && appointments && appointments.length === 0 && (
-        <Typography color="text.secondary">لا توجد مواعيد بهذا اليوم</Typography>
+        <Typography color="text.secondary">{t('appointments.empty')}</Typography>
       )}
 
       {!isLoading && appointments && appointments.length > 0 && (
@@ -116,8 +144,8 @@ export default function AppointmentsPage() {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>الوقت</TableCell>
-                <TableCell>الحالة</TableCell>
+                <TableCell>{t('appointments.time')}</TableCell>
+                <TableCell>{t('appointments.status')}</TableCell>
                 <TableCell></TableCell>
               </TableRow>
             </TableHead>
@@ -131,16 +159,17 @@ export default function AppointmentsPage() {
                     })}
                   </TableCell>
                   <TableCell>
-                    <Chip label={appt.status} size="small" color={statusColor[appt.status]} />
+                    <Chip label={t(`appointments.${appt.status}`)} size="small" color={statusColor[appt.status]} />
                   </TableCell>
                   <TableCell>
                     {appt.status === 'scheduled' && (
                       <Button
                         size="small"
                         color="error"
-                        onClick={() => cancelAppointment.mutate({ id: appt.id })}
+                        disabled={cancelAppointment.isPending}
+                        onClick={() => { setCancelError(null); setCancelId(appt.id); }}
                       >
-                        إلغاء
+                        {t('appointments.cancel')}
                       </Button>
                     )}
                   </TableCell>
@@ -151,27 +180,45 @@ export default function AppointmentsPage() {
         </TableContainer>
       )}
 
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullWidth maxWidth="sm">
-        <DialogTitle>حجز موعد جديد</DialogTitle>
+      <Typography variant="caption" color="text.secondary">{t('appointments.localTime')} {Intl.DateTimeFormat().resolvedOptions().timeZone}</Typography>
+      <Dialog open={Boolean(cancelId)} onClose={() => { if (!cancelAppointment.isPending) setCancelId(null); }} fullWidth maxWidth="xs">
+        <DialogTitle>{t('appointments.confirmTitle')}</DialogTitle>
+        <DialogContent><Typography>{t('appointments.confirmBody')}</Typography>{cancellationTarget && <Typography sx={{ mt: 1 }}><time dateTime={cancellationTarget.scheduledAt}>{new Date(cancellationTarget.scheduledAt).toLocaleString(locale)}</time></Typography>}{cancelError && <Alert severity="error" sx={{ mt: 2 }}>{cancelError}</Alert>}</DialogContent>
+        <DialogActions><Button disabled={cancelAppointment.isPending} onClick={() => setCancelId(null)}>{t('appointments.close')}</Button><Button color="error" disabled={cancelAppointment.isPending} onClick={handleCancel}>{t('appointments.confirm')}</Button></DialogActions>
+      </Dialog>
+      <Dialog open={dialogOpen} onClose={() => { if (!createAppointment.isPending) setDialogOpen(false); }} fullWidth maxWidth="sm">
+        <DialogTitle>{t('appointments.new')}</DialogTitle>
         <DialogContent>
           <TextField
             fullWidth
             margin="normal"
-            label="معرّف المريض"
+            label={t('appointments.patient')}
+            required
+            error={Boolean(fieldErrors.patientId)}
+            helperText={fieldMessage('patientId')}
+            disabled={createAppointment.isPending}
             value={patientId}
             onChange={(e) => setPatientId(e.target.value)}
           />
           <TextField
             fullWidth
             margin="normal"
-            label="معرّف الطبيب"
+            label={t('appointments.doctor')}
+            required
+            error={Boolean(fieldErrors.doctorId)}
+            helperText={fieldMessage('doctorId')}
+            disabled={createAppointment.isPending}
             value={formDoctorId}
             onChange={(e) => setFormDoctorId(e.target.value)}
           />
           <TextField
             fullWidth
             margin="normal"
-            label="معرّف القسم"
+            label={t('appointments.department')}
+            required
+            error={Boolean(fieldErrors.departmentId)}
+            helperText={fieldMessage('departmentId')}
+            disabled={createAppointment.isPending}
             value={departmentId}
             onChange={(e) => setDepartmentId(e.target.value)}
           />
@@ -179,7 +226,11 @@ export default function AppointmentsPage() {
             fullWidth
             margin="normal"
             type="datetime-local"
-            label="الموعد"
+            label={t('appointments.datetime')}
+            required
+            error={Boolean(fieldErrors.scheduledAt)}
+            helperText={fieldMessage('scheduledAt')}
+            disabled={createAppointment.isPending}
             value={scheduledAt}
             onChange={(e) => setScheduledAt(e.target.value)}
             InputLabelProps={{ shrink: true }}
@@ -191,12 +242,12 @@ export default function AppointmentsPage() {
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDialogOpen(false)}>إلغاء</Button>
+          <Button disabled={createAppointment.isPending} onClick={() => setDialogOpen(false)}>{t('appointments.close')}</Button>
           <Button variant="contained" onClick={handleCreate} disabled={createAppointment.isPending}>
-            حجز
+            {t('appointments.book')}
           </Button>
         </DialogActions>
       </Dialog>
     </Box>
   );
-}
+                  }

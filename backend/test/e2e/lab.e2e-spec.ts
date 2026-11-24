@@ -18,7 +18,7 @@ describe('Lab (e2e)', () => {
       update: jest.fn(),
     },
     encounter: {
-      findUnique: jest.fn().mockResolvedValue({ id: 'enc1', patientId: 'p1' }),
+      findUnique: jest.fn().mockResolvedValue({ id: '10000000-0000-4000-8000-000000000004', patientId: '10000000-0000-4000-8000-000000000001' }),
     },
     auditLog: { create: jest.fn().mockResolvedValue({}) },
   };
@@ -31,7 +31,7 @@ describe('Lab (e2e)', () => {
       .compile();
 
     app = moduleRef.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+    app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
     app.useGlobalFilters(new AllExceptionsFilter());
     app.setGlobalPrefix('api/v1');
     await app.init();
@@ -43,8 +43,8 @@ describe('Lab (e2e)', () => {
   });
 
   const validOrder = {
-    patientId: 'p1',
-    encounterId: 'enc1',
+    patientId: '10000000-0000-4000-8000-000000000001',
+    encounterId: '10000000-0000-4000-8000-000000000004',
     testType: 'lab',
     testName: 'CBC',
   };
@@ -60,7 +60,7 @@ describe('Lab (e2e)', () => {
   });
 
   it('POST /test-orders بدور doctor → 201', async () => {
-    const token = await jwtService.signAsync({ sub: 'doc1', username: 'dr1', role: 'doctor' });
+    const token = await jwtService.signAsync({ sub: '10000000-0000-4000-8000-000000000002', username: 'dr1', role: 'doctor' });
     const res = await request(app.getHttpServer())
       .post('/api/v1/test-orders')
       .set('Authorization', `Bearer ${token}`)

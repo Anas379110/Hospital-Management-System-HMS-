@@ -30,7 +30,7 @@ describe('Departments & Admissions (e2e)', () => {
       .compile();
 
     app = moduleRef.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+    app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
     app.useGlobalFilters(new AllExceptionsFilter());
     app.setGlobalPrefix('api/v1');
     await app.init();
@@ -64,27 +64,27 @@ describe('Departments & Admissions (e2e)', () => {
   });
 
   it('POST /admissions على سرير مشغول (UC-1 Alternative Flow) → 409', async () => {
-    txMock.bed.findUnique.mockResolvedValue({ id: 'bed-1', status: 'occupied' });
+    txMock.bed.findUnique.mockResolvedValue({ id: '10000000-0000-4000-8000-000000000005', status: 'occupied' });
     const token = await jwtService.signAsync({ sub: 'u3', username: 'nurse1', role: 'nurse' });
 
     const res = await request(app.getHttpServer())
       .post('/api/v1/admissions')
       .set('Authorization', `Bearer ${token}`)
-      .send({ patientId: 'p1', bedId: 'bed-1' });
+      .send({ patientId: '10000000-0000-4000-8000-000000000001', bedId: '10000000-0000-4000-8000-000000000005' });
 
     expect(res.status).toBe(409);
     expect(res.body.error.code).toBe('BED_NOT_AVAILABLE');
   });
 
   it('POST /admissions على سرير متاح → 201', async () => {
-    txMock.bed.findUnique.mockResolvedValue({ id: 'bed-2', status: 'available' });
-    txMock.admission.create.mockResolvedValue({ id: 'adm-1', patientId: 'p1', bedId: 'bed-2' });
+    txMock.bed.findUnique.mockResolvedValue({ id: '10000000-0000-4000-8000-000000000006', status: 'available' });
+    txMock.admission.create.mockResolvedValue({ id: 'adm-1', patientId: '10000000-0000-4000-8000-000000000001', bedId: '10000000-0000-4000-8000-000000000006' });
     const token = await jwtService.signAsync({ sub: 'u3', username: 'nurse1', role: 'nurse' });
 
     const res = await request(app.getHttpServer())
       .post('/api/v1/admissions')
       .set('Authorization', `Bearer ${token}`)
-      .send({ patientId: 'p1', bedId: 'bed-2' });
+      .send({ patientId: '10000000-0000-4000-8000-000000000001', bedId: '10000000-0000-4000-8000-000000000006' });
 
     expect(res.status).toBe(201);
   });

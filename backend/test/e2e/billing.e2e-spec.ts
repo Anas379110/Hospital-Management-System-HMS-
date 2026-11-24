@@ -30,7 +30,7 @@ describe('Billing (e2e)', () => {
       .compile();
 
     app = moduleRef.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+    app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
     app.useGlobalFilters(new AllExceptionsFilter());
     app.setGlobalPrefix('api/v1');
     await app.init();
@@ -46,7 +46,7 @@ describe('Billing (e2e)', () => {
     const res = await request(app.getHttpServer())
       .post('/api/v1/invoices')
       .set('Authorization', `Bearer ${token}`)
-      .send({ patientId: 'p1', items: [{ description: 'كشف', quantity: 1, unitPrice: 5000 }] });
+      .send({ patientId: '10000000-0000-4000-8000-000000000001', items: [{ description: 'كشف', quantity: 1, unitPrice: 5000 }] });
 
     expect(res.status).toBe(403);
   });
@@ -56,7 +56,7 @@ describe('Billing (e2e)', () => {
     const res = await request(app.getHttpServer())
       .post('/api/v1/invoices')
       .set('Authorization', `Bearer ${token}`)
-      .send({ patientId: 'p1', items: [] });
+      .send({ patientId: '10000000-0000-4000-8000-000000000001', items: [] });
 
     expect(res.status).toBe(400);
   });

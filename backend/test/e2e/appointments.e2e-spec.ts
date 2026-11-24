@@ -26,7 +26,7 @@ describe('Appointments (e2e)', () => {
       .compile();
 
     app = moduleRef.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+    app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
     app.useGlobalFilters(new AllExceptionsFilter());
     app.setGlobalPrefix('api/v1');
     await app.init();
@@ -38,9 +38,9 @@ describe('Appointments (e2e)', () => {
   });
 
   const validAppt = {
-    patientId: 'p1',
-    doctorId: 'doc1',
-    departmentId: 'dept1',
+    patientId: '10000000-0000-4000-8000-000000000001',
+    doctorId: '10000000-0000-4000-8000-000000000002',
+    departmentId: '10000000-0000-4000-8000-000000000003',
     scheduledAt: '2026-09-01T10:00:00.000Z',
   };
 
