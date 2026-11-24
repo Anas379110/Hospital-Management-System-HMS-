@@ -28,7 +28,7 @@ describe('Encounters (e2e)', () => {
       .compile();
 
     app = moduleRef.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+    app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
     app.useGlobalFilters(new AllExceptionsFilter());
     app.setGlobalPrefix('api/v1');
     await app.init();
@@ -39,7 +39,7 @@ describe('Encounters (e2e)', () => {
     await app.close();
   });
 
-  const validEncounter = { patientId: 'p1', chiefComplaint: 'صداع', diagnosis: 'شقيقة' };
+  const validEncounter = { patientId: '10000000-0000-4000-8000-000000000001', chiefComplaint: 'صداع', diagnosis: 'شقيقة' };
 
   it('POST /encounters بدور nurse (غير مخوَّل) → 403', async () => {
     const token = await jwtService.signAsync({ sub: 'u1', username: 'n1', role: 'nurse' });

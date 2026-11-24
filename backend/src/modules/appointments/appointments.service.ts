@@ -34,19 +34,37 @@ export class AppointmentsService {
     }
   }
 
+  private rethrowSlotConflict(error: unknown): never {
+    const failure = error as { code?: string; meta?: { target?: unknown } };
+    const target = failure?.meta?.target;
+    const slotConstraint = Array.isArray(target)
+      ? target.includes('doctor_id') && target.includes('scheduled_at')
+      : target === 'appointments_doctor_time_unique';
+    if (failure?.code === 'P2002' && slotConstraint) {
+      throw new ConflictException({
+        error: { code: 'APPOINTMENT_CONFLICT', message: 'الطبيب لديه موعد آخر محجوز بنفس التوقيت', details: [] },
+      });
+    }
+    throw error;
+  }
+
   // FR-3.1
   async create(dto: CreateAppointmentDto) {
     const scheduledAt = new Date(dto.scheduledAt);
     await this.assertNoConflict(dto.doctorId, scheduledAt);
 
-    return this.prisma.appointment.create({
-      data: {
-        patientId: dto.patientId,
-        doctorId: dto.doctorId,
-        departmentId: dto.departmentId,
-        scheduledAt,
-      },
-    });
+    try {
+      return await this.prisma.appointment.create({
+        data: {
+          patientId: dto.patientId,
+          doctorId: dto.doctorId,
+          departmentId: dto.departmentId,
+          scheduledAt,
+        },
+      });
+    } catch (error: unknown) {
+      this.rethrowSlotConflict(error);
+    }
   }
 
   // FR-3.4: جدول مواعيد طبيب ليوم/فترة محددة
@@ -86,13 +104,17 @@ export class AppointmentsService {
       await this.assertNoConflict(existing.doctorId, newScheduledAt, id);
     }
 
-    return this.prisma.appointment.update({
-      where: { id },
-      data: {
-        scheduledAt: newScheduledAt,
-        departmentId: dto.departmentId ?? existing.departmentId,
-      },
-    });
+    try {
+      return await this.prisma.appointment.update({
+        where: { id },
+        data: {
+          scheduledAt: newScheduledAt,
+          departmentId: dto.departmentId ?? existing.departmentId,
+        },
+      });
+    } catch (error: unknown) {
+      this.rethrowSlotConflict(error);
+    }
   }
 
   // FR-3.3 (إلغاء) + FR-3.5

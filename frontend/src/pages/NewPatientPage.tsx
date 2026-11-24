@@ -1,9 +1,8 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import { patientSchema } from '../lib/patientForm';
 import {
-  Box,
   Button,
   MenuItem,
   Paper,
@@ -20,19 +19,11 @@ import { useNavigate } from 'react-router-dom';
 import { useCreatePatient, type CreatePatientInput } from '../hooks/usePatients';
 import { getApiErrorCode, getApiErrorMessage } from '../api/client';
 
-const patientSchema = z.object({
-  fullName: z.string().min(3),
-  dateOfBirth: z.string().min(1),
-  gender: z.enum(['male', 'female']),
-  phone: z.string().min(6),
-  nationalId: z.string().optional(),
-  address: z.string().optional(),
-});
-
 export default function NewPatientPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const createPatient = useCreatePatient();
+  const submitting = useRef(false);
 
   const [duplicateWarning, setDuplicateWarning] = useState(false);
   const [pendingInput, setPendingInput] = useState<CreatePatientInput | null>(null);
@@ -44,10 +35,12 @@ export default function NewPatientPage() {
     formState: { errors },
   } = useForm<CreatePatientInput>({
     resolver: zodResolver(patientSchema),
-    defaultValues: { gender: 'male' },
+    defaultValues: { fullName: '', dateOfBirth: '', gender: 'male', phone: '', nationalId: '', address: '' },
   });
 
   async function submit(input: CreatePatientInput, force = false) {
+    if (submitting.current) return;
+    submitting.current = true;
     setErrorMessage(null);
     try {
       const patient = await createPatient.mutateAsync({ input, force });
@@ -60,6 +53,8 @@ export default function NewPatientPage() {
         return;
       }
       setErrorMessage(getApiErrorMessage(err, t('errors.generic')));
+    } finally {
+      submitting.current = false;
     }
   }
 
@@ -69,7 +64,7 @@ export default function NewPatientPage() {
         {t('nav.newPatient')}
       </Typography>
 
-      <form onSubmit={handleSubmit((data) => submit(data))}>
+      <form aria-busy={createPatient.isPending} onSubmit={handleSubmit((data) => submit(data))}>
         <Controller
           name="fullName"
           control={control}
@@ -80,6 +75,7 @@ export default function NewPatientPage() {
               margin="normal"
               label={t('patients.fullName')}
               error={!!errors.fullName}
+              helperText={errors.fullName ? t('patients.nameInvalid') : undefined}
             />
           )}
         />
@@ -95,6 +91,7 @@ export default function NewPatientPage() {
               label={t('patients.dateOfBirth')}
               InputLabelProps={{ shrink: true }}
               error={!!errors.dateOfBirth}
+              helperText={errors.dateOfBirth ? t('patients.dateInvalid') : undefined}
             />
           )}
         />
@@ -118,6 +115,7 @@ export default function NewPatientPage() {
               margin="normal"
               label={t('patients.phone')}
               error={!!errors.phone}
+              helperText={errors.phone ? t('patients.phoneInvalid') : undefined}
             />
           )}
         />
@@ -142,7 +140,7 @@ export default function NewPatientPage() {
           </Alert>
         )}
 
-        <Button type="submit" variant="contained" size="large" sx={{ mt: 3 }} fullWidth>
+        <Button disabled={createPatient.isPending} type="submit" variant="contained" size="large" sx={{ mt: 3 }} fullWidth>
           {t('patients.save')}
         </Button>
       </form>
@@ -151,7 +149,7 @@ export default function NewPatientPage() {
       <Dialog open={duplicateWarning} onClose={() => setDuplicateWarning(false)}>
         <DialogTitle>{t('patients.duplicateWarning')}</DialogTitle>
         <DialogContent>
-          <Typography>{t('patients.duplicateWarning')}</Typography>
+          <Typography>{t('patients.duplicateBody')}</Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDuplicateWarning(false)}>{t('patients.duplicateCancel')}</Button>

@@ -29,7 +29,7 @@ describe('Pharmacy (e2e)', () => {
       .compile();
 
     app = moduleRef.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+    app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
     app.useGlobalFilters(new AllExceptionsFilter());
     app.setGlobalPrefix('api/v1');
     await app.init();
@@ -51,13 +51,13 @@ describe('Pharmacy (e2e)', () => {
 
   it('POST /prescriptions/{id}/dispense عند نقص المخزون → 409', async () => {
     txMock.prescription.findUnique.mockResolvedValue({ id: 'rx-1', status: 'pending' });
-    txMock.medication.findUnique.mockResolvedValue({ id: 'med-1', currentStock: 2 });
+    txMock.medication.findUnique.mockResolvedValue({ id: '10000000-0000-4000-8000-000000000007', currentStock: 2 });
     const token = await jwtService.signAsync({ sub: 'ph1', username: 'pharmacist1', role: 'pharmacist' });
 
     const res = await request(app.getHttpServer())
       .post('/api/v1/prescriptions/rx-1/dispense')
       .set('Authorization', `Bearer ${token}`)
-      .send({ medicationId: 'med-1', quantityDispensed: 10 });
+      .send({ medicationId: '10000000-0000-4000-8000-000000000007', quantityDispensed: 10 });
 
     expect(res.status).toBe(409);
     expect(res.body.error.code).toBe('INSUFFICIENT_STOCK');
@@ -68,7 +68,7 @@ describe('Pharmacy (e2e)', () => {
     const res = await request(app.getHttpServer())
       .post('/api/v1/prescriptions/rx-1/dispense')
       .set('Authorization', `Bearer ${token}`)
-      .send({ medicationId: 'med-1', quantityDispensed: -5 });
+      .send({ medicationId: '10000000-0000-4000-8000-000000000007', quantityDispensed: -5 });
 
     expect(res.status).toBe(400);
   });

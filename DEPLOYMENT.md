@@ -1,6 +1,6 @@
 # DEPLOYMENT.md — خطة النشر
 
-**الحالة:** خطة موثَّقة — **لم يُنفَّذ أي نشر فعلي بعد** (راجع `PROJECT-AUDIT.md` Blocker #1: لا Migration حقيقية بعد على DB حقيقية).
+**الحالة:** لم يُنشر على خادم مشفى. نُفذت ترحيلات واختبارات محلية بقاعدة PostgreSQL وبيانات خيالية، واختبار نسخ واستعادة إلى قاعدة منفصلة. راجع HMS-QUALIFICATION-20261124.md وBACKUP-RESTORE-QUALIFICATION.md للنتائج وحدودها. بوابة التحقق النهائي للمرشح ما زالت غير مكتملة.
 
 ## 1. Hosting
 On-Premise بالكامل داخل المشفى (Decision 003) — لا Cloud، لا اعتماد إنترنت خارجي للوظائف الأساسية.
@@ -28,9 +28,9 @@ npm install
 cp ../.env.example .env  # عدّل DATABASE_URL, JWT_SECRET (قيمة عشوائية قوية فعلية)، FRONTEND_URL
 npx prisma migrate deploy   # ⚠️ أول تنفيذ فعلي لهذا الأمر بكل تاريخ المشروع — راجع النتيجة بعناية
 # طبّق يدوياً: database/migrations/manual-sql/appointments_unique_partial_index.sql
-npx prisma db seed          # بيانات تجريبية فقط — احذف/عدّل قبل بيانات حقيقية
+# لا تشغّل seed في الإنتاج، فهو ينشئ حسابات تطوير بكلمة مرور افتراضية
 npm run build
-pm2 start dist/main.js --name hms-backend   # أو systemd، راجع TECH-STACK.md
+pm2 start dist/src/main.js --name hms-backend   # أو systemd، راجع TECH-STACK.md
 
 # 4. Frontend
 cd frontend

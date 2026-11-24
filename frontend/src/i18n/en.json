@@ -31,11 +31,15 @@
     "address": "Address",
     "save": "Save",
     "createSuccess": "Patient registered successfully",
-    "duplicateWarning": "This patient may already be registered — review below",
+    "duplicateWarning": "Possible existing patient record",
     "duplicateContinue": "Continue registration anyway",
     "duplicateCancel": "Cancel and go back",
     "noResults": "No matching results",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "nameInvalid": "Enter a name with at least 3 characters",
+    "dateInvalid": "Enter a valid date of birth",
+    "phoneInvalid": "Enter a phone number with at least 6 characters",
+    "duplicateBody": "A record with the same name and date of birth may already exist. Cancel to keep this form and check the patient list before creating another record, or continue only if a separate record is intended."
   },
   "errors": {
     "generic": "An unexpected error occurred, please try again later or contact support",
