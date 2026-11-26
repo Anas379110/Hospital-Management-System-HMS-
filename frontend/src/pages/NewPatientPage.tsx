@@ -44,7 +44,7 @@ export default function NewPatientPage() {
     formState: { errors },
   } = useForm<CreatePatientInput>({
     resolver: zodResolver(patientSchema),
-    defaultValues: { gender: 'male' },
+    defaultValues: { fullName: '', dateOfBirth: '', phone: '', nationalId: '', address: '', gender: 'male' },
   });
 
   async function submit(input: CreatePatientInput, force = false) {
@@ -59,7 +59,7 @@ export default function NewPatientPage() {
         setDuplicateWarning(true);
         return;
       }
-      setErrorMessage(getApiErrorMessage(err, t('errors.generic')));
+      setErrorMessage(getApiErrorCode(err) === 'AUDIT_PERSISTENCE_FAILED' ? t('departments.auditFailure') : getApiErrorMessage(err, t('errors.generic')));
     }
   }
 
@@ -80,6 +80,7 @@ export default function NewPatientPage() {
               margin="normal"
               label={t('patients.fullName')}
               error={!!errors.fullName}
+              helperText={errors.fullName ? t('patients.invalidName') : undefined}
             />
           )}
         />
@@ -95,6 +96,7 @@ export default function NewPatientPage() {
               label={t('patients.dateOfBirth')}
               InputLabelProps={{ shrink: true }}
               error={!!errors.dateOfBirth}
+              helperText={errors.dateOfBirth ? t('patients.invalidDate') : undefined}
             />
           )}
         />
@@ -118,6 +120,7 @@ export default function NewPatientPage() {
               margin="normal"
               label={t('patients.phone')}
               error={!!errors.phone}
+              helperText={errors.phone ? t('patients.invalidPhone') : undefined}
             />
           )}
         />

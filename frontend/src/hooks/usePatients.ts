@@ -18,7 +18,7 @@ export function usePatientsSearch(search: string) {
       const res = await apiClient.get<Patient[]>('/patients', { params: { search } });
       return res.data;
     },
-    enabled: search.length >= 2, // لا بحث لحرف/حرفين فقط لتقليل الحمل — راجع ARCHITECTURE.md §8
+    enabled: search.length >= 2, // Search begins at two characters to avoid unbounded directory queries.
   });
 }
 
@@ -35,4 +35,8 @@ export function useCreatePatient() {
       queryClient.invalidateQueries({ queryKey: ['patients'] });
     },
   });
+}
+
+export function usePatient(id: string | undefined) {
+  return useQuery({ queryKey: ['patients', id], queryFn: async () => (await apiClient.get<Patient>(`/patients/${id}`)).data, enabled: !!id });
 }

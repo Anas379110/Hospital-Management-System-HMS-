@@ -22,7 +22,7 @@ export class LabController {
 
   @Post('test-orders')
   @Roles(Role.doctor)
-  @Audit('TEST_ORDERED', 'TestOrder')
+  @Audit('TEST_ORDERED', 'TestOrder', true)
   create(@Body() dto: CreateTestOrderDto, @Req() req: AuthedRequest) {
     return this.labService.createOrder(dto, req.user.userId);
   }
@@ -35,7 +35,7 @@ export class LabController {
 
   @Post('test-orders/:id/result')
   @Roles(Role.lab_tech, Role.admin)
-  @Audit('TEST_RESULT_RECORDED', 'TestOrder')
+  @Audit('TEST_RESULT_RECORDED', 'TestOrder', true)
   recordResult(@Param('id') id: string, @Body() dto: RecordResultDto, @Req() req: AuthedRequest) {
     return this.labService.recordResult(id, dto, req.user.userId);
   }

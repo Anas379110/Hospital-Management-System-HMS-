@@ -16,6 +16,8 @@ const queryClient = new QueryClient({
 function Root() {
   const { i18n } = useTranslation();
   const direction = i18n.language === 'ar' ? 'rtl' : 'ltr';
+  document.documentElement.dir = direction;
+  document.documentElement.lang = i18n.language;
 
   const cache = useMemo(() => createDirectionalCache(direction), [direction]);
   const theme = useMemo(() => createAppTheme(direction), [direction]);

@@ -1,3 +1,4 @@
+import { withCurrentSessions } from '../helpers/current-session-fixture';
 import { Test } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
@@ -11,8 +12,10 @@ describe('Users (e2e)', () => {
   let jwtService: JwtService;
 
   const prismaMock = {
+    $transaction: jest.fn((callback: (tx: unknown) => unknown): unknown => callback(prismaMock)), $executeRaw: jest.fn(), $queryRaw: jest.fn().mockResolvedValue([]),
     user: {
-      findUnique: jest.fn(),
+      findMany: jest.fn().mockResolvedValue([]),
+      findUnique: jest.fn().mockImplementation(({ where }) => Promise.resolve(where.id ? { id: where.id, isActive: true, role: "admin" } : null)),
       create: jest.fn().mockImplementation(({ data }) =>
         Promise.resolve({ id: 'u-new', ...data, passwordHash: undefined }),
       ),
@@ -24,7 +27,7 @@ describe('Users (e2e)', () => {
     process.env.JWT_SECRET = 'test-secret-key-for-e2e-only';
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
       .overrideProvider(PrismaService)
-      .useValue(prismaMock)
+      .useValue(withCurrentSessions(prismaMock, {"u1": "receptionist", "admin1": "admin"}))
       .compile();
 
     app = moduleRef.createNestApplication();
@@ -52,7 +55,7 @@ describe('Users (e2e)', () => {
   });
 
   it('POST /users بدور admin → 201، بلا تسريب passwordHash بالاستجابة', async () => {
-    prismaMock.user.findUnique.mockResolvedValue(null);
+    prismaMock.user.findUnique.mockImplementation(({ where }) => Promise.resolve(where.id ? { id: where.id, isActive: true, role: "admin" } : null));
     const token = await jwtService.signAsync({ sub: 'admin1', username: 'admin', role: 'admin' });
 
     const res = await request(app.getHttpServer())
@@ -74,4 +77,20 @@ describe('Users (e2e)', () => {
 
     expect(res.status).toBe(400);
   });
+  it('GET /users enforces admin and search bounds', async () => {
+    const admin = await jwtService.signAsync({ sub: 'admin1', username: 'admin', role: 'admin' });
+    const rec = await jwtService.signAsync({ sub: 'u1', username: 'rec', role: 'receptionist' });
+    expect((await request(app.getHttpServer()).get('/api/v1/users?search=demo').set('Authorization', `Bearer ${rec}`)).status).toBe(403);
+    for (const search of ['', 'a', '   ', 'a'.repeat(101)]) expect((await request(app.getHttpServer()).get('/api/v1/users').query({ search }).set('Authorization', `Bearer ${admin}`)).status).toBe(400);
+    const result = await request(app.getHttpServer()).get('/api/v1/users?search=demo').set('Authorization', `Bearer ${admin}`);
+    expect(result.status).toBe(200); expect(result.body).toEqual([]);
+  });
+
+  it('create trims identity, bounds data and rejects bcrypt byte truncation', async () => {
+    const token = await jwtService.signAsync({ sub: 'admin1', username: 'admin', role: 'admin' });
+    for (const body of [{ ...newUser, username: '   ' }, { ...newUser, username: 'x'.repeat(101) }, { ...newUser, fullName: '  ' }, { ...newUser, fullName: 'x'.repeat(201) }, { ...newUser, password: 'é'.repeat(37) }]) expect((await request(app.getHttpServer()).post('/api/v1/users').set('Authorization', `Bearer ${token}`).send(body)).status).toBe(400);
+    const result = await request(app.getHttpServer()).post('/api/v1/users').set('Authorization', `Bearer ${token}`).send({ ...newUser, username: '  trimmed  ', fullName: '  Fictional Name  ' });
+    expect(result.status).toBe(201); expect(result.body.username).toBe('trimmed'); expect(result.body.fullName).toBe('Fictional Name');
+  });
+
 });

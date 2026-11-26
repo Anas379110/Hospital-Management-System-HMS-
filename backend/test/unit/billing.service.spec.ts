@@ -4,8 +4,12 @@ import { BillingService } from '../../src/modules/billing/billing.service';
 import { PrismaService } from '../../src/prisma/prisma.service';
 
 interface TxMock {
-  invoice: { findUnique: jest.Mock; update: jest.Mock };
+  patient: { findUnique: jest.Mock }; admission: { findUnique: jest.Mock };
+  user: { findUnique: jest.Mock }; auditLog: { create: jest.Mock };
+  $queryRaw: jest.Mock;
+  invoice: { create: jest.Mock; findUnique: jest.Mock; update: jest.Mock };
   payment: { create: jest.Mock };
+  invoiceItem: { create: jest.Mock };
 }
 
 describe('BillingService', () => {
@@ -13,21 +17,28 @@ describe('BillingService', () => {
   let tx: TxMock;
   let prisma: {
     $transaction: jest.Mock;
-    invoice: { create: jest.Mock; findUnique: jest.Mock };
+    invoice: { create: jest.Mock; findUnique: jest.Mock; update: jest.Mock };
     invoiceItem: { create: jest.Mock };
   };
 
   beforeEach(async () => {
     tx = {
-      invoice: { findUnique: jest.fn(), update: jest.fn() },
+      patient: { findUnique: jest.fn().mockResolvedValue({ id: "p1" }) }, admission: { findUnique: jest.fn() },
+      user: { findUnique: jest.fn().mockResolvedValue({ isActive: true, role: "billing_clerk" }) }, auditLog: { create: jest.fn().mockResolvedValue({}) },
+      $queryRaw: jest.fn().mockResolvedValue([]),
+      invoice: { create: jest.fn(), findUnique: jest.fn(), update: jest.fn() },
       payment: { create: jest.fn() },
+      invoiceItem: { create: jest.fn() },
     };
     prisma = {
       $transaction: jest.fn((callback: (txArg: TxMock) => unknown) => callback(tx)),
-      invoice: { create: jest.fn(), findUnique: jest.fn() },
+      invoice: { create: jest.fn(), findUnique: jest.fn(), update: jest.fn() },
       invoiceItem: { create: jest.fn() },
     };
 
+    tx.invoice = prisma.invoice as typeof tx.invoice;
+    tx.invoice.update = jest.fn().mockImplementation(({ where, data }) => Promise.resolve({ id: where.id, ...data }));
+    tx.invoiceItem = prisma.invoiceItem;
     const moduleRef = await Test.createTestingModule({
       providers: [BillingService, { provide: PrismaService, useValue: prisma }],
     }).compile();
@@ -143,7 +154,7 @@ describe('BillingService', () => {
       });
 
       await expect(
-        service.addItem('inv-1', { description: 'بند إضافي', quantity: 1, unitPrice: 100 }),
+        service.addItem('inv-1', { description: 'بند إضافي', quantity: 1, unitPrice: 100 }, 'clerk-1'),
       ).rejects.toThrow(ConflictException);
       expect(prisma.invoiceItem.create).not.toHaveBeenCalled();
     });

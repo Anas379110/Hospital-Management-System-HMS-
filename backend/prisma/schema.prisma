@@ -1,4 +1,4 @@
-// database/schema.prisma — مصدر الحقيقة لبنية قاعدة البيانات (MVP)
+// backend/prisma/schema.prisma — مصدر الحقيقة لبنية قاعدة البيانات (MVP)
 // يُستخدم مع: npx prisma migrate dev / npx prisma migrate deploy
 
 datasource db {
@@ -318,7 +318,7 @@ model Admission {
 model AuditLog {
   id         String   @id @default(uuid())
   userId     String   @map("user_id")
-  user       User     @relation(fields: [userId], references: [id])
+  user       User     @relation(fields: [userId], references: [id], onUpdate: Restrict)
   action     String
   entityType String   @map("entity_type")
   entityId   String   @map("entity_id")

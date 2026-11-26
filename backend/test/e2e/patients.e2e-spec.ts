@@ -1,3 +1,4 @@
+import { withCurrentSessions } from '../helpers/current-session-fixture';
 import { Test } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
@@ -16,11 +17,14 @@ describe('Patients (e2e)', () => {
   let jwtService: JwtService;
 
   const prismaMock = {
+    $executeRaw: jest.fn().mockResolvedValue(1),
+    $queryRaw: jest.fn().mockResolvedValue([{ next: 1n }]),
+    $transaction: jest.fn((callback: (tx: unknown) => unknown): unknown => callback(prismaMock)),
     patient: {
       count: jest.fn().mockResolvedValue(0),
       findFirst: jest.fn().mockResolvedValue(null),
       findUnique: jest.fn(),
-      create: jest.fn().mockImplementation(({ data }) => Promise.resolve({ id: 'p1', ...data })),
+      create: jest.fn().mockImplementation(({ data }) => Promise.resolve({ id: 'efb8a802-7a25-5450-b223-5e81e4ec0e19', ...data })),
       update: jest.fn(),
       findMany: jest.fn(),
     },
@@ -28,7 +32,7 @@ describe('Patients (e2e)', () => {
       create: jest.fn().mockResolvedValue({}),
     },
     user: {
-      findUnique: jest.fn(),
+      findUnique: jest.fn().mockResolvedValue({ id: "u1", role: "receptionist", isActive: true }),
       create: jest.fn(),
       update: jest.fn(),
     },
@@ -41,7 +45,7 @@ describe('Patients (e2e)', () => {
       imports: [AppModule],
     })
       .overrideProvider(PrismaService)
-      .useValue(prismaMock)
+      .useValue(withCurrentSessions(prismaMock, {"u1": "doctor", "u2": "receptionist"}))
       .compile();
 
     app = moduleRef.createNestApplication();

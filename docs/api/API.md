@@ -16,6 +16,7 @@
 | POST | `/auth/login` | تسجيل دخول (username+password) → JWT | عام |
 | POST | `/auth/logout` | إبطال الجلسة الحالية | مصادَق عليه |
 | GET | `/auth/me` | بيانات المستخدم الحالي | مصادَق عليه |
+| GET | `/users?search=` | بحث إداري بالاسم أو اسم المستخدم، حرفان إلى100، أول50نتيجة، دون بيانات اعتماد | Admin فقط |
 | POST | `/users` | إنشاء مستخدم جديد | Admin فقط |
 | PATCH | `/users/{id}/status` | تفعيل/تعطيل مستخدم | Admin فقط |
 
@@ -79,3 +80,14 @@
 | POST | `/prescriptions/{id}/dispense` | صرف وصفة — خصم مخزون ذري (FR-6.3/6.4) | Pharmacist, Admin |
 
 خطأ نقص المخزون: `409` بكود `INSUFFICIENT_STOCK`.
+
+
+## Appointment schedule query contract, local November 2026 revision
+
+`GET /appointments` accepts optional `doctor_id` (UUID), legacy `date` (strict YYYY-MM-DD UTC day), paired `start`/`end` (timezone-qualified ISO instants, start-inclusive/end-exclusive, at most 31 days) and optional `page` (integer 1..10000).
+
+Without date or range, including doctor-only requests, it defaults to the current UTC calendar day. This no longer returns all historical appointments. Explicit start/end takes precedence over date. UI sends local-midnight to next-local-midnight instants, so selected day and displayed timezone agree.
+
+With `page`, returns an array of at most 100 appointments, ordered by scheduled time then ID. Empty page means no more rows. UI provides Previous/Next; exactly 100 items may require one extra empty page to discover the end. Live changes can shift offset pages; no stable snapshot or cursor guarantee. Without `page`, the compatibility response permits at most 500 and rejects larger ranges explicitly with 400 APPOINTMENT_RANGE_TOO_LARGE, never silent truncation.
+
+Read fields include appointment data plus selected patient name/MRN, doctor name, department Arabic/English names and nullable encounter ID. No doctor credentials or full User relation is returned. Options route `GET /appointments/options` is restricted to Admin/Receptionist/Doctor and returns active doctor ID/name and department ID/names only.

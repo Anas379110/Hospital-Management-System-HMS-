@@ -1,0 +1,101 @@
+name: HMS verification
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: hms-ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: hms_test
+          POSTGRES_PASSWORD: isolated-ci-only
+          POSTGRES_DB: hms_test_ci
+        ports: [5432:5432]
+        options: >-
+          --health-cmd "pg_isready -U hms_test -d hms_test_ci"
+          --health-interval 5s --health-timeout 5s --health-retries 12
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4 verified tag
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4 verified tag
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+      - run: npm ci --ignore-scripts --no-fund
+        working-directory: backend
+      - run: node node_modules/prisma/build/index.js generate
+        working-directory: backend
+      - run: npm audit --omit=dev --audit-level=high
+        working-directory: backend
+      - run: npm run lint
+        working-directory: backend
+      - run: npm run build
+        working-directory: backend
+      - run: npm test -- --runInBand
+        working-directory: backend
+      - run: npm run test:e2e -- --runInBand
+        working-directory: backend
+      - run: node test-real-postgres/concurrency.mjs
+        working-directory: backend
+        env:
+          # Migration URL is owner-only; the test creates and verifies a non-owner runtime URL.
+          HMS_TEST_DATABASE_URL: postgresql://hms_test:isolated-ci-only@127.0.0.1:5432/hms_test_ci?schema=public&connection_limit=8
+      - run: npm ci --ignore-scripts --no-fund
+        working-directory: frontend
+      - run: npm audit --omit=dev --audit-level=high
+        working-directory: frontend
+      - run: npm run lint
+        working-directory: frontend
+      - run: npm test
+        working-directory: frontend
+      - run: npm run build
+        working-directory: frontend
+      - run: node node_modules/playwright/cli.js install --with-deps chromium
+        working-directory: frontend
+      - run: createdb -h 127.0.0.1 -U hms_test hms_test_browser && createdb -h 127.0.0.1 -U hms_test hms_test_stock && createdb -h 127.0.0.1 -U hms_test hms_test_workflows && createdb -h 127.0.0.1 -U hms_test hms_test_appointments && createdb -h 127.0.0.1 -U hms_test hms_test_billing && createdb -h 127.0.0.1 -U hms_test hms_test_users
+        env:
+          PGPASSWORD: isolated-ci-only
+      - run: node test-real-browser/clinical.mjs
+        working-directory: frontend
+        env:
+          HMS_BROWSER_DATABASE_URL: postgresql://hms_test:isolated-ci-only@127.0.0.1:5432/hms_test_browser?schema=public&connection_limit=8
+      - run: node test-real-browser/stock.mjs
+        working-directory: frontend
+        env:
+          HMS_BROWSER_DATABASE_URL: postgresql://hms_test:isolated-ci-only@127.0.0.1:5432/hms_test_stock?schema=public&connection_limit=8
+      - run: node test-real-browser/workflows.mjs
+        working-directory: frontend
+        env:
+          HMS_BROWSER_DATABASE_URL: postgresql://hms_test:isolated-ci-only@127.0.0.1:5432/hms_test_workflows?schema=public&connection_limit=8
+      - run: node test-real-browser/appointments.mjs
+        working-directory: frontend
+        env:
+          HMS_BROWSER_DATABASE_URL: postgresql://hms_test:isolated-ci-only@127.0.0.1:5432/hms_test_appointments?schema=public&connection_limit=8
+      - run: node test-real-browser/billing.mjs
+        working-directory: frontend
+        env:
+          HMS_BROWSER_DATABASE_URL: postgresql://hms_test:isolated-ci-only@127.0.0.1:5432/hms_test_billing?schema=public&connection_limit=8
+      - run: node test-real-browser/users.mjs
+        working-directory: frontend
+        env:
+          HMS_BROWSER_DATABASE_URL: postgresql://hms_test:isolated-ci-only@127.0.0.1:5432/hms_test_users?schema=public&connection_limit=8
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4 verified tag
+        if: always()
+        with:
+          name: postgres-regression
+          path: |
+            backend/postgres-regression.json
+            frontend/browser-artifacts
+          if-no-files-found: ignore
+          retention-days: 7

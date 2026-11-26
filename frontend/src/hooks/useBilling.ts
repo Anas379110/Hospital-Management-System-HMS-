@@ -44,3 +44,14 @@ export function useRecordPayment() {
     },
   });
 }
+
+export function useAddInvoiceItem() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ invoiceId, item }: { invoiceId: string; item: CreateInvoiceInput['items'][number] }) =>
+      (await apiClient.post(`/invoices/${invoiceId}/items`, item)).data,
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['invoices', variables.invoiceId] });
+    },
+  });
+}
