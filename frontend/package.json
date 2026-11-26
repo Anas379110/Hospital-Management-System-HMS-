@@ -1,0 +1,28 @@
+{
+  "name": "hms-fictional-demo-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc --project tsconfig.json && vite build --config vite.config.ts"
+  },
+  "dependencies": {
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "@mui/material": "5.18.0",
+    "@emotion/react": "11.14.0",
+    "@emotion/styled": "11.14.1",
+    "@emotion/cache": "11.14.0",
+    "i18next": "23.16.8",
+    "react-i18next": "15.7.4",
+    "stylis": "4.4.0",
+    "stylis-plugin-rtl": "2.1.1"
+  },
+  "devDependencies": {
+    "vite": "7.3.8",
+    "@vitejs/plugin-react": "4.7.0",
+    "typescript": "5.9.3",
+    "@types/react": "18.3.31",
+    "@types/react-dom": "18.3.7"
+  },
+  "type": "module"
+}
