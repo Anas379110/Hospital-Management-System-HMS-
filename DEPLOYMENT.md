@@ -1,81 +1,17 @@
-# DEPLOYMENT.md — خطة النشر
+# Fictional demo deployment plan
 
-**الحالة:** خطة موثَّقة — **لم يُنفَّذ أي نشر فعلي بعد** (راجع `PROJECT-AUDIT.md` Blocker #1: لا Migration حقيقية بعد على DB حقيقية).
+No qualified functional hosted release is claimed. Isolated local PostgreSQL migration/concurrency tests pass. Existing read-only showcase is separate. Historic on-premise product design is not a request to commission a real hospital system.
 
-## 1. Hosting
-On-Premise بالكامل داخل المشفى (Decision 003) — لا Cloud، لا اعتماد إنترنت خارجي للوظائف الأساسية.
+## Pre-release gates
 
-## 2. مواصفات الخادم
-متوسط الأداء (Decision 005) — **NEEDS USER DECISION**: أرقام دقيقة (CPU/RAM/Storage) لم تُحدَّد بعد. توصية أولية للبدء الآمن:
-- CPU: 4 أنوية على الأقل
-- RAM: 8GB على الأقل (Node.js + PostgreSQL على نفس الخادم في هذه المرحلة)
-- Storage: SSD يفضَّل (أداء قواعد بيانات)، مساحة كافية لنمو بيانات 10,000+ مريض + نسخ احتياطية محلية
-- نظام التشغيل: Ubuntu Server LTS (راجع TECH-STACK.md)
-- **UPS إلزامي** (راجع ARCHITECTURE.md §7 — انقطاع الكهرباء خطر مسجَّل بالسياق السوري)
+Use reviewed source on a separate branch with successful actual CI, free standard runner, no paid services or converting trials. Run actual staging/end-to-end checks before replacing the showcase. Resolve public session isolation, no reusable privileged seed login, audit audience/retention, chosen persistence/hosting terms, TLS/CORS and environment separation. No real patient/staff/payment data.
 
-## 3. خطوات النشر الأولى (لم تُنفَّذ بعد — هذا هو الترتيب المطلوب فعلياً)
-```bash
-# 1. تثبيت المتطلبات على الخادم
-sudo apt update && sudo apt install -y nodejs postgresql nginx
+## Build and startup contract
 
-# 2. إعداد قاعدة البيانات
-sudo -u postgres createdb hms_db
-sudo -u postgres createuser hms_user --pwprompt
+Node22, locked npm ci --ignore-scripts in backend and frontend. Explicit backend Prisma generation, lint/tests/build; frontend lint/tests/build. Actual backend build entry is backend/dist/src/main.js. From backend run npm run start:prod, which executes node dist/src/main.js. The startup contract has been exercised as a child process against isolated PostgreSQL and a protected HTTP401 readiness check, not a hosted health check.
 
-# 3. Backend
-cd backend
-npm install
-cp ../.env.example .env  # عدّل DATABASE_URL, JWT_SECRET (قيمة عشوائية قوية فعلية)، FRONTEND_URL
-npx prisma migrate deploy   # ⚠️ أول تنفيذ فعلي لهذا الأمر بكل تاريخ المشروع — راجع النتيجة بعناية
-# طبّق يدوياً: database/migrations/manual-sql/appointments_unique_partial_index.sql
-npx prisma db seed          # بيانات تجريبية فقط — احذف/عدّل قبل بيانات حقيقية
-npm run build
-pm2 start dist/main.js --name hms-backend   # أو systemd، راجع TECH-STACK.md
+Supply DATABASE_URL, JWT_SECRET and FRONTEND_URL through approved secret configuration on the chosen target. Never commit live values. Migration identity must be separate from restricted application runtime. Additive migrations include active allocation constraints and audit actor restriction; review/apply only with target-specific authorization. Do not run manual duplicate indexes or fictional seed scripts blindly.
 
-# 4. Frontend
-cd frontend
-npm install
-npm run build
-# انسخ frontend/dist/ لمجلد Nginx (مثال: /var/www/hms)
+## Recovery and operations
 
-# 5. Nginx (Reverse Proxy)
-# - يوجّه / إلى frontend/dist (Static)
-# - يوجّه /api إلى http://localhost:3000
-# - TLS داخلي (شهادة ذاتية التوقيع أو CA داخلي للمشفى)
-```
-
-## 4. Environments
-- **development**: محلي على أجهزة المطورين (كما استُخدم طوال هذا المشروع)
-- **staging**: **NEEDS USER DECISION** — هل يوجد خادم اختبار منفصل قبل الإنتاج؟ موصى به قبل نقل بيانات مرضى حقيقيين.
-- **production**: الخادم الفعلي داخل المشفى
-
-لا تُستخدم قاعدة بيانات Production أثناء التطوير أو الاختبار — قاعدة منفصلة دائماً (`hms_db` إنتاج، `hms_test` اختبار، راجع `TESTING.md`).
-
-## 5. Backup & Recovery (Draft — يحتاج اختباراً فعلياً بعد النشر)
-- **التكرار:** نسخ احتياطي يومي تلقائي (`pg_dump` مجدول عبر Background Job داخلي — راجع ARCHITECTURE.md §10)
-- **الاحتفاظ:** **NEEDS USER DECISION** — كم يوم/شهر يُحتفَظ بالنسخ؟ (يتقاطع مع سياسة الاحتفاظ القانونية بقانون سوريا 12/2024، راجع SECURITY.md)
-- **التخزين:** وسيط منفصل فعلياً عن خادم الإنتاج (قرص خارجي/خادم ثانٍ) — لا نسخ احتياطي على نفس القرص فقط
-- **RTO/RPO:** **NEEDS USER DECISION** — لم تُحدَّد أرقام مستهدفة بعد
-- **⚠️ لا تُعتبر أي استراتيجية Backup ناجحة حتى يُختبَر الاستعادة (Restore) فعلياً** — لم يحدث بعد
-
-## 6. Monitoring & Logging
-- Health Check: `GET /health` (يُضاف إن لم يوجد بعد — تحقق قبل الاعتماد عليه)
-- سجلات محلية منظَّمة (Winston + Daily Rotate) — راجع TECH-STACK.md
-- لا أدوات Cloud Monitoring (Datadog/Sentry) — بيئة معزولة (راجع ARCHITECTURE.md §11)
-- **NEEDS USER DECISION**: هل يُضاف Grafana+Prometheus محلياً لاحقاً؟ غير حرج لبداية الاستخدام.
-
-## 7. Rollback Plan
-- **NEEDS USER DECISION / TODO**: لا خطة Rollback موثَّقة بعد بخطوات محددة. الحد الأدنى المقترح:
-  1. إيقاف الخدمة الجديدة (`pm2 stop hms-backend`)
-  2. استعادة آخر نسخة كود ناجحة معروفة (Git tag/commit)
-  3. استعادة نسخة DB الاحتياطية إن تغيّر Schema بشكل غير متوافق
-  4. إعادة التشغيل والتحقق
-
-## 8. قبل أول استخدام فعلي على مرضى حقيقيين — Checklist
-- [ ] `prisma migrate deploy` نُفِّذ فعلياً بنجاح على DB حقيقية
-- [ ] كل كلمات المرور التجريبية (`ChangeMe123!`) غُيِّرت
-- [ ] `JWT_SECRET` قيمة عشوائية قوية حقيقية (لا القيمة الافتراضية)
-- [ ] Backup يومي مُفعَّل ومُختبَر (Restore فعلي مرة واحدة على الأقل)
-- [ ] UAT (راجع `docs/testing/UAT-PLAN.md`) نُفِّذ فعلياً وأُغلقت كل الـ Bugs الحرجة
-- [ ] Finding #4 (`SECURITY-REVIEW.md`) محسوم بقرار صريح
-- [ ] استشارة قانونية محلية حول سياسة الاحتفاظ بالبيانات (راجع `SECURITY.md`)
+Before release verify supported backup/restore on the actual chosen arrangement, independent backup storage, rollback to the known source/configuration, migration compatibility and health checks. Retention/RTO/RPO are not invented. Local test artifacts are retained separately, not deployed. No cancellation/purge policy is silently implemented. Do not change account billing/settings to overcome a banner without explicit scope.

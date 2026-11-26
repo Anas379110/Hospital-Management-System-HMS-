@@ -36,3 +36,14 @@ export function useAdmitPatient() {
     },
   });
 }
+
+export function useDischargePatient() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ admissionId, dischargeNotes }: { admissionId: string; dischargeNotes: string }) => {
+      const res = await apiClient.post(`/admissions/${admissionId}/discharge`, { dischargeNotes });
+      return res.data;
+    },
+    onSuccess: () => { void queryClient.invalidateQueries({ queryKey: ['departments'] }); },
+  });
+}

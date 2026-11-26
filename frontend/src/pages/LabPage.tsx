@@ -16,15 +16,14 @@ import {
   Typography,
 } from '@mui/material';
 import { usePendingTestOrders, useRecordTestResult } from '../hooks/useLab';
-import { getApiErrorMessage } from '../api/client';
+import { useTranslation } from 'react-i18next';
+import { getApiErrorCode, getApiErrorMessage } from '../api/client';
 import type { PendingTestOrder } from '../types/lab';
 
-const typeLabel: Record<PendingTestOrder['testType'], string> = {
-  lab: 'مختبر',
-  radiology: 'أشعة',
-};
+
 
 export default function LabPage() {
+  const { t } = useTranslation();
   const { data: pending, isLoading } = usePendingTestOrders();
   const recordResult = useRecordTestResult();
 
@@ -42,20 +41,20 @@ export default function LabPage() {
       setResult('');
       setResultNotes('');
     } catch (err) {
-      setError(getApiErrorMessage(err, 'تعذَّر حفظ النتيجة'));
+      setError(getApiErrorCode(err) === 'AUDIT_PERSISTENCE_FAILED' ? t('departments.auditFailure') : getApiErrorMessage(err, t('errors.generic')));
     }
   }
 
   return (
-    <Box p={4} maxWidth={760} mx="auto">
+    <Box sx={{ p: { xs: 2, sm: 4 } }} maxWidth={760} mx="auto">
       <Typography variant="h5" fontWeight={700} mb={3}>
-        المختبر والأشعة — طلبات بانتظار التنفيذ
+        {t('lab.title')}
       </Typography>
 
       {isLoading && <CircularProgress />}
 
       {!isLoading && pending && pending.length === 0 && (
-        <Typography color="text.secondary">لا توجد طلبات معلَّقة حالياً</Typography>
+        <Typography color="text.secondary">{t('lab.empty')}</Typography>
       )}
 
       <Stack gap={2}>
@@ -70,12 +69,12 @@ export default function LabPage() {
                 </Typography>
                 <Typography color="text.secondary">{order.testName}</Typography>
                 <Stack direction="row" gap={1} mt={1}>
-                  <Chip label={typeLabel[order.testType]} size="small" />
-                  <Chip label={`الطبيب: ${order.orderedByUser.fullName}`} size="small" />
+                  <Chip label={t(`emr.${order.testType}`)} size="small" />
+                  <Chip label={`${t('pharmacy.doctor')}: ${order.orderedByUser.fullName}`} size="small" />
                 </Stack>
               </Box>
               <Button variant="contained" onClick={() => setDialogOrder(order)}>
-                تسجيل النتيجة
+                {t('lab.record')}
               </Button>
             </CardContent>
           </Card>
@@ -83,12 +82,12 @@ export default function LabPage() {
       </Stack>
 
       <Dialog open={!!dialogOrder} onClose={() => setDialogOrder(null)} fullWidth maxWidth="sm">
-        <DialogTitle>تسجيل نتيجة — {dialogOrder?.testName}</DialogTitle>
+        <DialogTitle>{t('lab.record')} {dialogOrder?.testName}</DialogTitle>
         <DialogContent>
           <TextField
             fullWidth
             margin="normal"
-            label="النتيجة"
+            label={t('lab.result')}
             multiline
             minRows={3}
             value={result}
@@ -97,7 +96,7 @@ export default function LabPage() {
           <TextField
             fullWidth
             margin="normal"
-            label="ملاحظات إضافية (اختياري)"
+            label={t('lab.notes')}
             value={resultNotes}
             onChange={(e) => setResultNotes(e.target.value)}
           />
@@ -108,9 +107,9 @@ export default function LabPage() {
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDialogOrder(null)}>إلغاء</Button>
-          <Button variant="contained" onClick={handleSubmit} disabled={recordResult.isPending}>
-            حفظ
+          <Button onClick={() => setDialogOrder(null)}>{t('lab.cancel')}</Button>
+          <Button variant="contained" onClick={handleSubmit} disabled={recordResult.isPending || !result.trim()}>
+            {t('lab.save')}
           </Button>
         </DialogActions>
       </Dialog>

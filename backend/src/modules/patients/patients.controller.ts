@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
+import { PATIENT_WRITE_ROLES } from '../../common/transaction-audit';
 import { PatientsService } from './patients.service';
 import { CreatePatientDto } from './dto/create-patient.dto';
 import { UpdatePatientDto } from './dto/update-patient.dto';
@@ -22,8 +23,8 @@ export class PatientsController {
 
   // FR-2.1
   @Post()
-  @Roles(Role.receptionist, Role.admin)
-  @Audit('PATIENT_CREATED', 'Patient')
+  @Roles(...PATIENT_WRITE_ROLES)
+  @Audit('PATIENT_CREATED', 'Patient', true)
   create(
     @Body() dto: CreatePatientDto,
     @Query('force') force: string,
@@ -47,10 +48,10 @@ export class PatientsController {
 
   // FR-2.4
   @Patch(':id')
-  @Roles(Role.receptionist, Role.admin)
-  @Audit('PATIENT_UPDATED', 'Patient')
-  update(@Param('id') id: string, @Body() dto: UpdatePatientDto) {
-    return this.patientsService.update(id, dto);
+  @Roles(...PATIENT_WRITE_ROLES)
+  @Audit('PATIENT_UPDATED', 'Patient', true)
+  update(@Param('id') id: string, @Body() dto: UpdatePatientDto, @Req() req: AuthedRequest) {
+    return this.patientsService.update(id, dto, req.user.userId);
   }
 
   // FR-4.3

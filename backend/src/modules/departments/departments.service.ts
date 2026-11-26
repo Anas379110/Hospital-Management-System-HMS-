@@ -20,9 +20,18 @@ export class DepartmentsService {
     return department;
   }
 
-  async getBeds(departmentId: string) {
+  async getBeds(departmentId: string, includeActivePatient = false) {
     await this.assertExists(departmentId);
-    return this.prisma.bed.findMany({ where: { departmentId } });
+    return this.prisma.bed.findMany({
+      where: { departmentId },
+      select: {
+        id: true, departmentId: true, bedNumber: true, status: true,
+        ...(includeActivePatient ? { admissions: {
+          where: { dischargedAt: null },
+          select: { id: true, patient: { select: { id: true, mrn: true, fullName: true } } },
+        } } : {}),
+      },
+    });
   }
 
   // US-5 / FR-5.4: إحصائية سريعة لحالة الأسرّة

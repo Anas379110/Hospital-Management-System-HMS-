@@ -23,9 +23,9 @@ export class PharmacyController {
 
   @Post('medications')
   @Roles(Role.pharmacist, Role.admin)
-  @Audit('MEDICATION_CREATED', 'Medication')
-  createMedication(@Body() dto: CreateMedicationDto) {
-    return this.pharmacyService.createMedication(dto);
+  @Audit('MEDICATION_CREATED', 'Medication', true)
+  createMedication(@Body() dto: CreateMedicationDto, @Req() req: AuthedRequest) {
+    return this.pharmacyService.createMedication(dto, req.user.userId);
   }
 
   @Get('medications')
@@ -42,9 +42,9 @@ export class PharmacyController {
 
   @Patch('medications/:id/stock')
   @Roles(Role.pharmacist, Role.admin)
-  @Audit('MEDICATION_STOCK_ADJUSTED', 'Medication')
-  adjustStock(@Param('id') id: string, @Body() dto: AdjustStockDto) {
-    return this.pharmacyService.adjustStock(id, dto.delta, dto.reason);
+  @Audit('MEDICATION_STOCK_ADJUSTED', 'Medication', true)
+  adjustStock(@Param('id') id: string, @Body() dto: AdjustStockDto, @Req() req: AuthedRequest) {
+    return this.pharmacyService.adjustStock(id, dto.delta, dto.reason, req.user.userId, dto.reasonCode);
   }
 
   @Get('prescriptions/pending')
@@ -55,7 +55,7 @@ export class PharmacyController {
 
   @Post('prescriptions/:id/dispense')
   @Roles(Role.pharmacist, Role.admin)
-  @Audit('PRESCRIPTION_DISPENSED', 'Prescription')
+  @Audit('PRESCRIPTION_DISPENSED', 'Prescription', true)
   dispense(
     @Param('id') id: string,
     @Body() dto: DispensePrescriptionDto,

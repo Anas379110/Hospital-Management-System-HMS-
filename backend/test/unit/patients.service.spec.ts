@@ -6,6 +6,11 @@ import { PrismaService } from '../../src/prisma/prisma.service';
 describe('PatientsService', () => {
   let service: PatientsService;
   let prisma: {
+    $transaction: jest.Mock;
+    $executeRaw: jest.Mock;
+    $queryRaw: jest.Mock;
+    user: { findUnique: jest.Mock };
+    auditLog: { create: jest.Mock };
     patient: {
       count: jest.Mock;
       findFirst: jest.Mock;
@@ -18,6 +23,11 @@ describe('PatientsService', () => {
 
   beforeEach(async () => {
     prisma = {
+      $transaction: jest.fn(callback => callback(prisma)),
+      $executeRaw: jest.fn().mockResolvedValue(1),
+      $queryRaw: jest.fn().mockImplementation(async () => [{ next: BigInt((await prisma.patient.count()) + 1) }]),
+      user: { findUnique: jest.fn().mockResolvedValue({ id: "user-1", role: "receptionist", isActive: true }) },
+      auditLog: { create: jest.fn().mockResolvedValue({}) },
       patient: {
         count: jest.fn(),
         findFirst: jest.fn(),

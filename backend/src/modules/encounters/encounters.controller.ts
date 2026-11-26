@@ -24,7 +24,7 @@ export class EncountersController {
   // FR-4.1: طبيب فقط يسجل زيارة
   @Post()
   @Roles(Role.doctor)
-  @Audit('ENCOUNTER_CREATED', 'Encounter')
+  @Audit('ENCOUNTER_CREATED', 'Encounter', true)
   create(@Body() dto: CreateEncounterDto, @Req() req: AuthedRequest) {
     return this.encountersService.create(dto, req.user.userId);
   }
@@ -38,15 +38,15 @@ export class EncountersController {
   // FR-4.2
   @Post(':id/prescriptions')
   @Roles(Role.doctor)
-  @Audit('PRESCRIPTION_ADDED', 'Prescription')
-  addPrescription(@Param('id') id: string, @Body() dto: CreatePrescriptionDto) {
-    return this.encountersService.addPrescription(id, dto);
+  @Audit('PRESCRIPTION_ADDED', 'Prescription', true)
+  addPrescription(@Param('id') id: string, @Body() dto: CreatePrescriptionDto, @Req() req: AuthedRequest) {
+    return this.encountersService.addPrescription(id, dto, req.user.userId);
   }
 
   // FR-4.4: حذف منطقي فقط، لصاحب السجل أو Admin (يُفرض داخل Service)
   @Delete(':id')
   @Roles(Role.doctor, Role.admin)
-  @Audit('ENCOUNTER_SOFT_DELETED', 'Encounter')
+  @Audit('ENCOUNTER_SOFT_DELETED', 'Encounter', true)
   softDelete(@Param('id') id: string, @Body() dto: DeleteEncounterDto, @Req() req: AuthedRequest) {
     return this.encountersService.softDelete(id, dto.reason, req.user);
   }

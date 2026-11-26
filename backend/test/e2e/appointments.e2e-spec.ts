@@ -1,3 +1,4 @@
+import { withCurrentSessions } from '../helpers/current-session-fixture';
 import { Test } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
@@ -11,9 +12,11 @@ describe('Appointments (e2e)', () => {
   let jwtService: JwtService;
 
   const prismaMock = {
+    patient: { findUnique: jest.fn().mockResolvedValue({id:"p"}) }, department: { findUnique: jest.fn().mockResolvedValue({id:"d"}) }, encounter: { findUnique: jest.fn().mockResolvedValue(null) },
+    $transaction: jest.fn((callback: (tx: unknown) => unknown): unknown => callback(prismaMock)), $queryRaw: jest.fn().mockResolvedValue([]), user: { findUnique: jest.fn().mockImplementation(({where}) => Promise.resolve({ isActive: true, role: where.id === "doctor-1" || where.id === "32320b1d-efd3-535c-85e4-f0d22550437d" ? "doctor" : "receptionist" })) },
     appointment: {
       findFirst: jest.fn(),
-      create: jest.fn().mockImplementation(({ data }) => Promise.resolve({ id: 'appt-1', ...data })),
+      create: jest.fn().mockImplementation(({ data }) => Promise.resolve({ id: 'appt-1', status: 'scheduled', ...data })),
     },
     auditLog: { create: jest.fn().mockResolvedValue({}) },
   };
@@ -22,7 +25,7 @@ describe('Appointments (e2e)', () => {
     process.env.JWT_SECRET = 'test-secret-key-for-e2e-only';
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
       .overrideProvider(PrismaService)
-      .useValue(prismaMock)
+      .useValue(withCurrentSessions(prismaMock, {"u1": "doctor", "u2": "receptionist"}))
       .compile();
 
     app = moduleRef.createNestApplication();
@@ -38,9 +41,9 @@ describe('Appointments (e2e)', () => {
   });
 
   const validAppt = {
-    patientId: 'p1',
-    doctorId: 'doc1',
-    departmentId: 'dept1',
+    patientId: 'efb8a802-7a25-5450-b223-5e81e4ec0e19',
+    doctorId: '32320b1d-efd3-535c-85e4-f0d22550437d',
+    departmentId: '100591de-8185-54ec-840a-dfb496fe8b5f',
     scheduledAt: '2026-09-01T10:00:00.000Z',
   };
 

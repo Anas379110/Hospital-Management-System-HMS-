@@ -23,7 +23,7 @@ export class BillingController {
 
   @Post()
   @Roles(Role.billing_clerk, Role.admin)
-  @Audit('INVOICE_CREATED', 'Invoice')
+  @Audit('INVOICE_CREATED', 'Invoice', true)
   create(@Body() dto: CreateInvoiceDto, @Req() req: AuthedRequest) {
     return this.billingService.createInvoice(dto, req.user.userId);
   }
@@ -36,14 +36,14 @@ export class BillingController {
 
   @Post(':id/items')
   @Roles(Role.billing_clerk, Role.admin)
-  @Audit('INVOICE_ITEM_ADDED', 'InvoiceItem')
-  addItem(@Param('id') id: string, @Body() dto: AddInvoiceItemDto) {
-    return this.billingService.addItem(id, dto);
+  @Audit('INVOICE_ITEM_ADDED', 'InvoiceItem', true)
+  addItem(@Param('id') id: string, @Body() dto: AddInvoiceItemDto, @Req() req: AuthedRequest) {
+    return this.billingService.addItem(id, dto, req.user.userId);
   }
 
   @Post(':id/payments')
   @Roles(Role.billing_clerk, Role.admin)
-  @Audit('PAYMENT_RECORDED', 'Payment')
+  @Audit('PAYMENT_RECORDED', 'Payment', true)
   recordPayment(@Param('id') id: string, @Body() dto: RecordPaymentDto, @Req() req: AuthedRequest) {
     return this.billingService.recordPayment(id, dto, req.user.userId);
   }

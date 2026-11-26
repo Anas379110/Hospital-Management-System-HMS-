@@ -1,4 +1,6 @@
 import { useState, type FormEvent } from 'react';
+import { landingPath } from '../auth/permissions';
+import type { CurrentUser } from '../types/api';
 import { useNavigate } from 'react-router-dom';
 import { Box, Button, Paper, TextField, Typography, Alert } from '@mui/material';
 import { useTranslation } from 'react-i18next';
@@ -21,7 +23,8 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await login(username, password);
-      navigate('/patients');
+      const current = JSON.parse(localStorage.getItem('hms_user') ?? 'null') as CurrentUser | null;
+      navigate(current ? landingPath(current.role) : '/patients');
     } catch (err) {
       setError(getApiErrorMessage(err, t('auth.loginError')));
     } finally {

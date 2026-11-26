@@ -10,6 +10,7 @@ export interface Bed {
   departmentId: string;
   bedNumber: string;
   status: 'available' | 'occupied' | 'maintenance';
+  admissions?: { id: string; patient: { id: string; mrn: string; fullName: string } }[];
 }
 
 export interface BedsSummary {

@@ -41,3 +41,11 @@ export function useDispensePrescription() {
     },
   });
 }
+
+export function useAdjustStock() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...data }: { id: string; delta: number; reasonCode: 'restock' | 'correction' | 'disposal' }) => (await apiClient.patch(`/medications/${id}/stock`, data)).data,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['medications'] }),
+  });
+}

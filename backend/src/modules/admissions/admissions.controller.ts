@@ -1,6 +1,7 @@
 import { Body, Controller, Param, Post, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
+import { ADMISSION_ROLES } from './admission-audit';
 import { AdmissionsService } from './admissions.service';
 import { CreateAdmissionDto } from './dto/create-admission.dto';
 import { DischargeAdmissionDto } from './dto/discharge-admission.dto';
@@ -22,17 +23,17 @@ export class AdmissionsController {
 
   // FR-5.2 / UC-1
   @Post()
-  @Roles(Role.nurse, Role.doctor)
-  @Audit('PATIENT_ADMITTED', 'Admission')
+  @Roles(...ADMISSION_ROLES)
+  @Audit('PATIENT_ADMITTED', 'Admission', true)
   create(@Body() dto: CreateAdmissionDto, @Req() req: AuthedRequest) {
     return this.admissionsService.create(dto, req.user.userId);
   }
 
   // FR-5.3
   @Post(':id/discharge')
-  @Roles(Role.nurse, Role.doctor)
-  @Audit('PATIENT_DISCHARGED', 'Admission')
-  discharge(@Param('id') id: string, @Body() dto: DischargeAdmissionDto) {
-    return this.admissionsService.discharge(id, dto.dischargeNotes);
+  @Roles(...ADMISSION_ROLES)
+  @Audit('PATIENT_DISCHARGED', 'Admission', true)
+  discharge(@Param('id') id: string, @Body() dto: DischargeAdmissionDto, @Req() req: AuthedRequest) {
+    return this.admissionsService.discharge(id, dto.dischargeNotes, req.user.userId);
   }
 }

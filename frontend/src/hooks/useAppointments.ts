@@ -1,13 +1,14 @@
+import { appointmentDayRange } from './appointmentRange';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../api/client';
 import type { Appointment } from '../types/appointments';
 
-export function useAppointments(doctorId?: string, date?: string) {
+export function useAppointments(doctorId?: string, date?: string, page = 1) {
   return useQuery({
-    queryKey: ['appointments', doctorId, date],
+    queryKey: ['appointments', doctorId, date, page],
     queryFn: async () => {
       const res = await apiClient.get<Appointment[]>('/appointments', {
-        params: { doctor_id: doctorId, date },
+        params: { page, doctor_id: doctorId, ...(date ? appointmentDayRange(date) : {}) },
       });
       return res.data;
     },
@@ -45,5 +46,17 @@ export function useCancelAppointment() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] });
     },
+  });
+}
+
+export function useAppointmentOptions() {
+  return useQuery({ queryKey: ['appointments', 'options'], queryFn: async () => (await apiClient.get<{ doctors: { id: string; fullName: string }[]; departments: { id: string; nameAr: string; nameEn: string }[] }>('/appointments/options')).data });
+}
+
+export function useUpdateAppointment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...input }: { id: string; departmentId: string; scheduledAt: string }) => (await apiClient.patch<Appointment>(`/appointments/${id}`, input)).data,
+    onSuccess: () => { void queryClient.invalidateQueries({ queryKey: ['appointments'] }); },
   });
 }

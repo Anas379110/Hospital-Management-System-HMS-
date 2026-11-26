@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import {
+  Alert,
   Box,
   Button,
   Card,
@@ -19,13 +20,20 @@ import {
   useCreateEncounter,
   useAddPrescription,
 } from '../hooks/useEncounters';
+import { getApiErrorCode, getApiErrorMessage } from '../api/client';
+import { usePatient } from '../hooks/usePatients';
 import { usePatientTestResults } from '../hooks/useLab';
 
 export default function PatientDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
-  const { data: records, isLoading } = usePatientRecords(id);
+  const patient = usePatient(id);
+  const recordsQuery = usePatientRecords(id);
+  const { data: records, isLoading } = recordsQuery;
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  function mutationError(err: unknown) { setError(getApiErrorCode(err) === 'AUDIT_PERSISTENCE_FAILED' ? t('departments.auditFailure') : getApiErrorMessage(err, t('errors.generic'))); }
   const { data: testResults } = usePatientTestResults(id);
   const createEncounter = useCreateEncounter();
   const addPrescription = useAddPrescription();
@@ -42,14 +50,20 @@ export default function PatientDetailPage() {
 
   async function handleCreateEncounter() {
     if (!id || !chiefComplaint || !diagnosis) return;
+    setError(null); setSuccess(null);
+    try {
     const encounter = await createEncounter.mutateAsync({ patientId: id, chiefComplaint, diagnosis });
     setActiveEncounterId(encounter.id);
     setChiefComplaint('');
     setDiagnosis('');
+    setSuccess(t('emr.encounterSaved'));
+    } catch (err) { mutationError(err); }
   }
 
   async function handleAddPrescription() {
     if (!activeEncounterId || !medicationName || !dosage || !duration) return;
+    setError(null); setSuccess(null);
+    try {
     await addPrescription.mutateAsync({
       encounterId: activeEncounterId,
       medicationName,
@@ -60,32 +74,38 @@ export default function PatientDetailPage() {
     setDosage('');
     setDuration('');
     setActiveEncounterId(null);
+    setSuccess(t('emr.prescriptionSaved'));
+    } catch (err) { mutationError(err); }
   }
 
   return (
-    <Box p={4} maxWidth={760} mx="auto">
+    <Box sx={{ p: { xs: 2, sm: 4 } }} maxWidth={760} mx="auto">
       <Typography variant="h5" fontWeight={700} mb={3}>
-        {t('patients.title')} — {t('nav.patients')}
+        {t('emr.title')}
       </Typography>
 
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      {success && <Alert severity="success" role="status" sx={{ mb: 2 }}>{success}</Alert>}
+      {recordsQuery.isError && <Alert severity="error" action={<Button onClick={() => void recordsQuery.refetch()}>{t('patients.retry')}</Button>}>{t('errors.generic')}</Alert>}
+      {patient.data && <Typography sx={{ mb: 2 }}>{patient.data.fullName} ({patient.data.mrn})</Typography>}
       {/* FR-4.1: طبيب فقط يسجل زيارة جديدة — الفحص هنا واجهي فقط، RolesGuard بالـ Backend هو الحماية الفعلية */}
-      {isDoctor && (
+      {isDoctor && patient.data && (
         <Card sx={{ mb: 4 }}>
           <CardContent>
             <Typography variant="subtitle1" fontWeight={600} mb={2}>
-              تسجيل زيارة جديدة
+              {t('emr.newEncounter')}
             </Typography>
             <TextField
               fullWidth
               margin="normal"
-              label="الشكوى الرئيسية"
+              label={t('emr.complaint')}
               value={chiefComplaint}
               onChange={(e) => setChiefComplaint(e.target.value)}
             />
             <TextField
               fullWidth
               margin="normal"
-              label="التشخيص"
+              label={t('emr.diagnosis')}
               value={diagnosis}
               onChange={(e) => setDiagnosis(e.target.value)}
             />
@@ -95,36 +115,36 @@ export default function PatientDetailPage() {
               onClick={handleCreateEncounter}
               disabled={createEncounter.isPending || !chiefComplaint || !diagnosis}
             >
-              حفظ الزيارة
+              {t('emr.saveEncounter')}
             </Button>
 
             {/* بعد إنشاء الزيارة مباشرة، يمكن إضافة وصفة لها فوراً — FR-4.2 */}
             {activeEncounterId && (
               <Box mt={3} pt={2} borderTop="1px dashed #ccc">
                 <Typography variant="subtitle2" mb={1}>
-                  إضافة وصفة طبية للزيارة المسجَّلة
+                  {t('emr.addPrescription')}
                 </Typography>
                 <Stack direction="row" gap={2} flexWrap="wrap">
                   <TextField
-                    label="اسم الدواء"
+                    label={t('emr.medication')}
                     value={medicationName}
                     onChange={(e) => setMedicationName(e.target.value)}
                     size="small"
                   />
                   <TextField
-                    label="الجرعة"
+                    label={t('emr.dose')}
                     value={dosage}
                     onChange={(e) => setDosage(e.target.value)}
                     size="small"
                   />
                   <TextField
-                    label="المدة"
+                    label={t('emr.duration')}
                     value={duration}
                     onChange={(e) => setDuration(e.target.value)}
                     size="small"
                   />
-                  <Button variant="outlined" onClick={handleAddPrescription}>
-                    إضافة
+                  <Button variant="outlined" disabled={addPrescription.isPending || !medicationName || !dosage || !duration} onClick={handleAddPrescription}>
+                    {t('emr.add')}
                   </Button>
                 </Stack>
               </Box>
@@ -134,7 +154,7 @@ export default function PatientDetailPage() {
       )}
 
       <Typography variant="subtitle1" fontWeight={600} mb={2}>
-        السجل الطبي الكامل
+        {t('emr.records')}
       </Typography>
 
       {isLoading && (
@@ -144,7 +164,7 @@ export default function PatientDetailPage() {
       )}
 
       {!isLoading && records && records.length === 0 && (
-        <Typography color="text.secondary">لا يوجد سجل طبي سابق لهذا المريض</Typography>
+        <Typography color="text.secondary">{t('emr.empty')}</Typography>
       )}
 
       <Stack gap={2}>
@@ -167,6 +187,7 @@ export default function PatientDetailPage() {
                         key={rx.id}
                         label={`${rx.medicationName} — ${rx.dosage} (${rx.duration})`}
                         size="small"
+                        sx={{ maxWidth: '100%', height: 'auto', '& .MuiChip-label': { whiteSpace: 'normal', overflowWrap: 'anywhere', py: 0.5 } }}
                       />
                     ))}
                   </Stack>
@@ -181,7 +202,7 @@ export default function PatientDetailPage() {
       {testResults && testResults.length > 0 && (
         <>
           <Typography variant="subtitle1" fontWeight={600} mt={4} mb={2}>
-            نتائج المختبر والأشعة
+            {t('emr.results')}
           </Typography>
           <Stack gap={2}>
             {testResults.map((tr) => (
@@ -191,7 +212,7 @@ export default function PatientDetailPage() {
                     {new Date(tr.completedAt).toLocaleDateString(locale)}
                   </Typography>
                   <Typography fontWeight={600}>
-                    {tr.testName} ({tr.testType === 'lab' ? 'مختبر' : 'أشعة'})
+                    {tr.testName} ({tr.testType === 'lab' ? t('emr.lab') : t('emr.radiology')})
                   </Typography>
                   <Typography>{tr.result}</Typography>
                   {tr.resultNotes && (

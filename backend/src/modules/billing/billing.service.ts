@@ -1,5 +1,6 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { requireActor, writeCombinedAudit } from '../../common/transaction-audit';
+import { Prisma, Role } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { AddInvoiceItemDto } from './dto/add-invoice-item.dto';
@@ -33,6 +34,15 @@ export class BillingService {
     return { subtotal, patientResponsibility, totalPaid, remaining };
   }
 
+  private assertSafeItems(items: { quantity: number; unitPrice: number }[]) {
+    let sum = 0;
+    for (const item of items) {
+      const product = item.quantity * item.unitPrice;
+      sum += product;
+      if (!Number.isSafeInteger(product) || !Number.isSafeInteger(sum) || sum > Math.floor(Number.MAX_SAFE_INTEGER / 100)) throw new ConflictException({ error: { code: 'INVOICE_TOTAL_OUT_OF_RANGE', message: 'إجمالي الفاتورة يتجاوز الدقة المدعومة', details: [] } });
+    }
+  }
+
   private deriveStatus(totals: InvoiceTotals): 'unpaid' | 'partial' | 'paid' {
     if (totals.remaining <= 0 && totals.patientResponsibility > 0) return 'paid';
     if (totals.totalPaid > 0) return 'partial';
@@ -41,7 +51,16 @@ export class BillingService {
 
   // FR-8.1
   async createInvoice(dto: CreateInvoiceDto, createdBy: string) {
-    const invoice = await this.prisma.invoice.create({
+    return this.prisma.$transaction(async tx => {
+    await requireActor(tx, createdBy, [Role.billing_clerk, Role.admin]);
+    if (!await tx.patient.findUnique({ where: { id: dto.patientId }, select: { id: true } })) throw new NotFoundException({ error: { code: 'PATIENT_NOT_FOUND', message: 'المريض غير موجود', details: [] } });
+    if (dto.admissionId) {
+      const admission = await tx.admission.findUnique({ where: { id: dto.admissionId }, select: { patientId: true } });
+      if (!admission) throw new NotFoundException({ error: { code: 'ADMISSION_NOT_FOUND', message: 'سجل التسكين غير موجود', details: [] } });
+      if (admission.patientId !== dto.patientId) throw new ConflictException({ error: { code: 'PATIENT_ADMISSION_MISMATCH', message: 'التسكين لا يخص المريض المحدد', details: [] } });
+    }
+    this.assertSafeItems(dto.items);
+    const invoice = await tx.invoice.create({
       data: {
         patientId: dto.patientId,
         admissionId: dto.admissionId,
@@ -51,7 +70,9 @@ export class BillingService {
       },
       include: { items: true, payments: true },
     });
+    await writeCombinedAudit(tx, createdBy, 'INVOICE_CREATED', 'Invoice', invoice.id, [{ type: 'Invoice', before: null, after: invoice }, ...invoice.items.map(item => ({ type: 'InvoiceItem', before: null, after: item }))]);
     return { ...invoice, ...this.computeTotals(invoice.items, invoice.payments, invoice.insuranceCoveragePercent) };
+    });
   }
 
   private async findInvoiceOrThrow(id: string) {
@@ -73,8 +94,12 @@ export class BillingService {
   }
 
   // FR-8.2
-  async addItem(invoiceId: string, dto: AddInvoiceItemDto) {
-    const invoice = await this.findInvoiceOrThrow(invoiceId);
+  async addItem(invoiceId: string, dto: AddInvoiceItemDto, actor: string) {
+    return this.prisma.$transaction(async tx => {
+    await requireActor(tx, actor, [Role.billing_clerk, Role.admin]);
+    await tx.$queryRaw(Prisma.sql`SELECT id FROM invoices WHERE id = ${invoiceId} FOR UPDATE`);
+    const invoice = await tx.invoice.findUnique({ where: { id: invoiceId }, include: { items: true, payments: true } });
+    if (!invoice) throw new NotFoundException({ error: { code: 'INVOICE_NOT_FOUND', message: 'الفاتورة غير موجودة', details: [] } });
     if (invoice.status === 'paid' || invoice.status === 'cancelled') {
       throw new ConflictException({
         error: {
@@ -84,7 +109,11 @@ export class BillingService {
         },
       });
     }
-    return this.prisma.invoiceItem.create({ data: { invoiceId, ...dto } });
+    this.assertSafeItems([...invoice.items, dto]);
+    const item = await tx.invoiceItem.create({ data: { invoiceId, ...dto } });
+    await writeCombinedAudit(tx, actor, 'INVOICE_ITEM_ADDED', 'InvoiceItem', item.id, [{ type: 'Invoice', before: invoice, after: invoice }, { type: 'InvoiceItem', before: null, after: item }]);
+    return item;
+    });
   }
 
   /**
@@ -93,6 +122,8 @@ export class BillingService {
    */
   async recordPayment(invoiceId: string, dto: RecordPaymentDto, recordedBy: string) {
     return this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      await requireActor(tx, recordedBy, [Role.billing_clerk, Role.admin]);
+      await tx.$queryRaw(Prisma.sql`SELECT id FROM invoices WHERE id = ${invoiceId} FOR UPDATE`);
       const invoice = await tx.invoice.findUnique({
         where: { id: invoiceId },
         include: { items: true, payments: true },
@@ -103,6 +134,7 @@ export class BillingService {
         });
       }
 
+      if (invoice.status === 'cancelled') throw new ConflictException({ error: { code: 'INVOICE_LOCKED', message: 'الفاتورة ملغاة ولا تقبل دفعات', details: [] } });
       const totals = this.computeTotals(invoice.items, invoice.payments, invoice.insuranceCoveragePercent);
 
       if (dto.amount > totals.remaining) {
@@ -124,11 +156,12 @@ export class BillingService {
         [...invoice.payments, payment],
         invoice.insuranceCoveragePercent,
       );
-      await tx.invoice.update({
+      const updatedInvoice = await tx.invoice.update({
         where: { id: invoiceId },
         data: { status: this.deriveStatus(newTotals) },
       });
 
+      await writeCombinedAudit(tx, recordedBy, 'PAYMENT_RECORDED', 'Payment', payment.id, [{ type: 'Invoice', before: invoice, after: updatedInvoice }, { type: 'Payment', before: null, after: payment }]);
       return payment;
     });
   }

@@ -6,6 +6,8 @@ import { PrismaService } from '../../src/prisma/prisma.service';
 describe('EncountersService', () => {
   let service: EncountersService;
   let prisma: {
+    $transaction: jest.Mock; $queryRaw: jest.Mock;
+    user: { findUnique: jest.Mock }; patient: { findUnique: jest.Mock }; auditLog: { create: jest.Mock };
     encounter: {
       create: jest.Mock;
       findUnique: jest.Mock;
@@ -18,6 +20,9 @@ describe('EncountersService', () => {
 
   beforeEach(async () => {
     prisma = {
+      $transaction: jest.fn(callback => callback(prisma)), $queryRaw: jest.fn().mockResolvedValue([]),
+      user: { findUnique: jest.fn().mockImplementation(({ where }) => Promise.resolve({ id: where.id, role: where.id.startsWith("admin") ? "admin" : "doctor", isActive: true })) },
+      patient: { findUnique: jest.fn().mockResolvedValue({ id: "patient-1" }) }, auditLog: { create: jest.fn().mockResolvedValue({}) },
       encounter: { create: jest.fn(), findUnique: jest.fn(), update: jest.fn() },
       prescription: { create: jest.fn() },
     };
@@ -57,14 +62,14 @@ describe('EncountersService', () => {
   });
 
   it('addPrescription يضيف وصفة لزيارة موجودة', async () => {
-    prisma.encounter.findUnique.mockResolvedValue({ id: 'enc-1', deletedAt: null });
+    prisma.encounter.findUnique.mockResolvedValue({ id: 'enc-1', doctorId: 'doc-1', deletedAt: null });
     prisma.prescription.create.mockResolvedValue({ id: 'rx-1', medicationName: 'Paracetamol' });
 
     const result = (await service.addPrescription('enc-1', {
       medicationName: 'Paracetamol',
       dosage: '500mg',
       duration: '5 أيام',
-    })) as { medicationName: string };
+    }, 'doc-1')) as { medicationName: string };
 
     expect(result.medicationName).toBe('Paracetamol');
   });
