@@ -1,3 +1,4 @@
+import { validateRateLimitIdentityConfiguration } from './common/rate-limit-tracker';
 import { qualificationIdentity } from './common/qualification-identity';
 import { qualificationGate } from './common/qualification-gate';
 import { DemoCapacityInterceptor } from './common/demo-capacity.interceptor';
@@ -13,6 +14,7 @@ import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 
 /** Shared request contract for production and actual HTTP integration tests. */
 export async function createApplication(options: { logger?: false } = {}) {
+  validateRateLimitIdentityConfiguration();
   const app = await NestFactory.create(AppModule, options);
   app.getHttpAdapter().getInstance().set('trust proxy', trustedProxyAddresses(process.env.HMS_TRUSTED_PROXY_ADDRESSES));
   app.use(qualificationGate());
