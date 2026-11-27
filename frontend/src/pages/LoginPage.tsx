@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import LocaleButton from '../components/LocaleButton';
 import RetentionNotice from '../components/RetentionNotice';
 import { landingPath } from '../auth/permissions';
@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { Box, Button, Paper, TextField, Typography, Alert } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../hooks/useAuth';
-import { getApiErrorMessage } from '../api/client';
+import { getApiErrorCode, getApiErrorMessage, isUnknownWriteOutcome } from '../api/client';
 
 export default function LoginPage() {
   const { t } = useTranslation();
@@ -18,6 +18,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [startCooldown, setStartCooldown] = useState(0);
+  useEffect(() => { if (!startCooldown) return; const timer=window.setInterval(()=>setStartCooldown(value=>Math.max(0,value-1)),1000); return ()=>window.clearInterval(timer); }, [startCooldown]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -42,7 +44,8 @@ export default function LoginPage() {
           {t('app.title')}
         </Typography>
         <RetentionNotice />
-        <Button fullWidth variant="contained" disabled={loading} onClick={async()=>{setLoading(true);setError(null);try{await startDemo();navigate('/');}catch(err){setError((err as {response?:{data?:{error?:{code?:string}}}}).response?.data?.error?.code==='DEMO_CAPACITY_REACHED'?t('demo.capacity'):getApiErrorMessage(err,t('errors.generic')));}finally{setLoading(false);}}}>{t('demo.start')}</Button>
+        <Button fullWidth variant="contained" disabled={loading || startCooldown > 0} onClick={async()=>{if(loading || startCooldown > 0)return;setLoading(true);setError(null);try{await startDemo();navigate('/');}catch(err){if(getApiErrorCode(err)==='DEMO_CAPACITY_REACHED'){setError(t('demo.capacity'));}else if(isUnknownWriteOutcome(err)){setError(t('demo.startUnknown'));setStartCooldown(60);}else setError(getApiErrorMessage(err,t('errors.generic')));}finally{setLoading(false);}}}>{startCooldown > 0 ? t('demo.startCooldown',{seconds:startCooldown}) : t('demo.start')}</Button>
+        {loading && import.meta.env.VITE_PUBLIC_DEMO === 'true' && <Alert severity="info" role="status" sx={{mt:2}}>{t('demo.startWaiting')}</Alert>}
         {error && <Alert severity="error">{error}</Alert>}
         {import.meta.env.VITE_PUBLIC_DEMO !== 'true' && <form onSubmit={handleSubmit}>
           <TextField

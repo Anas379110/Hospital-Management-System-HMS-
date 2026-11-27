@@ -4,6 +4,8 @@ import type { ApiErrorShape } from '../types/api';
 
 export const apiClient = axios.create({
   baseURL: '/api/v1',
+  // Client observation bound only, not cancellation of work on the server.
+  timeout: import.meta.env.VITE_PUBLIC_DEMO === 'true' ? 90_000 : 0,
 });
 
 apiClient.interceptors.request.use((config) => {

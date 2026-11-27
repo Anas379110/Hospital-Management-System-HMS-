@@ -289,7 +289,10 @@
     "actor": "Actor",
     "entity": "Record type",
     "time": "Time",
-    "capacity": "The demo is at capacity. Try again later. Existing visitor workspaces will not be deleted to make room."
+    "capacity": "The demo is at capacity. Try again later. Existing visitor workspaces will not be deleted to make room.",
+    "startWaiting": "Starting your fictional workspace. Free hosting may need time to wake after inactivity. Keep this page open. We will not send another request automatically. A timeout stops waiting here, not work already running on the server.",
+    "startUnknown": "Starting the workspace may have completed, but we did not receive confirmation or a session. Wait one minute, then press Start again yourself. We cannot recover a session whose reply was lost. An unused workspace expires after 24 hours of inactivity, not immediately.",
+    "startCooldown": "Wait {{seconds}} seconds before starting again"
   },
   "audit": {
     "unknownAction": "Recorded action",
