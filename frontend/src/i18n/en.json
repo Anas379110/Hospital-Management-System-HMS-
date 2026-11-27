@@ -59,7 +59,8 @@
     "forbidden": "You do not have access to this workspace.",
     "back": "Go to your workspace",
     "writeUnknown": "The connection ended without a confirmed result. This write may have completed. Do not submit it again until you check the current records and audit log.",
-    "demoBusy": "The demo is busy. This request was not completed. Wait a few seconds before trying again."
+    "demoBusy": "The demo is busy. This request was not completed. Wait a few seconds before trying again.",
+    "cleanupPending": "Demo temporarily paused for maintenance and cleanup. Try again later."
   },
   "roles": {
     "admin": "Administrator",

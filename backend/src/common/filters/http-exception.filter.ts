@@ -61,6 +61,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
       status = Number(exception.status);
       code = HttpStatus[status] ?? 'BAD_REQUEST';
       message = 'Invalid request body';
+    } else if (process.env.HMS_PUBLIC_DEMO === 'true' && typeof exception === 'object' && exception !== null && 'code' in exception && exception.code === 'P2010' && 'meta' in exception && (exception.meta as {code?:string;message?:string})?.code === 'P0001' && (exception.meta as {message?:string}).message?.includes('Demo cleanup pending')) {
+      status = 503; code = 'DEMO_CLEANUP_PENDING'; message = 'Demo temporarily paused for maintenance. Try again later.';
     } else if (process.env.HMS_PUBLIC_DEMO === 'true' && exception instanceof Error && 'code' in exception && (String(exception.code) === 'P2024' || (String(exception.code) === 'P2028' && exception.message === 'Transaction API error: Unable to start a transaction in the given time.'))) {
       status = HttpStatus.SERVICE_UNAVAILABLE;
       code = 'DEMO_BUSY';
@@ -71,7 +73,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       this.logger.error({ code: 'UNHANDLED_REQUEST_ERROR' });
     }
 
-    if (status === 503 && code === 'DEMO_BUSY') response.setHeader('Retry-After', '5');
+    if (status === 503 && ['DEMO_BUSY','DEMO_CLEANUP_PENDING'].includes(code)) response.setHeader('Retry-After', '5');
     response.status(status).json({ error: { code, message, details } });
   }
 }

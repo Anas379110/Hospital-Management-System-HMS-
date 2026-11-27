@@ -19,6 +19,7 @@ try{
  await owner.query(`CREATE ROLE hms_runtime LOGIN PASSWORD '${rp}' NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS NOINHERIT`);
  const cp=randomBytes(24).toString('hex');await owner.query(`CREATE ROLE hms_cleanup LOGIN PASSWORD '${cp}' NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS NOINHERIT`);
  await owner.query(readFileSync(base+'/prisma/demo/grants.sql','utf8'));
+ await owner.query('SELECT hms_cleanup_expired_workspaces()');
  await owner.query("INSERT INTO demo_workspaces(id) VALUES('workspace-a'),('workspace-b')");
  const ru=new URL(url);ru.username='hms_runtime';ru.password=rp;
  runtime=new Client({connectionString:ru.toString()});await runtime.connect();
@@ -148,6 +149,18 @@ const {workspaceContext}=require(base+'/dist/src/prisma/workspace-context.js');
  await entry.screenshot({path:artifacts+'/entry-'+lang+'-'+width+'-collapsed.png',fullPage:true});await entry.locator('summary').click();await entry.screenshot({path:artifacts+'/entry-'+lang+'-'+width+'-details.png',fullPage:true});
  result.views.push({route:'login',lang,width,states:['collapsed','details'],overflow:false});
  }
+ // UI-only maintenance fixture. Actual API behavior is tested separately below.
+ await entry.route('**/api/v1/demo/start',route=>route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:{code:'DEMO_CLEANUP_PENDING',message:'Maintenance',details:[]}})}));
+ for(const lang of ['en','ar']){
+  await entry.evaluate(lang=>localStorage.setItem('hms_locale',lang),lang);await entry.reload();
+  const button=entry.getByRole('button',{name:lang==='ar'?'ابدأ مساحة عرض خاصة':'Start a private demo workspace',exact:true});
+  // Resolve translated CTA without assuming its wording in Arabic.
+  const start=lang==='en'?button:entry.locator('main > button');await start.click();
+  await entry.getByRole('alert').filter({hasText:lang==='en'?'Demo temporarily paused for maintenance and cleanup. Try again later.':'العرض متوقف مؤقتاً للصيانة والتنظيف. حاول لاحقاً.'}).waitFor();if(!await start.isEnabled())throw Error('maintenance incorrectly applies cooldown');
+  await entry.screenshot({path:artifacts+'/cleanup-maintenance-'+lang+'.png',fullPage:true});
+ }
+ await entry.unroute('**/api/v1/demo/start');
+ result.checks.push('AR/EN maintenance fixture shown with enabled button, no auto retry or uncertain-write cooldown');
  await entry.evaluate(()=>localStorage.setItem('hms_locale','en'));await entry.reload();
  const entryScan=await new AxeBuilder({page:entry}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();result.axe.push({lang:'en',route:'entry',violations:entryScan.violations,passes:entryScan.passes.map(x=>x.id),incomplete:entryScan.incomplete.map(x=>({id:x.id,nodes:x.nodes.map(n=>({target:n.target,summary:n.failureSummary,checks:[...n.any,...n.all,...n.none].map(c=>({id:c.id,message:c.message,data:c.data}))}))}))});if(entryScan.violations.length)throw Error('entry axe '+JSON.stringify(entryScan.violations));
  await entry.setViewportSize({width:320,height:740});if(await entry.evaluate(()=>document.documentElement.scrollWidth>innerWidth))throw Error('320entry overflow');await entry.screenshot({path:artifacts+'/isolation-entry-320.png',fullPage:true});await entry.getByRole('button',{name:'Start a private demo workspace',exact:true}).focus();await entry.keyboard.press('Enter');await entry.waitForURL('**/appointments');if(!await entry.evaluate(()=>localStorage.getItem('hms_demo')==='true'))throw Error('production bootstrap did not persist demo flag');
@@ -234,10 +247,22 @@ const {workspaceContext}=require(base+'/dist/src/prisma/workspace-context.js');
  // Test rate gate after the3actual anonymous starts, no proxy-header assumptions.
  const throttled=await call('demo/start',null,{});if(throttled.status!==429)throw Error('fourth anonymous start not throttled');
  const forgedIp=await fetch(host+'/api/v1/demo/start',{method:'POST',headers:{'Content-Type':'application/json','X-Forwarded-For':'203.0.113.19'},body:'{}'});if(forgedIp.status!==429)throw Error('untrusted forwarded header bypassed throttle');result.checks.push('default proxy configuration ignores spoofed forwardedIP for bootstrap throttle');
- // Direct SQL cap permits expired-row reaping without changing sliding inactivity.
+ // Actual API readiness rejection and recovery, with no lease renewal.
+ const activeId=pb.data[0].workspaceId;
+ const originalTouch=(await owner.query('SELECT last_active_at FROM demo_workspaces WHERE id=$1',[activeId])).rows[0].last_active_at;
+ await owner.query('UPDATE hms_cleanup_state SET last_success_at=NULL');
+ const maintenance=await call('patients',b.data.accessToken);
+ if(maintenance.status!==503||maintenance.data.error?.code!=='DEMO_CLEANUP_PENDING')throw Error('authenticated cleanup readiness contract');
+ if((await owner.query('SELECT last_active_at FROM demo_workspaces WHERE id=$1',[activeId])).rows[0].last_active_at.getTime()!==originalTouch.getTime())throw Error('maintenance touched workspace');
+ let startBlocked=false;try{await app.get(require(base+'/dist/src/modules/auth/demo.service.js').DemoService).create()}catch(e){startBlocked=e.getStatus?.()===503&&e.getResponse?.().error?.code==='DEMO_CLEANUP_PENDING'}if(!startBlocked)throw Error('bootstrap readiness contract');
+ await cleaner.query('SELECT hms_cleanup_expired_workspaces()');
+ if((await call('patients',b.data.accessToken)).status!==200)throw Error('cleanup readiness did not recover');
+ result.checks.push('missing heartbeat returns known503 before authenticated touch and bootstrap; real cleanup restores session');
+ // Only scheduled cleanup reaps expired rows; bootstrap never performs cleanup.
  await owner.query("INSERT INTO demo_workspaces(id,expires_at) SELECT gen_random_uuid()::text,now()-interval '1 second' FROM generate_series(1,101)");
  await runtime.query('SELECT hms_create_demo_workspace($1)',[require('node:crypto').randomUUID()]);
- if((await owner.query('SELECT count(*)::int AS n FROM demo_workspaces WHERE expires_at<=now()')).rows[0].n!==0)throw Error('bootstrap did not reap expired rows');
+ if((await owner.query('SELECT count(*)::int AS n FROM demo_workspaces WHERE expires_at<=now()')).rows[0].n!==101)throw Error('bootstrap performed request-time cleanup');
+ await cleaner.query('SELECT hms_cleanup_expired_workspaces()');
  await owner.query("INSERT INTO demo_workspaces(id) SELECT gen_random_uuid()::text FROM generate_series(1,100-(SELECT count(*)::int FROM demo_workspaces))");
  let capped=false;try{await runtime.query('SELECT hms_create_demo_workspace($1)',[require('node:crypto').randomUUID()])}catch(e){capped=e.code==='P0001'&&e.message.includes('capacity')};if(!capped)throw Error('100workspace cap not enforced');
  let structured=false;try{await app.get(require(base+'/dist/src/modules/auth/demo.service.js').DemoService).create()}catch(e){structured=e.getStatus?.()===503&&e.getResponse?.().error?.code==='DEMO_CAPACITY_REACHED'}if(!structured)throw Error('capacity not structured503');
@@ -246,7 +271,7 @@ const {workspaceContext}=require(base+'/dist/src/prisma/workspace-context.js');
  try {const response=await fetch((await capacityApp.getUrl())+'/api/v1/demo/start',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});const body=await response.json();if(response.status!==503||body.error?.code!=='DEMO_CAPACITY_REACHED')throw Error('HTTP capacity response contract');}finally{await capacityApp.close()}
  result.checks.push('actual HTTP start returns503 JSON DEMO_CAPACITY_REACHED at capacity');
  result.checks.push('capacity maps to structured503 DEMO_CAPACITY_REACHED');
- result.checks.push('deletedworkspace401, fourthanonymousstart429, bootstrap expired reaping,100liveworkspace cap');
+ result.checks.push('deletedworkspace401, fourthanonymousstart429, bootstrap no cleanup,100liveworkspace cap');
  result.checks.push('direct cross-workspace composite FK denied; cleanup purges actual invoice/items/audit and preserves other8users');
  result.finishedAt=new Date().toISOString();result.checkCount=result.checks.length;result.axeScanCount=result.axe.length;result.passed=true;console.log(JSON.stringify(result,null,2));
 }catch(e){result.error=String(e.stack??e).replaceAll(password,'[redacted]');console.error(result.error);process.exitCode=1}

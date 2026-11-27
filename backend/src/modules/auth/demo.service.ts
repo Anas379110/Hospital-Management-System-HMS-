@@ -1,3 +1,4 @@
+import { requireCleanupReady } from '../../common/demo-cleanup-readiness';
 import { Injectable, NotFoundException, UnauthorizedException, OnModuleDestroy, ServiceUnavailableException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaClient, Role } from '@prisma/client';
@@ -16,6 +17,7 @@ export class DemoService implements OnModuleDestroy {
     // this fixed function is exposed on an otherwise unscoped bootstrap client.
     const id = randomUUID();
     if (!this.bootstrap) { const u=new URL(process.env.DATABASE_URL!);u.searchParams.set('connection_limit','2');this.bootstrap=new PrismaClient({datasources:{db:{url:u.toString()}}}); }
+    await requireCleanupReady(() => this.bootstrap!.$queryRaw<{ready:boolean}[]>`SELECT hms_demo_cleanup_fresh() AS ready`);
     try { await this.bootstrap.$executeRaw`SELECT hms_create_demo_workspace(${id})`; }
     catch (error: unknown) {
       const e = error as {code?:string;meta?:{code?:string;message?:string}};

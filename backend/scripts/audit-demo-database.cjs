@@ -6,6 +6,8 @@ const {PrismaClient}=require('@prisma/client');
  const identity=await p.$queryRawUnsafe("SELECT current_user AS role,current_database() AS database,(SELECT ssl FROM pg_stat_ssl WHERE pid=pg_backend_pid()) AS ssl");
  if(identity[0]?.role!=='postgres'||identity[0]?.ssl!==true)throw Error('identity');
  await p.$executeRawUnsafe(sql);
+ const readiness=await p.$queryRawUnsafe('SELECT hms_demo_cleanup_fresh() AS ready');
+ if(readiness[0]?.ready!==true)throw Error('cleanup readiness unavailable');
  const status=await p.$queryRawUnsafe(fs.readFileSync(path.join(__dirname,'../prisma/demo/cleanup-status.sql'),'utf8'));
  if(status[0]?.healthy!==true)throw Error('scheduled cleanup unavailable or stale');
  console.log(JSON.stringify({scheduledCleanup:status[0]}));

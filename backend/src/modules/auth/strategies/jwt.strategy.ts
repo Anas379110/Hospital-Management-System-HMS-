@@ -1,3 +1,4 @@
+import { requireCleanupReady } from '../../../common/demo-cleanup-readiness';
 import { workspaceContext, demoMode } from '../../../prisma/workspace-context';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
@@ -28,6 +29,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     if (demoMode()) {
       if (payload.kind !== 'fictional-demo' || !payload.workspace || !/^[a-f0-9-]{36}$/.test(payload.workspace)) throw new UnauthorizedException();
       workspaceContext.enterWith(payload.workspace);
+      await requireCleanupReady(() => this.prisma.$queryRaw<{ready:boolean}[]>`SELECT hms_demo_cleanup_fresh() AS ready`);
       const touched = await this.prisma.$queryRaw<{hms_touch_demo_workspace:boolean}[]>`SELECT hms_touch_demo_workspace(${payload.workspace})`;
       if (!touched[0]?.hms_touch_demo_workspace) throw new UnauthorizedException('Demo workspace expired');
     }

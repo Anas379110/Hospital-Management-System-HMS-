@@ -8,7 +8,7 @@ BEGIN
  IF EXISTS(SELECT 1 FROM pg_attribute a JOIN pg_class c ON c.oid=a.attrelid WHERE c.relnamespace='public'::regnamespace AND a.attacl IS NOT NULL) THEN RAISE EXCEPTION 'Unexpected column ACL'; END IF;
  FOR x IN SELECT c.oid,c.relname,c.relkind,c.relowner,c.relacl FROM pg_class c WHERE c.relnamespace='public'::regnamespace LOOP
   IF pg_get_userbyid(x.relowner)<>'hms_migration' THEN RAISE EXCEPTION 'Unexpected public relation owner: %',x.relname; END IF;
-  IF x.relkind='r' AND x.relname<>ALL(tenant_tables) AND x.relname NOT IN ('demo_workspaces','_prisma_migrations') THEN RAISE EXCEPTION 'Unexpected public table: %',x.relname; END IF;
+  IF x.relkind='r' AND x.relname<>ALL(tenant_tables) AND x.relname NOT IN ('demo_workspaces','_prisma_migrations','hms_cleanup_state') THEN RAISE EXCEPTION 'Unexpected public table: %',x.relname; END IF;
   IF EXISTS(SELECT 1 FROM aclexplode(coalesce(x.relacl,acldefault(CASE WHEN x.relkind='S' THEN 'S'::"char" ELSE 'r'::"char" END,x.relowner))) a WHERE a.grantee=0 OR a.grantee IN (SELECT oid FROM pg_roles WHERE rolname IN ('anon','authenticated','service_role'))) THEN RAISE EXCEPTION 'Public relation exposure: %',x.relname; END IF;
   IF x.relkind='r' THEN
    FOREACH r IN ARRAY ARRAY['hms_runtime','hms_cleanup'] LOOP
@@ -20,22 +20,22 @@ BEGIN
    END LOOP;
   END IF;
  END LOOP;
- IF (SELECT count(*) FROM pg_tables WHERE schemaname='public')<>16 THEN RAISE EXCEPTION 'Unexpected table set'; END IF;
+ IF (SELECT count(*) FROM pg_tables WHERE schemaname='public')<>17 THEN RAISE EXCEPTION 'Unexpected table set'; END IF;
  FOR x IN SELECT p.* FROM pg_proc p WHERE p.pronamespace='public'::regnamespace LOOP
-  IF pg_get_userbyid(x.proowner)<>'hms_migration' OR x.proname NOT IN ('hms_create_demo_workspace','hms_touch_demo_workspace','hms_cleanup_expired_workspaces') OR NOT x.prosecdef OR x.proconfig IS DISTINCT FROM ARRAY['search_path=public, pg_temp'] THEN RAISE EXCEPTION 'Public function drift: %',x.proname; END IF;
+  IF pg_get_userbyid(x.proowner)<>'hms_migration' OR x.proname NOT IN ('hms_create_demo_workspace','hms_touch_demo_workspace','hms_cleanup_expired_workspaces','hms_demo_cleanup_fresh') OR NOT x.prosecdef OR x.proconfig IS DISTINCT FROM ARRAY['search_path=public, pg_temp'] THEN RAISE EXCEPTION 'Public function drift: %',x.proname; END IF;
   IF EXISTS(SELECT 1 FROM aclexplode(coalesce(x.proacl,acldefault('f',x.proowner))) a WHERE a.grantee=0 OR a.grantee IN (SELECT oid FROM pg_roles WHERE rolname IN ('anon','authenticated','service_role'))) THEN RAISE EXCEPTION 'Public function exposure: %',x.proname; END IF;
   FOREACH r IN ARRAY ARRAY['hms_runtime','hms_cleanup'] LOOP
-   expected := (r='hms_cleanup' AND x.proname='hms_cleanup_expired_workspaces') OR (r='hms_runtime' AND x.proname IN ('hms_create_demo_workspace','hms_touch_demo_workspace'));
+   expected := (r='hms_cleanup' AND x.proname='hms_cleanup_expired_workspaces') OR (r='hms_runtime' AND x.proname IN ('hms_create_demo_workspace','hms_touch_demo_workspace','hms_demo_cleanup_fresh'));
    IF has_function_privilege(r,x.oid,'EXECUTE') IS DISTINCT FROM expected THEN RAISE EXCEPTION 'Function execute drift'; END IF;
   END LOOP;
  END LOOP;
- IF (SELECT count(*) FROM pg_proc WHERE pronamespace='public'::regnamespace)<>3 THEN RAISE EXCEPTION 'Unexpected function set'; END IF;
+ IF (SELECT count(*) FROM pg_proc WHERE pronamespace='public'::regnamespace)<>4 THEN RAISE EXCEPTION 'Unexpected function set'; END IF;
  FOR x IN SELECT t.* FROM pg_type t WHERE t.typnamespace='public'::regnamespace LOOP
   IF pg_get_userbyid(x.typowner)<>'hms_migration' THEN RAISE EXCEPTION 'Public type ownership drift: %',x.typname; END IF;
   IF x.typtype='e' THEN
    IF x.typname NOT IN ('AppointmentStatus','BedStatus','Gender','InvoiceStatus','PaymentMethod','PrescriptionStatus','Role','TestOrderStatus','TestType') THEN RAISE EXCEPTION 'Unexpected enum: %',x.typname; END IF;
   ELSIF x.typtype='c' THEN
-   IF NOT EXISTS(SELECT 1 FROM pg_class c WHERE c.oid=x.typrelid AND c.relnamespace='public'::regnamespace AND c.relkind='r' AND (c.relname=ANY(tenant_tables) OR c.relname IN ('demo_workspaces','_prisma_migrations'))) THEN RAISE EXCEPTION 'Unexpected composite type: %',x.typname; END IF;
+   IF NOT EXISTS(SELECT 1 FROM pg_class c WHERE c.oid=x.typrelid AND c.relnamespace='public'::regnamespace AND c.relkind='r' AND (c.relname=ANY(tenant_tables) OR c.relname IN ('demo_workspaces','_prisma_migrations','hms_cleanup_state'))) THEN RAISE EXCEPTION 'Unexpected composite type: %',x.typname; END IF;
   ELSIF x.typelem<>0 THEN
    IF NOT EXISTS(SELECT 1 FROM pg_type t WHERE t.oid=x.typelem AND t.typarray=x.oid AND t.typnamespace='public'::regnamespace AND t.typtype IN ('e','c')) THEN RAISE EXCEPTION 'Unexpected array type'; END IF;
   ELSE RAISE EXCEPTION 'Unexpected public type: %',x.typname;

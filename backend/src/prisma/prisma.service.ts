@@ -82,6 +82,8 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
         OR EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relkind='r' AND pg_has_role(c.relowner,'USAGE'))
         OR has_schema_privilege(current_user,'public','CREATE')
         OR has_function_privilege(current_user,'hms_cleanup_expired_workspaces()','EXECUTE')
+        OR NOT has_function_privilege(current_user,'hms_demo_cleanup_fresh()','EXECUTE')
+        OR has_table_privilege(current_user,'hms_cleanup_state','SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER')
       ) AS unsafe`); } finally { await check.$disconnect(); }
       if (rows[0]?.unsafe !== false) throw new Error('Public demo requires restricted nonowner runtime grants');
     }

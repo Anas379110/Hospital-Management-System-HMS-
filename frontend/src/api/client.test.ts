@@ -14,3 +14,8 @@ describe('unknown write outcome',()=>{
   expect(isUnknownWriteOutcome({isAxiosError:true,config:{method:'post',url:'/invoices'},response:{status:400,data:{}}})).toBe(false);
  });
 });
+
+it('known cleanup rejection is not an uncertain write',()=>{
+ expect(isUnknownWriteOutcome({isAxiosError:true,config:{method:'post',url:'/demo/start'},response:{status:503,data:{error:{code:'DEMO_CLEANUP_PENDING'}}}})).toBe(false);
+ expect(isUnknownWriteOutcome({isAxiosError:true,config:{method:'post',url:'/invoices'},response:{status:503,data:{error:{code:'DEMO_CLEANUP_PENDING'}}}})).toBe(false);
+});
