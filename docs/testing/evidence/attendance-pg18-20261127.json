@@ -1,5 +1,6 @@
 {
-  "scope": "Local disposable actual HTTP manual attendance, fictional data only",
+  "scope": "Disposable actual HTTP manual attendance, fictional data only",
+  "mode": "local cluster identity checked",
   "complete": true,
   "checks": [
     "MalformedUUID400/missing404/extra-missingDTO400/crossworkspace404/cancelledfinal409/all6forbiddenroles403/doubleattendance201+409exactoneaudit",
@@ -11,7 +12,13 @@
     "Actual auditfailure503 rollsbackstatus and audit; triggerremoved",
     "Actual no_show/encounterrace has one201/one409 and no contradictory state"
   ],
-  "scriptSha256": "5489fd31db6680731286cee1abe844347ba1dcf31d2830753e29a15736dc62c8",
-  "startedAt": "2026-11-27T19:39:56.779Z",
-  "finishedAt": "2026-11-27T19:40:02.264Z"
+  "scriptSha256": "67cd61984731fad481ed6527f1f5c649a067d636e8673f4afdbc203bf63efb21",
+  "startedAt": "2026-11-27T19:43:53.092Z",
+  "runtime": {
+    "role": "hms_runtime",
+    "superuser": false,
+    "bypassRls": false,
+    "auditMutationsDenied": 3
+  },
+  "finishedAt": "2026-11-27T19:43:58.708Z"
 }

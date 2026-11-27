@@ -115,6 +115,16 @@ jobs:
         working-directory: frontend
         env:
           HMS_BROWSER_DATABASE_URL: postgresql://hms_test:isolated-ci-only@127.0.0.1:5432/hms_test_users?schema=public&connection_limit=8&options=-c%20hms.workspace_id%3D00000000-0000-4000-a000-000000000001
+      - run: createdb -h 127.0.0.1 -U hms_test hms_test_attendance
+        env:
+          PGPASSWORD: isolated-ci-only
+      - run: node test-real-postgres/attendance.mjs
+        working-directory: backend
+        env:
+          HMS_ATTENDANCE_CI: 'true'
+          HMS_ATTENDANCE_DATABASE_URL: postgresql://hms_test:isolated-ci-only@127.0.0.1:5432/hms_test_attendance
+          HMS_ATTENDANCE_REPORT: attendance-report.json
+          HMS_ATTENDANCE_ARTIFACTS: ../frontend/browser-artifacts/attendance
       - run: createdb -h 127.0.0.1 -U hms_test hms_test_isolation
         env:
           PGPASSWORD: isolated-ci-only
@@ -130,6 +140,7 @@ jobs:
           name: postgres-regression-pg${{ matrix.postgres }}
           path: |
             backend/postgres-regression.json
+            backend/attendance-report.json
             backend/cleanup-readiness-report.json
             backend/cleanup-upgrade-report.json
             frontend/browser-artifacts

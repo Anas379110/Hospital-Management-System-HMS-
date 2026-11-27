@@ -60,3 +60,15 @@ This is not an OS network namespace, packet capture, a full physical internet-di
 Fresh `npm ci`/`npm audit` during this round reported a moderate advisory in locked i18next: https://github.com/advisories/GHSA-6jcc-5g8w-32mx . Current first-party translation setup imports two static JSON dictionaries, with no remote loader/resource upload found. This narrows observed exposure but does not erase the dependency finding. No automatic major upgrade or audit suppression was applied. A separate remediation candidate pins i18next 26.3.4, the advisory's first patched version. Official migration guidance was checked: https://www.i18next.com/misc/migration-guide . No removed custom formatter/initImmediate/legacy JSON option was used. Candidate lint, production build, 40 frontend tests including all dictionary strings/interpolation and inherited-built-in merge regression, and the measured production browser paths pass; fresh audit returns zero vulnerabilities. Exact-head CI/review and hosted verification are still required before release. The deployed 37424a3 still has the older dependency until then.
 
 Reports record script SHA256 and dirty-tree state (backup runner), not merely baseline git HEAD. The runtime report also records its script SHA256. These tie uncommitted candidates to measured evidence. The runtime source baseline remains 37424a3; patched frontend bundle is identified by observed hashed request paths in the later browser report.
+
+### Separate attendance CI harness
+
+Attendance uses its own dedicated empty CI database, not the restore target.
+`HMS_ATTENDANCE_CI=true` requires GitHub Actions, exact loopback host/port5432,
+owner hms_test and database hms_test_attendance with no connection options.
+It refuses any existing public table before migrations, creates a distinct
+nonowner/no-bypass runtime role and verifies audit UPDATE/DELETE/TRUNCATE denial.
+Local mode still requires the actual matching disposable /tmp data directory.
+Local CI-path emulation on a fresh PG18 cluster passed; that is not a hosted CI
+run. The workflow now runs the same HTTP/browser cases in both PG17/18 jobs,
+retaining JSON and screenshots. Report script hashes tie each run to its code.
