@@ -72,9 +72,13 @@ jobs:
       - run: createdb -h 127.0.0.1 -U hms_test hms_test_browser && createdb -h 127.0.0.1 -U hms_test hms_test_stock && createdb -h 127.0.0.1 -U hms_test hms_test_workflows && createdb -h 127.0.0.1 -U hms_test hms_test_appointments && createdb -h 127.0.0.1 -U hms_test hms_test_billing && createdb -h 127.0.0.1 -U hms_test hms_test_users
         env:
           PGPASSWORD: isolated-ci-only
-      - run: createdb -h 127.0.0.1 -U hms_test hms_test_cleanup
+      - run: createdb -h 127.0.0.1 -U hms_test hms_test_cleanup && createdb -h 127.0.0.1 -U hms_test hms_test_upgrade
         env:
           PGPASSWORD: isolated-ci-only
+      - run: node test-real-postgres/cleanup-upgrade.mjs
+        working-directory: backend
+        env:
+          HMS_UPGRADE_TEST_DATABASE_URL: postgresql://hms_test:isolated-ci-only@127.0.0.1:5432/hms_test_upgrade
       - run: node test-real-postgres/cleanup-readiness.mjs
         working-directory: backend
         env:
@@ -125,6 +129,7 @@ jobs:
           path: |
             backend/postgres-regression.json
             backend/cleanup-readiness-report.json
+            backend/cleanup-upgrade-report.json
             frontend/browser-artifacts
           if-no-files-found: ignore
           retention-days: 7
