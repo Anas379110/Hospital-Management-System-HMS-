@@ -7,7 +7,8 @@ Reconciled27 November2026 against2ad6bb2. This file supersedes the historical57/
 - Unit/mock: `backend/test/unit/*.spec.ts` and `backend/test/e2e/*.e2e-spec.ts`. The latter use actual HTTP/validation/guards with mocked services/DB, not real PostgreSQL.
 - Real DB: `backend/test-real-postgres/concurrency.mjs`, `cleanup-readiness.mjs`, `cleanup-upgrade.mjs`, actual migrations and compiled services/HTTP.
 - Real browser: `frontend/test-real-browser/public-{clinical,stock,workflows,appointments,billing,users}.mjs` and `isolation.mjs`, actual public-mode app and isolated fictional PostgreSQL. Scoped views/scenarios, not all possible role/state combinations.
-- Local performance: `backend/test-real-postgres/performance.mjs`, `docs/testing/evidence/performance-pg18-20261127.json`. Actual local HTTP+nonownerRLS DB, not mocks and not hosted performance.
+- Local performance: `backend/test-real-postgres/performance.mjs`, `docs/testing/evidence/performance-pg17-20261127.json` and `performance-pg18-20261127.json`. Actual local HTTP+nonownerRLS DB, not mocks and not hosted performance.
+- Local crash: `backend/test-real-postgres/crash-recovery.mjs`, `docs/testing/evidence/crash-recovery-pg18-20261127.json`, observed committed rows/audits retained and uncommitted sentinel absent after immediate process stop/restart, not WAL or physical-power-loss certification.
 - Current controller/DTO/role paths: [route inventory](../api/ROUTE-INVENTORY.json), generated [OpenAPI](../api/openapi.yaml), [API service rules](../api/API.md).
 - Exact source hosted CI: https://github.com/Anas379110/Hospital-Management-System-HMS-/actions/runs/46032128551 , PostgreSQL17and18. Public fictional demonstration https://hms-isolated-qualification.onrender.com/ . CI is execution evidence for named suites, not every original requirement.
 

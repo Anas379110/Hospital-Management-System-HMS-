@@ -3,7 +3,7 @@
 import { createRequire } from 'node:module';
 import { spawn, spawnSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
-import { writeFileSync } from 'node:fs';
+import { writeFileSync,realpathSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import os from 'node:os';
 import assert from 'node:assert/strict';
@@ -13,11 +13,16 @@ const url=process.env.HMS_PERFORMANCE_DATABASE_URL;
 if(!url)throw Error('Set HMS_PERFORMANCE_DATABASE_URL');
 const parsed=new URL(url);
 if(!['127.0.0.1','localhost','[::1]'].includes(parsed.hostname)||!/^\/hms_test_perf_[a-z0-9_]+$/.test(parsed.pathname))throw Error('Only loopback hms_test_perf_* disposable databases are allowed');
+const expectedData=process.env.HMS_TEST_PG_DATA;
+if(!parsed.port)throw Error('Explicit disposable PostgreSQL port is required');
+if(!expectedData||!/^\/tmp\/hms_test_perf_[a-zA-Z0-9_]+$/.test(realpathSync(expectedData)))throw Error('HMS_TEST_PG_DATA must identify an actual disposable /tmp/hms_test_perf_* cluster');
 const output=process.env.HMS_PERFORMANCE_REPORT ?? backend+'performance-report.json';
 const report={scope:'local loopback HTTP, actual compiled public-demo app, nonowner RLS runtime,10,000 fictional patients in one workspace, no hosted performance claim',source:spawnSync('git',['rev-parse','HEAD'],{cwd:backend,encoding:'utf8'}).stdout.trim(),environment:{node:process.version,platform:os.platform(),release:os.release(),arch:os.arch(),cpu:os.cpus()[0]?.model,logicalCpus:os.cpus().length,ramBytes:os.totalmem(),loadBefore:os.loadavg()},criteria:{latencyMs:300,interpretation:'Report every sample plus p50/p95/p99/max; <300ms for every measured operation is the strict local comparison, not a definition of unspecified normal load or medium server.',concurrency:[1,4],samplesPerReadPerConcurrency:40,warmup:4},checks:[],workloads:[]};
 let owner,app;
 try{
  owner=new PrismaClient({datasources:{db:{url}}});
+ const actualData=(await owner.$queryRawUnsafe('SHOW data_directory'))[0].data_directory;assert.equal(realpathSync(actualData),realpathSync(expectedData),'Refuse shared/tunneled or different PostgreSQL cluster before any migration/role/grant effect');
+ report.environment.disposableCluster={actualDataDirectory:realpathSync(actualData),explicitPort:Number(parsed.port),identityMatchedBeforeWrites:true};
  const existing=await owner.$queryRawUnsafe("SELECT tablename FROM pg_tables WHERE schemaname='public'");assert.equal(existing.length,0,'Require an empty fresh database');
  const migration=spawnSync(process.execPath,['node_modules/prisma/build/index.js','migrate','deploy'],{cwd:backend,env:{...process.env,DATABASE_URL:url},encoding:'utf8'});assert.equal(migration.status,0,migration.stderr);report.checks.push('All migrations applied to empty disposable DB');
  const password=randomBytes(24).toString('hex');
@@ -25,7 +30,7 @@ try{
  await owner.$executeRawUnsafe('CREATE ROLE hms_cleanup NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS NOINHERIT');
  // SQL is repository-controlled, fixed local-only grants. No external input is interpolated.
   // Prisma raw accepts only one statement. Use the PostgreSQL client's fixed SQL-file support.
- const psql=spawnSync('psql',[url,'-v','ON_ERROR_STOP=1','-f',backend+'prisma/demo/grants.sql'],{encoding:'utf8'});assert.equal(psql.status,0,psql.stderr);
+ const psql=spawnSync('psql',['-v','ON_ERROR_STOP=1','-f',backend+'prisma/demo/grants.sql'],{encoding:'utf8',env:{...process.env,PGHOST:parsed.hostname,PGPORT:parsed.port,PGDATABASE:parsed.pathname.slice(1),PGUSER:decodeURIComponent(parsed.username),PGPASSWORD:decodeURIComponent(parsed.password)}});assert.equal(psql.status,0,psql.stderr);
  await owner.$queryRawUnsafe('SELECT hms_cleanup_expired_workspaces()');
  const runtime=new URL(url);runtime.username='hms_runtime';runtime.password=password;runtime.searchParams.set('connection_limit','8');
  const port=Number(process.env.HMS_PERFORMANCE_PORT??4389);assert.ok(port>=1024&&port<=65535);

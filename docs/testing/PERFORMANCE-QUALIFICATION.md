@@ -16,6 +16,8 @@ npm run build
 node test-real-postgres/performance.mjs
 ```
 
+HMS_TEST_PG_DATA is required and must realpath-match SHOW data_directory under /tmp/hms_test_perf_* before migrations or cluster-wide role/grant changes; an explicit loopback port is required. The runner refuses a different/shared/tunneled cluster. psql credentials are passed through child environment, not command-line arguments.
+
 The disposable database role must own the empty DB and be able to create restricted test roles. The runner creates hms_runtime/hms_cleanup/hms_migration within that disposable cluster, applies current migrations and exact demo grants, advances local cleanup once and launches the unmodified public-mode compiled application. It generates local random test credentials without recording them in evidence. Use a new isolated cluster per run because role names are fixed. The local cluster/data is retained for inspection; stopping it is not authority to delete unrelated artifacts.
 
 The actual application throttles, RLS, readiness and capacity limits remain enabled. Fixtures are bulk-loaded outside timing to exactly10,000patients. Seven basic reads each have4warmupsand40timedsamplesatconcurrency1then4.40full HTTPaudited patient creates follow,20perconcurrency. Timing includes fetch/HTTP/body-read on localhost, not just DBexecution. No seed/direct SQLis counted as an API write.
@@ -77,3 +79,5 @@ PostgreSQL 17.12 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 7.5.0-3ubuntu1~
 |patient-create-audited|4|20|159.65|188.56|205.79|0|
 
 All600timedsamples<300msagain;40creates,40audits,10,040uniqueMRNs. [RawPG17evidence](evidence/performance-pg17-20261127.json). This confirms the recorded scenario on a second local PostgreSQL major, not the unmeasured deployment/workload assumptions above.
+
+Small-sample caveat:20write/40read samples per scenario make p95/p99close to the maximum and unstable estimates of tail behavior. These are sample summaries, not reliable population percentiles or a sustained-load claim.

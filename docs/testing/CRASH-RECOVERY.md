@@ -9,7 +9,7 @@
 3. Assert fsync, synchronous_commit and full_page_writes areon. Count10,040patients,10,040uniqueMRNsand40audits.
 4. Start an actual open SQLtransaction and insert an uncommitted fictional sentinel patient. Wait until the insert returns inside that transaction.
 5. Issue `pg_ctl -m immediate stop` only to the exact disposable cluster whose `SHOW data_directory` matches the guarded `/tmp/hms_test_perf_*`path. Restart that same local cluster.
-6. Query after PostgreSQLWALrecovery:10,040patientsanduniqueMRNs,40audits, zero uncommitted sentinel. Open transaction rejected, not falsely reported committed.
+6. Query after PostgreSQLprocess restart:10,040patientsanduniqueMRNs,40audits, zero uncommitted sentinel. Open transaction rejected, not falsely reported committed.
 
 Actual immediate-stop-to-restarted-query interval:266msinthisone local run. This is not an availability/RTO/SLAcommitment. The app was not running during the crash drill, so no API auto-reconnect/auto-restart claim.
 
