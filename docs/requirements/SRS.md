@@ -1,3 +1,5 @@
+> Requirements baseline, not an implementation or legal-compliance certificate. Targets below are preserved unchanged. Current implementation and explicit gaps are in [TRACEABILITY.md](TRACEABILITY.md), including national-ID duplicate matching, appointment state transitions, department/bed administration, waitlist and nonfunctional qualification.
+
 # SRS.md — Software Requirements Specification
 ## نظام إدارة المشافي (HMS) — نطاق MVP
 

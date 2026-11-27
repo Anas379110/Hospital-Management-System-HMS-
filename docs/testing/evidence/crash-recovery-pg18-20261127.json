@@ -1,0 +1,42 @@
+{
+  "scope": "actual local PostgreSQL immediate process shutdown/restart with WAL recovery, not physical hardware power failure",
+  "checks": [
+    "Committed10040fictionalpatients/uniqueMRNs survived immediate process stop+restart",
+    "Committed40audits survived",
+    "Actual open uncommitted transaction did not persist its sentinel"
+  ],
+  "complete": true,
+  "settings": [
+    {
+      "name": "fsync",
+      "setting": "on"
+    },
+    {
+      "name": "full_page_writes",
+      "setting": "on"
+    },
+    {
+      "name": "synchronous_commit",
+      "setting": "on"
+    }
+  ],
+  "before": {
+    "patients": 10040,
+    "unique_mrns": 10040,
+    "audits": 40
+  },
+  "after": {
+    "patients": 10040,
+    "unique_mrns": 10040,
+    "uncommitted_sentinel": 0,
+    "audits": 40
+  },
+  "recoveryToQueryMs": 266,
+  "limitations": [
+    "Not a physical power cut or storage/controller failure",
+    "No claim about hosted provider crash/resume or hidden-resume heartbeat semantics",
+    "No app availability/auto-restart measurement: API process was stopped after the benchmark",
+    "No backup/restore/RPO/RTO/SLA certification; measured recovery is this local drill only"
+  ],
+  "finishedAt": "2026-11-27T17:41:41.123Z"
+}

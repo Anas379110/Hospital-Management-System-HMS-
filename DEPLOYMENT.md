@@ -1,3 +1,5 @@
+> Historical record, not current acceptance. Reconciled27 November2026: see [current verification](VERIFICATION.md), [requirements traceability](docs/requirements/TRACEABILITY.md) and [API contract](docs/api/API.md). Old counts, completion statements and release gates below describe an earlier snapshot. Original requirement targets remain open where traceability says partial/missing/unproven.
+
 # Fictional demo deployment plan
 
 No qualified functional hosted release is claimed. Isolated local PostgreSQL migration/concurrency tests pass. Existing read-only showcase is separate. Historic on-premise product design is not a request to commission a real hospital system.

@@ -1,3 +1,5 @@
+> Historical record, not current acceptance. Reconciled27 November2026: see [current verification](VERIFICATION.md), [requirements traceability](docs/requirements/TRACEABILITY.md) and [API contract](docs/api/API.md). Old counts, completion statements and release gates below describe an earlier snapshot. Original requirement targets remain open where traceability says partial/missing/unproven.
+
 # SECURITY-REVIEW.md — مراجعة أمنية شاملة (Gate 8)
 
 **التاريخ:** 2026-08-10

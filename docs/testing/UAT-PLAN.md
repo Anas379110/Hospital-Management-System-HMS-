@@ -1,3 +1,5 @@
+> Historical record, not current acceptance. Reconciled27 November2026: see [current verification](../../VERIFICATION.md), [requirements traceability](../../docs/requirements/TRACEABILITY.md) and [API contract](../../docs/api/API.md). Old counts, completion statements and release gates below describe an earlier snapshot. Original requirement targets remain open where traceability says partial/missing/unproven.
+
 # UAT-PLAN.md — خطة اختبار المستخدمين الحقيقيين (Gate 8)
 
 **المرجع المنهجي:** دليل إنشاء المشاريع البرمجية §"اختبار المستخدمين الحقيقيين" — 5 مستخدمين يكشفون ~85% من المشاكل. اطلب منهم التفكير بصوت عالٍ، ولا توجّههم أثناء التنفيذ.
