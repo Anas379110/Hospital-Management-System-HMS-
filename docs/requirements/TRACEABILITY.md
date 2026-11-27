@@ -70,7 +70,7 @@ Reconciled27 November2026 against2ad6bb2. This file supersedes the historical57/
 
 | Target | Current evidence | Acceptance status |
 | --- | --- | --- |
-|10k+patients and basicAPI<300msonmediumserver/normal load | actual local10k+40fixture,1and4concurrentclientbenchmark, all600timedsamples<300msinfirstPG18run | Bounded local evidence only. Medium-server definition, normal workload, rich related history and Free hosted performance not established |
+|10k+patients and basicAPI<300msonmediumserver/normal load | actual local10k+40fixture,1and4concurrentclientbenchmark, all600timedsamplesperrun<300msinactualguardedPG17.12andPG18.7reruns | Bounded local evidence only. Medium-server definition, normal workload, rich related history and Free hosted performance not established |
 | bcrypt/HTTPS/audit/API RBAC | bcrypt, hostedHTTPS, transaction audit and scoped authorization checks | Scoped engineering evidence. Not deployment-wide/intranetTLS or security certification |
 | intranet without internet + daily local backup | proposed deployment files, local source/dependencies | Not qualified. Browser asset/runtime dependency inventory and repeatable offline deployment/backup/restore remain |
 | no loss on sudden power failure | DBtransactions, recorded rollback/contention checks and localPG18process-crash recovery preservingcommits/rejectinguncommittedsentinel | Physical power-loss target not established. Transactions do not prove physical power-loss durability; backup/restore/crash matrix required |
