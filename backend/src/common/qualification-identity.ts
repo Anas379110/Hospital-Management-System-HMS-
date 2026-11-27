@@ -13,6 +13,6 @@ export function qualificationIdentity() {
     res.setHeader('Cache-Control', 'no-store');
     if (Date.now() >= expires) { res.status(410).json({error:{code:'QUALIFICATION_DIAGNOSTIC_EXPIRED'}}); return; }
     const chain = (req.get('x-forwarded-for') ?? '').split(',').map(x=>x.trim()).filter(Boolean);
-    res.status(200).json({scope:'ephemeral-qualification-only',socket: digest(req.socket.remoteAddress),express: digest(req.ip),forwardedFirst:digest(chain[0]),forwardedLast:digest(chain[chain.length-1]),forwardedPositions:chain.slice(0,8).map(x=>digest(x)),forwardedCount:chain.length,positionsTruncated:chain.length>8});
+    res.status(200).json({scope:'ephemeral-qualification-only',socket: digest(req.socket.remoteAddress),express: digest(req.ip),cloudflare:digest(req.get('cf-connecting-ip')),trueClient:digest(req.get('true-client-ip')),forwardedFirst:digest(chain[0]),forwardedLast:digest(chain[chain.length-1]),forwardedPositions:chain.slice(0,8).map(x=>digest(x)),forwardedCount:chain.length,positionsTruncated:chain.length>8});
   };
 }
