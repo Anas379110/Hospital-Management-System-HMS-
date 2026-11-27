@@ -39,7 +39,7 @@ export default function BillingPage() {
   const writable = !!user && canManageBilling(user.role) && !unknownWrite;
   function holdUnknown(error: unknown) { if (import.meta.env.VITE_PUBLIC_DEMO === 'true' && isUnknownWriteOutcome(error)) { sessionStorage.setItem(lockKey, 'true'); setUnknownWrite(true); } }
 
-  const displayError = (error: unknown) => getApiErrorCode(error) === 'AUDIT_PERSISTENCE_FAILED' ? t('departments.auditFailure') : getApiErrorMessage(error, t('errors.generic'));
+  const displayError = (error: unknown) => isUnknownWriteOutcome(error) ? t('errors.writeUnknown') : getApiErrorCode(error) === 'AUDIT_PERSISTENCE_FAILED' ? t('departments.auditFailure') : getApiErrorMessage(error, t('errors.generic'));
   const [newItem, setNewItem] = useState<ItemRow>({ description: '', quantity: '1', unitPrice: '' });
   const [itemError, setItemError] = useState<string | null>(null);
   const [itemSuccess, setItemSuccess] = useState(false);
