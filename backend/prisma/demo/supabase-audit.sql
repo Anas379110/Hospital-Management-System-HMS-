@@ -2,7 +2,7 @@
 -- Fail closed. This inspects every public relation/function/type, not a prefix.
 DO $$
 DECLARE x record; r text; priv text; expected boolean; allowed boolean;
- tenant_tables text[] := ARRAY['users','patients','appointments','encounters','prescriptions','medications','test_orders','invoices','invoice_items','payments','departments','beds','admissions','audit_logs'];
+ tenant_tables text[] := ARRAY['users','patients','appointments','encounters','prescriptions','medications','test_orders','invoices','invoice_items','payments','departments','beds','admissions','audit_logs','waitlist_requests'];
 BEGIN
  IF current_user<>'postgres' OR NOT coalesce((SELECT ssl FROM pg_stat_ssl WHERE pid=pg_backend_pid()),false) THEN RAISE EXCEPTION 'Audit requires owner identity and TLS'; END IF;
  IF EXISTS(SELECT 1 FROM pg_attribute a JOIN pg_class c ON c.oid=a.attrelid WHERE c.relnamespace='public'::regnamespace AND a.attacl IS NOT NULL) THEN RAISE EXCEPTION 'Unexpected column ACL'; END IF;
@@ -13,14 +13,14 @@ BEGIN
   IF x.relkind='r' THEN
    FOREACH r IN ARRAY ARRAY['hms_runtime','hms_cleanup'] LOOP
     FOREACH priv IN ARRAY ARRAY['SELECT','INSERT','UPDATE','DELETE','TRUNCATE','REFERENCES','TRIGGER','MAINTAIN'] LOOP
-     expected := r='hms_runtime' AND ((x.relname=ANY(tenant_tables) AND priv IN ('SELECT','INSERT','UPDATE','DELETE') AND NOT(x.relname='audit_logs' AND priv IN ('UPDATE','DELETE'))) OR (x.relname='demo_workspaces' AND priv='SELECT'));
+     expected := r='hms_runtime' AND ((x.relname=ANY(tenant_tables) AND priv IN ('SELECT','INSERT','UPDATE','DELETE') AND NOT(x.relname='audit_logs' AND priv IN ('UPDATE','DELETE')) AND NOT(x.relname='waitlist_requests' AND priv='DELETE')) OR (x.relname='demo_workspaces' AND priv='SELECT'));
      allowed := has_table_privilege(r,x.oid,priv);
      IF allowed IS DISTINCT FROM expected THEN RAISE EXCEPTION 'Table privilege drift: %.% %',r,x.relname,priv; END IF;
     END LOOP;
    END LOOP;
   END IF;
  END LOOP;
- IF (SELECT count(*) FROM pg_tables WHERE schemaname='public')<>17 THEN RAISE EXCEPTION 'Unexpected table set'; END IF;
+ IF (SELECT count(*) FROM pg_tables WHERE schemaname='public')<>18 THEN RAISE EXCEPTION 'Unexpected table set'; END IF;
  FOR x IN SELECT p.* FROM pg_proc p WHERE p.pronamespace='public'::regnamespace LOOP
   IF pg_get_userbyid(x.proowner)<>'hms_migration' OR x.proname NOT IN ('hms_create_demo_workspace','hms_touch_demo_workspace','hms_cleanup_expired_workspaces','hms_demo_cleanup_fresh') OR NOT x.prosecdef OR x.proconfig IS DISTINCT FROM ARRAY['search_path=public, pg_temp'] THEN RAISE EXCEPTION 'Public function drift: %',x.proname; END IF;
   IF EXISTS(SELECT 1 FROM aclexplode(coalesce(x.proacl,acldefault('f',x.proowner))) a WHERE a.grantee=0 OR a.grantee IN (SELECT oid FROM pg_roles WHERE rolname IN ('anon','authenticated','service_role'))) THEN RAISE EXCEPTION 'Public function exposure: %',x.proname; END IF;

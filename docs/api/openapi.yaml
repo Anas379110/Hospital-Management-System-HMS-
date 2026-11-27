@@ -386,6 +386,19 @@
         ],
         "type": "object"
       },
+      "CreateWaitlistDto": {
+        "additionalProperties": false,
+        "properties": {
+          "patientId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "patientId"
+        ],
+        "type": "object"
+      },
       "DeleteEncounterDto": {
         "additionalProperties": false,
         "properties": {
@@ -690,6 +703,17 @@
           },
           "phone": {
             "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "WaitlistPageDto": {
+        "additionalProperties": false,
+        "properties": {
+          "page": {
+            "maximum": 10000,
+            "minimum": 0,
+            "type": "integer"
           }
         },
         "type": "object"
@@ -1557,6 +1581,203 @@
         "x-roles": [
           "manager",
           "admin"
+        ]
+      }
+    },
+    "/departments/{departmentId}/waitlist": {
+      "get": {
+        "operationId": "WaitlistController_list",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "departmentId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "maximum": 10000,
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
+          },
+          "403": {
+            "description": "Current persisted role is not permitted"
+          },
+          "404": {
+            "description": "Scoped record not found"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "WaitlistController.list",
+        "tags": [
+          "departments/:departmentId/waitlist"
+        ],
+        "x-controller": "modules/waitlist/waitlist.controller.ts",
+        "x-guards": [
+          "JwtAuthGuard",
+          "RolesGuard"
+        ],
+        "x-roles": [
+          "doctor",
+          "nurse"
+        ]
+      },
+      "post": {
+        "operationId": "WaitlistController_create",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "departmentId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWaitlistDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
+          },
+          "403": {
+            "description": "Current persisted role is not permitted"
+          },
+          "404": {
+            "description": "Scoped record not found"
+          },
+          "409": {
+            "description": "Pending request conflict or already closed"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "503": {
+            "description": "Audit persistence failed, operation rolled back"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "WaitlistController.create",
+        "tags": [
+          "departments/:departmentId/waitlist"
+        ],
+        "x-controller": "modules/waitlist/waitlist.controller.ts",
+        "x-guards": [
+          "JwtAuthGuard",
+          "RolesGuard"
+        ],
+        "x-roles": [
+          "doctor",
+          "nurse"
+        ]
+      }
+    },
+    "/departments/{departmentId}/waitlist/{id}/cancel": {
+      "post": {
+        "operationId": "WaitlistController_cancel",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "departmentId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
+          },
+          "403": {
+            "description": "Current persisted role is not permitted"
+          },
+          "404": {
+            "description": "Scoped record not found"
+          },
+          "409": {
+            "description": "Pending request conflict or already closed"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "503": {
+            "description": "Audit persistence failed, operation rolled back"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "WaitlistController.cancel",
+        "tags": [
+          "departments/:departmentId/waitlist"
+        ],
+        "x-controller": "modules/waitlist/waitlist.controller.ts",
+        "x-guards": [
+          "JwtAuthGuard",
+          "RolesGuard"
+        ],
+        "x-roles": [
+          "doctor",
+          "nurse"
         ]
       }
     },

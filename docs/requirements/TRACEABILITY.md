@@ -113,3 +113,12 @@ Approved behavior November27 22:09. Overview and department/bed board use shared
 
 ### Setup release reconciliation November27 23:53 Istanbul
 Historical candidate entries above record the state at their preparation. Setup exact fe787f55f41b154e301eef04d02248a243678d5e subsequently passed exactCI46065044976 on PG17/18, mergedPR10, and RenderLiveFree plus actual hosted fictional ENdesktop/AR390px smoke. FR5.1 approved Admin setup/maintenance now shipped in this scoped demo. History-linked deletion blocked; occupied relabel preserves IDs/history, occupied maintenance blocked. NativeSwagger27schemas52ops. App-lock uniqueness and redacted historical labels remain limits. FR5.4 cross-client15sfreshness still candidate, not hosted. Persistent FIFOwaitlist remains open and separately liveDBgated.
+
+### Persistent waitlist local candidate November28, live gate open
+Clinical-only department queue read/add/cancel, chronological timestamp+stable arbitraryID
+ties, retained close history, same-department atomicadmissionclosure, compositeworkspaceFK,
+forcedRLS and minimalruntimeDML. BoundedPG17/18HTTP/browser/rollback/races and localoldinstall
+upgrade/dump/emptyrestore evidence in docs/testing/evidence/waitlist*. No clinicalpriority or
+autoadmission. Offsetpages shift under edits. Live exactschema/grants permission and target
+preflight/backup remain required. Not shipped, wholeHMS incomplete. Freshness7eddacd is
+actually hostedverified; historical prior freshnesspending entries reflect their prep time.

@@ -15,6 +15,7 @@ ALTER FUNCTION hms_cleanup_expired_workspaces() OWNER TO hms_migration;
 REVOKE CREATE ON SCHEMA public FROM PUBLIC,hms_runtime,hms_cleanup;
 GRANT USAGE ON SCHEMA public TO hms_runtime,hms_cleanup;
 GRANT SELECT,INSERT,UPDATE,DELETE ON ALL TABLES IN SCHEMA public TO hms_runtime;
+REVOKE DELETE,TRUNCATE,REFERENCES,TRIGGER ON waitlist_requests FROM hms_runtime;
 REVOKE ALL ON hms_cleanup_state FROM hms_runtime,hms_cleanup;
 REVOKE ALL ON demo_workspaces FROM hms_runtime;
 GRANT SELECT ON demo_workspaces TO hms_runtime;

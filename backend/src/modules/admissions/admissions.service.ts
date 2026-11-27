@@ -2,6 +2,7 @@ import { ConflictException, Injectable, NotFoundException } from '@nestjs/common
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { requireAdmissionActor, writeAdmissionAudit } from './admission-audit';
+import { writeEntityAudit } from '../../common/transaction-audit';
 import { CreateAdmissionDto } from './dto/create-admission.dto';
 
 @Injectable()
@@ -18,12 +19,16 @@ export class AdmissionsService {
       if (!await tx.patient.findUnique({ where: { id: dto.patientId }, select: { id: true } })) {
         throw new NotFoundException({ error: { code: 'PATIENT_NOT_FOUND', message: 'Patient not found', details: [] } });
       }
-      const bed = await tx.bed.findUnique({ where: { id: dto.bedId } });
+      let bed = await tx.bed.findUnique({ where: { id: dto.bedId } });
       if (!bed) {
         throw new NotFoundException({
           error: { code: 'BED_NOT_FOUND', message: 'السرير غير موجود', details: [] },
         });
       }
+      // Shared department-first lock serializes queue add/cancel/admit and setup.
+      await tx.$queryRaw`SELECT id FROM departments WHERE id=${bed.departmentId} FOR UPDATE`;
+      bed = await tx.bed.findUnique({ where: { id: dto.bedId } });
+      if (!bed) throw new NotFoundException({ error: { code: 'BED_NOT_FOUND', message: 'Bed not found', details: [] } });
       if (bed.status !== 'available') {
         // UC-1 Alternative Flow: لا سرير متاح — الواجهة تعرض قائمة انتظار بدل رسالة خطأ فقط
         throw new ConflictException({
@@ -47,6 +52,11 @@ export class AdmissionsService {
         data: { patientId: dto.patientId, bedId: dto.bedId, admittedBy },
       });
       await writeAdmissionAudit(tx, admittedBy, 'PATIENT_ADMITTED', null, admission, bed, { id: bed.id, status: 'occupied' });
+      const pending = await tx.waitlistRequest.findFirst({ where: { patientId: dto.patientId, departmentId: bed.departmentId, status: 'pending' } });
+      if (pending) {
+        const closed = await tx.waitlistRequest.update({ where: { id: pending.id }, data: { status: 'admitted', closedBy: admittedBy, closedAt: new Date(), admissionId: admission.id } });
+        await writeEntityAudit(tx, admittedBy, 'WAITLIST_ADMITTED', 'WaitlistRequest', pending, closed);
+      }
       return admission;
     }).catch((error: unknown) => {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {

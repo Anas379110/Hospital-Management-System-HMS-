@@ -368,6 +368,18 @@
         ],
         "type": "object"
       },
+      "CreateWaitlistDto": {
+        "properties": {
+          "patientId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "patientId"
+        ],
+        "type": "object"
+      },
       "DeleteEncounterDto": {
         "properties": {
           "reason": {
@@ -1420,6 +1432,195 @@
         "x-roles": [
           "manager",
           "admin"
+        ]
+      }
+    },
+    "/api/v1/departments/{departmentId}/waitlist": {
+      "get": {
+        "description": "Clinical-only patient identity. page and total identify additional pending requests, no inferred medical priority.",
+        "operationId": "WaitlistController_list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "maximum": 10000,
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "departmentId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "items, page and total, workspace scoped."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Invalid authentication or workspace"
+          },
+          "403": {
+            "description": "Clinical role required"
+          },
+          "404": {
+            "description": "Scoped record not found"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the pending requests in pages of100 chronologically",
+        "tags": [
+          "waitlist"
+        ],
+        "x-auth": "roles",
+        "x-roles": [
+          "doctor",
+          "nurse"
+        ]
+      },
+      "post": {
+        "description": "No automatic admission or clinical priority. Duplicate pending request409.",
+        "operationId": "WaitlistController_create",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "departmentId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWaitlistDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created request."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Invalid authentication or workspace"
+          },
+          "403": {
+            "description": "Clinical role required"
+          },
+          "404": {
+            "description": "Scoped record not found"
+          },
+          "409": {
+            "description": "Pending request conflict or already closed"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "503": {
+            "description": "Audit persistence failed, operation rolled back"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Manually add a pending request",
+        "tags": [
+          "waitlist"
+        ],
+        "x-auth": "roles",
+        "x-roles": [
+          "doctor",
+          "nurse"
+        ]
+      }
+    },
+    "/api/v1/departments/{departmentId}/waitlist/{id}/cancel": {
+      "post": {
+        "description": "Final state, no hard deletion or reopening.",
+        "operationId": "WaitlistController_cancel",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "departmentId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Cancelled request."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Invalid authentication or workspace"
+          },
+          "403": {
+            "description": "Clinical role required"
+          },
+          "404": {
+            "description": "Scoped record not found"
+          },
+          "409": {
+            "description": "Pending request conflict or already closed"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "503": {
+            "description": "Audit persistence failed, operation rolled back"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Manually cancel a pending request",
+        "tags": [
+          "waitlist"
+        ],
+        "x-auth": "roles",
+        "x-roles": [
+          "doctor",
+          "nurse"
         ]
       }
     },

@@ -161,3 +161,14 @@ routes' declared status sets are still not exhaustive service-error catalogues.
 Local-only candidate after b584561, not yet reviewed/deployed. Seven Admin-only writes: POST /departments, PATCH/DELETE /departments/{id}, POST /departments/{id}/beds, PATCH/DELETE /departments/{id}/beds/{bedId}, PATCH /departments/{id}/beds/{bedId}/maintenance. Both localized department names are required, trimmed and max120; bed label required trimmed max40, unique per department through serialized setup. UUID parameters and strict DTO whitelist. Maintenance accepts available/maintenance only, never occupied. Current active Admin rechecked inside transaction. Doctor/nurse alone retain admission/discharge.
 
 Department row lock serializes setup/count operations, followed by bed row lock. Admission uses status CAS; references/row locks protect concurrent deletion. Occupied maintenance rejected409; relabeling an occupied bed is permitted without changing its identity or history. Any admission history prevents bed deletion; any beds or appointment history prevents department deletion. Successful unused deletion retains explicit redacted audit. All setup writes and audit atomic; audit failure503 rolls back. Count updated from actual beds on add/delete, not entered as a free number. No schema/grant/provider change in this candidate.
+
+## Waitlist candidate, not yet deployed
+GET /departments/:departmentId/waitlist?page=0 returns100pending items perpage, page andtotal.
+POST samepath with patientId recordsmanualrequest. POST /:id/cancel closespendingrequest.
+Allthree doctor/nurse only, currentactiveactor rechecked, no newAdmin/Managerclinicalidentity.
+IDsUUIDvalidated, page0..10000, extraDTOkeysrejected. GET items containrequestid/department/
+requestedAt/status andpatient{id,fullName,mrn}. Noautoadmit, no reservation or clinicaltriage.
+Timestampascending andIDtie order is deterministic but not strictarrivalpriority for ties.
+Crosspage reads may shift with concurrentchanges. Duplicatepending/closed/requestconflict409,
+scopedmissing404; auditfailure503 rollsback write. Uncertainwrite shouldbereadback, never
+blindlyretried. Histories retained inDB/audit, pending-only list not a newhistoryscreen.

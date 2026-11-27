@@ -45,7 +45,7 @@ export class DepartmentSetupService {
   deleteDepartment(id: string, actor: string) {
     return this.write(actor, async tx => {
       const before = await this.department(tx, id);
-      if (await tx.bed.count({ where: { departmentId: id } }) || await tx.appointment.count({ where: { departmentId: id } })) throw conflict('SETUP_HAS_HISTORY');
+      if (await tx.bed.count({ where: { departmentId: id } }) || await tx.appointment.count({ where: { departmentId: id } }) || await tx.waitlistRequest.count({ where: { departmentId: id } })) throw conflict('SETUP_HAS_HISTORY');
       await tx.department.delete({ where: { id } });
       await writeEntityAudit(tx, actor, 'DEPARTMENT_DELETED', 'Department', before, { ...before, deleted: true });
       return { id, deleted: true };

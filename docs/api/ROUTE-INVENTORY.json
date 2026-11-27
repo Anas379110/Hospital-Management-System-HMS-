@@ -159,6 +159,45 @@
     "guards": []
   },
   {
+    "method": "POST",
+    "path": "/departments/{departmentId}/waitlist/{id}/cancel",
+    "controller": "modules/waitlist/waitlist.controller.ts",
+    "roles": [
+      "doctor",
+      "nurse"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/departments/{departmentId}/waitlist",
+    "controller": "modules/waitlist/waitlist.controller.ts",
+    "roles": [
+      "doctor",
+      "nurse"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/departments/{departmentId}/waitlist",
+    "controller": "modules/waitlist/waitlist.controller.ts",
+    "roles": [
+      "doctor",
+      "nurse"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
     "method": "PATCH",
     "path": "/departments/{id}/beds/{bedId}/maintenance",
     "controller": "modules/departments/department-setup.controller.ts",

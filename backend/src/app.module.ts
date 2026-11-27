@@ -1,3 +1,4 @@
+import { WaitlistModule } from './modules/waitlist/waitlist.module';
 import { rateLimitTracker } from './common/rate-limit-tracker';
 import { WorkspaceInterceptor } from './prisma/workspace.interceptor';
 import { Module } from '@nestjs/common';
@@ -32,6 +33,7 @@ import { AuditInterceptor } from './common/interceptors/audit.interceptor';
     AppointmentsModule,
     DepartmentsModule,
     AdmissionsModule,
+    WaitlistModule,
     PharmacyModule,
     LabModule,
     BillingModule,

@@ -9,6 +9,7 @@ describe('Admin department setup', () => {
       user: { findUnique: jest.fn().mockResolvedValue({ role: 'admin', isActive: true }) },
       department: { findUnique: jest.fn().mockResolvedValue({ id: 'dept' }), create: jest.fn().mockResolvedValue({ id: 'dept', totalBeds: 0 }), update: jest.fn(), delete: jest.fn() },
       bed: { findFirst: jest.fn(), create: jest.fn().mockResolvedValue(before), count: jest.fn().mockResolvedValue(0), delete: jest.fn(), updateMany: jest.fn().mockResolvedValue({ count: 1 }), findUniqueOrThrow: jest.fn().mockResolvedValue({ ...before, status: 'maintenance' }) },
+      waitlistRequest: { count: jest.fn().mockResolvedValue(0) },
       appointment: { count: jest.fn().mockResolvedValue(0) },
       admission: { count: jest.fn().mockResolvedValue(0) },
       auditLog: { create: jest.fn().mockResolvedValue({}) },

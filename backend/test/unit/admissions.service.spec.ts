@@ -4,6 +4,8 @@ import { AdmissionsService } from '../../src/modules/admissions/admissions.servi
 import { PrismaService } from '../../src/prisma/prisma.service';
 
 interface TxMock {
+  $queryRaw: jest.Mock;
+  waitlistRequest: { findFirst: jest.Mock; update: jest.Mock };
   patient: { findUnique: jest.Mock };
   user: { findUnique: jest.Mock };
   auditLog: { create: jest.Mock };
@@ -18,7 +20,9 @@ describe('AdmissionsService — UC-1 (SRS.md)', () => {
 
   beforeEach(async () => {
     tx = {
-      patient: { findUnique: jest.fn().mockResolvedValue({ id: "patient-1" }) },
+      $queryRaw: jest.fn().mockResolvedValue([]),
+    waitlistRequest: { findFirst: jest.fn().mockResolvedValue(null), update: jest.fn() },
+    patient: { findUnique: jest.fn().mockResolvedValue({ id: "patient-1" }) },
       user: { findUnique: jest.fn().mockResolvedValue({ id: "nurse-1", role: "nurse", isActive: true }) },
       auditLog: { create: jest.fn().mockResolvedValue({}) },
       bed: { findUniqueOrThrow: jest.fn().mockResolvedValue({ id: "bed-1", status: "occupied" }), findUnique: jest.fn(), update: jest.fn().mockResolvedValue({ id: "bed-1", status: "available" }), updateMany: jest.fn().mockResolvedValue({ count: 1 }) },

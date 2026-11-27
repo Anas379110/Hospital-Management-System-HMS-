@@ -27,7 +27,7 @@ try{
  await c.query(sql('prisma/demo/supabase-normalize.sql'));
  // Scheduler catalog is a local fixture, not evidence of pg_cron scheduling.
  await c.query('RESET ROLE');await c.query('CREATE TABLE cron.job(jobname text,schedule text,command text,username text,active boolean)');
- const audit=sql('prisma/demo/supabase-audit.sql');const command=audit.match(/command<>\$cleanup\$([\s\S]*?)\$cleanup\$/)[1];
+ const audit=sql('test-real-postgres/fixtures/supabase-audit-prewaitlist.sql');const command=audit.match(/command<>\$cleanup\$([\s\S]*?)\$cleanup\$/)[1];
  await c.query('INSERT INTO cron.job VALUES($1,$2,$3,$4,true),($5,$6,$7,$4,true)',['hms-hourly-expiry-cleanup','0 * * * *',command,'postgres','hms-cron-history-prune','15 0 * * *',"DELETE FROM cron.job_run_details WHERE end_time < now() - interval '24 hours';"]);
  await c.query('GRANT USAGE ON SCHEMA cron TO postgres; GRANT SELECT ON cron.job TO postgres;');
  await c.query('SET ROLE postgres');

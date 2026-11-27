@@ -12,6 +12,8 @@ describe('Departments & Admissions (e2e)', () => {
   let jwtService: JwtService;
 
   const txMock = {
+    $queryRaw: jest.fn().mockResolvedValue([]),
+    waitlistRequest: { findFirst: jest.fn().mockResolvedValue(null), update: jest.fn() },
     patient: { findUnique: jest.fn().mockResolvedValue({ id: "patient-1" }) },
     user: { findUnique: jest.fn().mockResolvedValue({ id: "u3", role: "nurse", isActive: true }) },
     auditLog: { create: jest.fn().mockResolvedValue({}) },

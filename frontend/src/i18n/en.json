@@ -387,5 +387,27 @@
     "offline": "Offline. Shown data may be out of date. Refresh will resume when connected.",
     "hidden": "Refresh paused while this screen is hidden. Shown data may be out of date.",
     "stale": "Waiting for a confirmed update. Shown data may be out of date."
+  },
+  "waitlist": {
+    "title": "Department waitlist",
+    "manual": "Chronological display with a stable arbitrary order for identical timestamps",
+    "add": "Add to waitlist",
+    "cancel": "Cancel request",
+    "noBeds": "No bed is available in this department. You can record a waitlist request below.",
+    "pendingCount": "Pending requests {{count}}",
+    "empty": "No pending requests",
+    "emptyPage": "No pending requests on this page. Go back to see earlier requests.",
+    "pending": "Pending since",
+    "page": "Page {{page}}",
+    "added": "Waitlist request recorded",
+    "cancelled": "Request cancelled and history retained",
+    "changed": "This request changed or the record is no longer available. The list has been refreshed.",
+    "addSafety": "This records a request only. It does not reserve a bed or admit the patient. Display order is chronological, not medical priority.",
+    "cancelSafety": "Cancel this pending request? The history will be retained. This does not discharge a patient.",
+    "confirmAdd": "Record request",
+    "confirmCancel": "Cancel this request",
+    "dismissAdd": "Do not add",
+    "keep": "Keep request",
+    "checked": "I checked the records"
   }
 }

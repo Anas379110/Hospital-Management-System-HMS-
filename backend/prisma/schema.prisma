@@ -346,3 +346,21 @@ model AuditLog {
   @@index([entityType, entityId])
   @@map("audit_logs")
 }
+
+// Additive waitlist candidate. Composite workspace FK and partial pending uniqueness
+// are enforced by the reviewed SQL migration, like existing isolation relations.
+model WaitlistRequest {
+  workspaceId String @default(dbgenerated("current_setting('hms.workspace_id', true)")) @map("workspace_id")
+  id String @id @default(uuid())
+  patientId String @map("patient_id")
+  departmentId String @map("department_id")
+  status String @default("pending")
+  requestedBy String @map("requested_by")
+  requestedAt DateTime @default(now()) @map("requested_at")
+  closedBy String? @map("closed_by")
+  closedAt DateTime? @map("closed_at")
+  admissionId String? @map("admission_id")
+
+  @@index([workspaceId, departmentId, status, requestedAt, id], map: "waitlist_fifo_idx")
+  @@map("waitlist_requests")
+}

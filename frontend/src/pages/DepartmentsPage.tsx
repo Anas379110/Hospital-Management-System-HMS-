@@ -1,3 +1,4 @@
+import DepartmentWaitlist from '../components/DepartmentWaitlist';
 import ReadFreshness from '../components/ReadFreshness';
 import DepartmentSetup from '../components/DepartmentSetup';
 import { useEffect, useState } from 'react';
@@ -82,6 +83,7 @@ export default function DepartmentsPage() {
         </CardContent></Card>
       </Grid>)}</Grid>
     </>}
+    {admissionAllowed && selectedDept && <DepartmentWaitlist key={selectedDept} departmentId={selectedDept} departmentName={departmentName} noAvailableBeds={!!beds.data && !beds.data.some(bed => bed.status === 'available')} />}
     <Dialog open={!!dialog} onClose={close} fullWidth maxWidth="sm">
       <DialogTitle>{t(dialog?.mode === 'discharge' ? 'departments.discharge' : 'departments.admit')} <bdi>{dialog?.bed.bedNumber}</bdi></DialogTitle>
       <DialogContent>
