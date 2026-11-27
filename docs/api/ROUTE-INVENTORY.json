@@ -159,6 +159,42 @@
     "guards": []
   },
   {
+    "method": "PATCH",
+    "path": "/departments/{id}/beds/{bedId}/maintenance",
+    "controller": "modules/departments/department-setup.controller.ts",
+    "roles": [
+      "admin"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/departments/{id}/beds/{bedId}",
+    "controller": "modules/departments/department-setup.controller.ts",
+    "roles": [
+      "admin"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/departments/{id}/beds/{bedId}",
+    "controller": "modules/departments/department-setup.controller.ts",
+    "roles": [
+      "admin"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
     "method": "GET",
     "path": "/departments/{id}/beds/summary",
     "controller": "modules/departments/departments.controller.ts",
@@ -180,6 +216,42 @@
       "nurse",
       "admin",
       "manager"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/departments/{id}/beds",
+    "controller": "modules/departments/department-setup.controller.ts",
+    "roles": [
+      "admin"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/departments/{id}",
+    "controller": "modules/departments/department-setup.controller.ts",
+    "roles": [
+      "admin"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/departments/{id}",
+    "controller": "modules/departments/department-setup.controller.ts",
+    "roles": [
+      "admin"
     ],
     "guards": [
       "JwtAuthGuard",
@@ -209,6 +281,18 @@
       "nurse",
       "admin",
       "manager"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/departments",
+    "controller": "modules/departments/department-setup.controller.ts",
+    "roles": [
+      "admin"
     ],
     "guards": [
       "JwtAuthGuard",

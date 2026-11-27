@@ -1,6 +1,6 @@
 import { ApiOperation, ApiResponse, ApiQuery, ApiExtension } from '@nestjs/swagger';
 import { ApiProperty } from '@nestjs/swagger';
-import { Controller, Get, Param, Query, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, ParseUUIDPipe, Query, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { IsDateString, Matches } from 'class-validator';
@@ -69,7 +69,7 @@ export class DepartmentsController {
   @ApiResponse({"status": 401, "description": "Missing/expired token, inactive current user, or invalid/expired workspace"})
   @ApiResponse({"status": 403, "description": "Current persisted role is not permitted"})
   @ApiResponse({"status": 429, "description": "Rate limit exceeded"})
-  getBeds(@Param('id') id: string, @Req() req: { user: { role: Role } }) {
+  getBeds(@Param('id', ParseUUIDPipe) id: string, @Req() req: { user: { role: Role } }) {
     return this.departmentsService.getBeds(id, CLINICAL_BED_IDENTITY_ROLES.includes(req.user.role));
   }
 
@@ -83,7 +83,7 @@ export class DepartmentsController {
   @ApiResponse({"status": 401, "description": "Missing/expired token, inactive current user, or invalid/expired workspace"})
   @ApiResponse({"status": 403, "description": "Current persisted role is not permitted"})
   @ApiResponse({"status": 429, "description": "Rate limit exceeded"})
-  getBedsSummary(@Param('id') id: string) {
+  getBedsSummary(@Param('id', ParseUUIDPipe) id: string) {
     return this.departmentsService.getBedsSummary(id);
   }
 }

@@ -357,5 +357,26 @@
     "beds": "Beds by department",
     "total": "Total",
     "stale": "Displayed figures are from the last successful update."
+  },
+  "setup": {
+    "title": "Department and bed setup",
+    "createDepartment": "Create department",
+    "renameDepartment": "Rename department",
+    "deleteDepartment": "Delete unused department",
+    "createBed": "Add bed",
+    "renameBed": "Rename bed",
+    "deleteBed": "Delete unused bed",
+    "makeAvailable": "Return to available",
+    "makeMaintenance": "Set maintenance",
+    "actualCount": "Actual bed count",
+    "nameAr": "Arabic department name",
+    "nameEn": "English department name",
+    "bedNumber": "Bed label",
+    "safety": "Only unused records can be deleted. Occupied beds cannot enter maintenance. Admission history is kept. Confirm this change.",
+    "confirm": "Confirm setup change",
+    "duplicate": "This bed label already exists in this department.",
+    "conflict": "This record changed, is occupied or has linked history. Lists refreshed. Close this dialog and check before trying again.",
+    "forbidden": "Your current role cannot change setup. Refresh or sign in again.",
+    "invalid": "Check the required fields and their length before trying again."
   }
 }

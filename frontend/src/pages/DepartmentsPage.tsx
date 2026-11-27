@@ -1,3 +1,4 @@
+import DepartmentSetup from '../components/DepartmentSetup';
 import { useEffect, useState } from 'react';
 import { Alert, Autocomplete, Box, Button, Card, CardContent, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Grid, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
@@ -59,6 +60,7 @@ export default function DepartmentsPage() {
     {!!departments.data?.length && <TextField select fullWidth label={t('departments.choose')} value={selectedDept} onChange={e => setSelectedDept(e.target.value)} sx={{ mb: 3 }}>
       {departments.data.map(d => <MenuItem key={d.id} value={d.id}>{i18n.language === 'ar' ? d.nameAr : d.nameEn}</MenuItem>)}
     </TextField>}
+    {user?.role === 'admin' && <DepartmentSetup department={activeDepartment} beds={beds.data} onDeleted={() => setSelectedDept('')} />}
     {!bedsAllowed && <Alert severity="info">{t('departments.directoryOnly')}</Alert>}
     {bedsAllowed && !selectedDept && <Alert severity="info">{t('departments.chooseHint')}</Alert>}
     {beds.isLoading && <CircularProgress aria-label={t('patients.loading')} />}

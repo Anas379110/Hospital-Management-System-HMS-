@@ -46,6 +46,7 @@ export class AppointmentsService {
         } });
       }
     }
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') throw new ConflictException({ error: { code: 'APPOINTMENT_REFERENCE_CHANGED', message: 'An appointment reference changed. Refresh before trying again.', details: [] } });
     throw error;
   }
 

@@ -11,6 +11,8 @@ export async function requireActor(tx: Prisma.TransactionClient, actor: string, 
 }
 // Entity-specific fields only. Patient demographics and contact values never enter audit.
 export const policies: Record<string, { fields: string[]; visible: string[] }> = {
+  Department: { fields: ['id','nameAr','nameEn','totalBeds','deleted'], visible: ['id','totalBeds','deleted'] },
+  Bed: { fields: ['id','departmentId','bedNumber','status','deleted'], visible: ['id','departmentId','status','deleted'] },
   Appointment: { fields: ['id','patientId','doctorId','departmentId','scheduledAt','status','cancelReason','createdAt','updatedAt'], visible: ['id','patientId','doctorId','departmentId','scheduledAt','status','createdAt','updatedAt'] },
   User: { fields: ['id','username','fullName','role','isActive','createdAt','updatedAt'], visible: ['id','role','isActive','createdAt','updatedAt'] },
   TestOrder: { fields: ['id','patientId','encounterId','orderedBy','testType','testName','status','result','resultNotes','orderedAt','completedBy','completedAt'], visible: ['id','patientId','encounterId','orderedBy','testType','status','orderedAt','completedBy','completedAt'] },

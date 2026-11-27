@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import { Test } from '@nestjs/testing';
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { AppointmentsService } from '../../src/modules/appointments/appointments.service';
@@ -185,4 +186,13 @@ describe('AppointmentsService', () => {
     });
   });
 
+});
+
+
+
+describe('Appointment referenced record deletion', () => {
+  it('maps transaction foreign-key loss to actionable409 instead of500', async () => {
+    const service = new AppointmentsService({ $transaction: jest.fn().mockRejectedValue(new Prisma.PrismaClientKnownRequestError('reference changed', { code: 'P2003', clientVersion: 'test' })) } as unknown as PrismaService);
+    await expect(service.create({ patientId: 'patient', doctorId: 'doctor', departmentId: 'dept', scheduledAt: '2026-12-01T00:00:00Z' }, 'actor')).rejects.toMatchObject({ status: 409, response: { error: { code: 'APPOINTMENT_REFERENCE_CHANGED' } } });
+  });
 });

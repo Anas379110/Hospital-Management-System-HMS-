@@ -60,6 +60,37 @@
         ],
         "type": "object"
       },
+      "BedMaintenanceDto": {
+        "additionalProperties": false,
+        "properties": {
+          "status": {
+            "enum": [
+              "available",
+              "maintenance"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "type": "object"
+      },
+      "BedNumberDto": {
+        "additionalProperties": false,
+        "properties": {
+          "bedNumber": {
+            "maxLength": 40,
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          }
+        },
+        "required": [
+          "bedNumber"
+        ],
+        "type": "object"
+      },
       "CancelAppointmentDto": {
         "additionalProperties": false,
         "properties": {
@@ -365,6 +396,28 @@
         },
         "required": [
           "reason"
+        ],
+        "type": "object"
+      },
+      "DepartmentNamesDto": {
+        "additionalProperties": false,
+        "properties": {
+          "nameAr": {
+            "maxLength": 120,
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "nameEn": {
+            "maxLength": 120,
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          }
+        },
+        "required": [
+          "nameAr",
+          "nameEn"
         ],
         "type": "object"
       },
@@ -1387,6 +1440,62 @@
           "admin",
           "manager"
         ]
+      },
+      "post": {
+        "operationId": "DepartmentSetupController_create",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DepartmentNamesDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
+          },
+          "403": {
+            "description": "Current persisted role is not permitted"
+          },
+          "404": {
+            "description": "Scoped setup record not found"
+          },
+          "409": {
+            "description": "Occupied bed, duplicate label or linked history"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "503": {
+            "description": "Audit persistence failed, operation rolled back"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "DepartmentSetupController.create",
+        "tags": [
+          "departments"
+        ],
+        "x-controller": "modules/departments/department-setup.controller.ts",
+        "x-guards": [
+          "JwtAuthGuard",
+          "RolesGuard"
+        ],
+        "x-roles": [
+          "admin"
+        ]
       }
     },
     "/departments/overview": {
@@ -1451,6 +1560,130 @@
         ]
       }
     },
+    "/departments/{id}": {
+      "delete": {
+        "operationId": "DepartmentSetupController_remove",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
+          },
+          "403": {
+            "description": "Current persisted role is not permitted"
+          },
+          "404": {
+            "description": "Scoped setup record not found"
+          },
+          "409": {
+            "description": "Occupied bed, duplicate label or linked history"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "503": {
+            "description": "Audit persistence failed, operation rolled back"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "DepartmentSetupController.remove",
+        "tags": [
+          "departments"
+        ],
+        "x-controller": "modules/departments/department-setup.controller.ts",
+        "x-guards": [
+          "JwtAuthGuard",
+          "RolesGuard"
+        ],
+        "x-roles": [
+          "admin"
+        ]
+      },
+      "patch": {
+        "operationId": "DepartmentSetupController_rename",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DepartmentNamesDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
+          },
+          "403": {
+            "description": "Current persisted role is not permitted"
+          },
+          "404": {
+            "description": "Scoped setup record not found"
+          },
+          "409": {
+            "description": "Occupied bed, duplicate label or linked history"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "503": {
+            "description": "Audit persistence failed, operation rolled back"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "DepartmentSetupController.rename",
+        "tags": [
+          "departments"
+        ],
+        "x-controller": "modules/departments/department-setup.controller.ts",
+        "x-guards": [
+          "JwtAuthGuard",
+          "RolesGuard"
+        ],
+        "x-roles": [
+          "admin"
+        ]
+      }
+    },
     "/departments/{id}/beds": {
       "get": {
         "operationId": "DepartmentsController_getBeds",
@@ -1501,6 +1734,72 @@
           "admin",
           "manager"
         ]
+      },
+      "post": {
+        "operationId": "DepartmentSetupController_createBed",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BedNumberDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
+          },
+          "403": {
+            "description": "Current persisted role is not permitted"
+          },
+          "404": {
+            "description": "Scoped setup record not found"
+          },
+          "409": {
+            "description": "Occupied bed, duplicate label or linked history"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "503": {
+            "description": "Audit persistence failed, operation rolled back"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "DepartmentSetupController.createBed",
+        "tags": [
+          "departments"
+        ],
+        "x-controller": "modules/departments/department-setup.controller.ts",
+        "x-guards": [
+          "JwtAuthGuard",
+          "RolesGuard"
+        ],
+        "x-roles": [
+          "admin"
+        ]
       }
     },
     "/departments/{id}/beds/summary": {
@@ -1549,6 +1848,222 @@
         ],
         "x-roles": [
           "manager",
+          "admin"
+        ]
+      }
+    },
+    "/departments/{id}/beds/{bedId}": {
+      "delete": {
+        "operationId": "DepartmentSetupController_removeBed",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "bedId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
+          },
+          "403": {
+            "description": "Current persisted role is not permitted"
+          },
+          "404": {
+            "description": "Scoped setup record not found"
+          },
+          "409": {
+            "description": "Occupied bed, duplicate label or linked history"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "503": {
+            "description": "Audit persistence failed, operation rolled back"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "DepartmentSetupController.removeBed",
+        "tags": [
+          "departments"
+        ],
+        "x-controller": "modules/departments/department-setup.controller.ts",
+        "x-guards": [
+          "JwtAuthGuard",
+          "RolesGuard"
+        ],
+        "x-roles": [
+          "admin"
+        ]
+      },
+      "patch": {
+        "operationId": "DepartmentSetupController_renameBed",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "bedId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BedNumberDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
+          },
+          "403": {
+            "description": "Current persisted role is not permitted"
+          },
+          "404": {
+            "description": "Scoped setup record not found"
+          },
+          "409": {
+            "description": "Occupied bed, duplicate label or linked history"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "503": {
+            "description": "Audit persistence failed, operation rolled back"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "DepartmentSetupController.renameBed",
+        "tags": [
+          "departments"
+        ],
+        "x-controller": "modules/departments/department-setup.controller.ts",
+        "x-guards": [
+          "JwtAuthGuard",
+          "RolesGuard"
+        ],
+        "x-roles": [
+          "admin"
+        ]
+      }
+    },
+    "/departments/{id}/beds/{bedId}/maintenance": {
+      "patch": {
+        "operationId": "DepartmentSetupController_maintenance",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "bedId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BedMaintenanceDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
+          },
+          "403": {
+            "description": "Current persisted role is not permitted"
+          },
+          "404": {
+            "description": "Scoped setup record not found"
+          },
+          "409": {
+            "description": "Occupied bed, duplicate label or linked history"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "503": {
+            "description": "Audit persistence failed, operation rolled back"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "DepartmentSetupController.maintenance",
+        "tags": [
+          "departments"
+        ],
+        "x-controller": "modules/departments/department-setup.controller.ts",
+        "x-guards": [
+          "JwtAuthGuard",
+          "RolesGuard"
+        ],
+        "x-roles": [
           "admin"
         ]
       }

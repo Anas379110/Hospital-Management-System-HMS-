@@ -36,10 +36,10 @@ Reconciled27 November2026 against deployed37424a3 and the local qualification ev
 | FR4.2 prescription linked to encounter | encounters service+UI, pharmacy tests | Implemented fictional prescription. No clinical dosing/safety claim |
 | FR4.3 chronological medical records | patients records endpoint descencounterDatewithprescriptions; separate test-results route/UI | Implemented scoped records. No universal combined longitudinal activity timeline |
 | FR4.4 soft-delete with reason | encounter ownership+reason DTO, service tests and rollback coverage | Implemented domain soft-delete. Demo workspace expiry intentionally physically deletes fictional data, unlike real-record retention |
-| FR5.1 define departments/bed counts | schema and seed, list/beds read routes | Partial. No staff department/bed setup mutations or UI; seeded fixtures are not administration functionality |
+| FR5.1 define departments/bed counts | existing schema plus seven Admin setup candidate writes and bilingual UI | Local candidate tested PG17/18; independent review/exact CI/hosted release pending, seeded fixtures alone do not count |
 | FR5.2 admit only available bed | admissions service+transactional bed state, DB contention, browser | Implemented scoped workflow |
 | FR5.3 discharge time/state | admissions service+audit/rollback; browser | Implemented scoped workflow |
-| FR5.4 bed states current to all clients | APIreadsstates, local mutation cache invalidation | Partial. No staff maintenance-state mutation and no cross-client realtime/polling freshness guarantee |
+| FR5.4 bed states current to all clients | APIreadsstates, local mutation cache invalidation | Partial. Local Admin maintenance candidate tested; publication gates pending. Cross-client polling/stale indicator still open |
 
 ## Extended FR6..8
 
@@ -103,3 +103,7 @@ actions and EN desktop/AR390px confirmation commits. These are selected local
 cases, not full workflow coverage. Exact-head hosted CI, source publication and
 hosted release of this candidate remain pending. Department/bed setup, waitlist
 and freshness are still open; no live schema/grant change is included here.
+
+## Department setup candidate November27
+
+Local after b584561: seven Admin setup writes, occupied relabel allowed, maintenance/delete protected, linked-history deletion rejected, redacted atomic audit, app-lock bed labels and actual count.213unit/62mockHTTP/56frontend/18contracts plus actualPG17/18/EN+ARbrowser pass. Independent review remediation pending closure, then exact CI/hosted proof. No schema or grant delta. Application-lock uniqueness and bounded race evidence, not DB constraint or exhaustive interleavings. Waitlist/freshness remain open.

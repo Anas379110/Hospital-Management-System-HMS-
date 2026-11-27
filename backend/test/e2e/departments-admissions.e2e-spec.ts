@@ -48,19 +48,19 @@ describe('Departments & Admissions (e2e)', () => {
   it('GET /departments/{id}/beds/summary بدور nurse (غير مخوَّل — Manager/Admin فقط) → 403', async () => {
     const token = await jwtService.signAsync({ sub: 'u1', username: 'n1', role: 'nurse' });
     const res = await request(app.getHttpServer())
-      .get('/api/v1/departments/dept-1/beds/summary')
+      .get('/api/v1/departments/00000000-0000-4000-a000-000000000001/beds/summary')
       .set('Authorization', `Bearer ${token}`);
 
     expect(res.status).toBe(403);
   });
 
   it('GET /departments/{id}/beds/summary بدور manager → 200', async () => {
-    prismaMock.department.findUnique.mockResolvedValue({ id: 'dept-1' });
+    prismaMock.department.findUnique.mockResolvedValue({ id: '00000000-0000-4000-a000-000000000001' });
     prismaMock.bed.findMany.mockResolvedValue([{ status: 'available' }, { status: 'occupied' }]);
     const token = await jwtService.signAsync({ sub: 'u2', username: 'mgr1', role: 'manager' });
 
     const res = await request(app.getHttpServer())
-      .get('/api/v1/departments/dept-1/beds/summary')
+      .get('/api/v1/departments/00000000-0000-4000-a000-000000000001/beds/summary')
       .set('Authorization', `Bearer ${token}`);
 
     expect(res.status).toBe(200);

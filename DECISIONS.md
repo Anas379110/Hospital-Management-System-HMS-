@@ -128,3 +128,7 @@
 ## Decision 027 — Finding #9 (Billing insurance %) — قرار مفتوح عمداً
 راجع docs/security/SECURITY-REVIEW.md Finding #9. لا قيد تقني مفروض حالياً على `insuranceCoveragePercent` — قرار سياسة عمل لا خطأ برمجي، 3 خيارات مطروحة، **بانتظار قرارك الصريح** بدل فرض قيد قد يُعطِّل سير عمل شرعي.
 **Status:** OPEN — NEEDS USER DECISION.
+
+## Decision 028 — Approved setup roles and preserved history, candidate November27
+
+User approved workflow rules22:09 and clarified Admin rather than Manager22:10. Extend existing department/bed schema and stack. Admin setup and available/maintenance only; doctor/nurse admission/discharge unchanged. No delete when linked history exists. Locks/CAS serialize setup/admission and actual count updates, with audit in same transaction. Bilingual confirmation UI does not implement authorization. No schema/migration required for this slice. Waitlist and live DB gate separate. Candidate remains unreviewed/unpublished until review/exact CI/hosted checks.

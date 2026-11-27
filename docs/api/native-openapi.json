@@ -58,6 +58,35 @@
         ],
         "type": "object"
       },
+      "BedMaintenanceDto": {
+        "properties": {
+          "status": {
+            "enum": [
+              "available",
+              "maintenance"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "type": "object"
+      },
+      "BedNumberDto": {
+        "properties": {
+          "bedNumber": {
+            "maxLength": 40,
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          }
+        },
+        "required": [
+          "bedNumber"
+        ],
+        "type": "object"
+      },
       "CancelAppointmentDto": {
         "properties": {
           "reason": {
@@ -348,6 +377,27 @@
         },
         "required": [
           "reason"
+        ],
+        "type": "object"
+      },
+      "DepartmentNamesDto": {
+        "properties": {
+          "nameAr": {
+            "maxLength": 120,
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "nameEn": {
+            "maxLength": 120,
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          }
+        },
+        "required": [
+          "nameAr",
+          "nameEn"
         ],
         "type": "object"
       },
@@ -1260,6 +1310,58 @@
           "admin",
           "manager"
         ]
+      },
+      "post": {
+        "operationId": "DepartmentSetupController_create",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DepartmentNamesDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          },
+          "400": {
+            "description": "Invalid DTO or UUID"
+          },
+          "401": {
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "description": "Active Admin required"
+          },
+          "404": {
+            "description": "Scoped setup record not found"
+          },
+          "409": {
+            "description": "Occupied bed, duplicate label or linked history"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "503": {
+            "description": "Audit persistence failed, operation rolled back"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "department-setup"
+        ],
+        "x-auth": "roles",
+        "x-roles": [
+          "admin"
+        ]
       }
     },
     "/api/v1/departments/overview": {
@@ -1321,6 +1423,120 @@
         ]
       }
     },
+    "/api/v1/departments/{id}": {
+      "delete": {
+        "operationId": "DepartmentSetupController_remove",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "description": "Invalid DTO or UUID"
+          },
+          "401": {
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "description": "Active Admin required"
+          },
+          "404": {
+            "description": "Scoped setup record not found"
+          },
+          "409": {
+            "description": "Occupied bed, duplicate label or linked history"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "503": {
+            "description": "Audit persistence failed, operation rolled back"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "department-setup"
+        ],
+        "x-auth": "roles",
+        "x-roles": [
+          "admin"
+        ]
+      },
+      "patch": {
+        "operationId": "DepartmentSetupController_rename",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DepartmentNamesDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "description": "Invalid DTO or UUID"
+          },
+          "401": {
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "description": "Active Admin required"
+          },
+          "404": {
+            "description": "Scoped setup record not found"
+          },
+          "409": {
+            "description": "Occupied bed, duplicate label or linked history"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "503": {
+            "description": "Audit persistence failed, operation rolled back"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "department-setup"
+        ],
+        "x-auth": "roles",
+        "x-roles": [
+          "admin"
+        ]
+      }
+    },
     "/api/v1/departments/{id}/beds": {
       "get": {
         "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization.",
@@ -1368,6 +1584,67 @@
           "admin",
           "manager"
         ]
+      },
+      "post": {
+        "operationId": "DepartmentSetupController_createBed",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BedNumberDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          },
+          "400": {
+            "description": "Invalid DTO or UUID"
+          },
+          "401": {
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "description": "Active Admin required"
+          },
+          "404": {
+            "description": "Scoped setup record not found"
+          },
+          "409": {
+            "description": "Occupied bed, duplicate label or linked history"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "503": {
+            "description": "Audit persistence failed, operation rolled back"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "department-setup"
+        ],
+        "x-auth": "roles",
+        "x-roles": [
+          "admin"
+        ]
       }
     },
     "/api/v1/departments/{id}/beds/summary": {
@@ -1413,6 +1690,207 @@
         "x-auth": "roles",
         "x-roles": [
           "manager",
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/departments/{id}/beds/{bedId}": {
+      "delete": {
+        "operationId": "DepartmentSetupController_removeBed",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "bedId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "description": "Invalid DTO or UUID"
+          },
+          "401": {
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "description": "Active Admin required"
+          },
+          "404": {
+            "description": "Scoped setup record not found"
+          },
+          "409": {
+            "description": "Occupied bed, duplicate label or linked history"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "503": {
+            "description": "Audit persistence failed, operation rolled back"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "department-setup"
+        ],
+        "x-auth": "roles",
+        "x-roles": [
+          "admin"
+        ]
+      },
+      "patch": {
+        "operationId": "DepartmentSetupController_renameBed",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "bedId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BedNumberDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "description": "Invalid DTO or UUID"
+          },
+          "401": {
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "description": "Active Admin required"
+          },
+          "404": {
+            "description": "Scoped setup record not found"
+          },
+          "409": {
+            "description": "Occupied bed, duplicate label or linked history"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "503": {
+            "description": "Audit persistence failed, operation rolled back"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "department-setup"
+        ],
+        "x-auth": "roles",
+        "x-roles": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/departments/{id}/beds/{bedId}/maintenance": {
+      "patch": {
+        "operationId": "DepartmentSetupController_maintenance",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "bedId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BedMaintenanceDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "description": "Invalid DTO or UUID"
+          },
+          "401": {
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "description": "Active Admin required"
+          },
+          "404": {
+            "description": "Scoped setup record not found"
+          },
+          "409": {
+            "description": "Occupied bed, duplicate label or linked history"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "503": {
+            "description": "Audit persistence failed, operation rolled back"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "department-setup"
+        ],
+        "x-auth": "roles",
+        "x-roles": [
           "admin"
         ]
       }
