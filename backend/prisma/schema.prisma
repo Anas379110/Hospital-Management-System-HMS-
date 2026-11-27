@@ -70,8 +70,9 @@ enum PaymentMethod {
 }
 
 model User {
+  workspaceId String @default(dbgenerated("current_setting('hms.workspace_id', true)")) @map("workspace_id")
   id           String   @id @default(uuid())
-  username     String   @unique
+  username     String
   passwordHash String   @map("password_hash")
   fullName     String   @map("full_name")
   role         Role
@@ -90,12 +91,14 @@ model User {
   createdInvoices       Invoice[]       @relation("InvoiceCreatedBy")
   recordedPayments      Payment[]       @relation("PaymentRecordedBy")
 
+  @@unique([workspaceId, username])
   @@map("users")
 }
 
 model Patient {
+  workspaceId String @default(dbgenerated("current_setting('hms.workspace_id', true)")) @map("workspace_id")
   id                    String   @id @default(uuid())
-  mrn                   String   @unique
+  mrn                   String
   fullName              String   @map("full_name")
   dateOfBirth           DateTime @map("date_of_birth")
   gender                Gender
@@ -116,10 +119,12 @@ model Patient {
   invoices     Invoice[]
 
   @@index([fullName, dateOfBirth])
+  @@unique([workspaceId, mrn])
   @@map("patients")
 }
 
 model Appointment {
+  workspaceId String @default(dbgenerated("current_setting('hms.workspace_id', true)")) @map("workspace_id")
   id           String            @id @default(uuid())
   patientId    String            @map("patient_id")
   patient      Patient           @relation(fields: [patientId], references: [id])
@@ -142,6 +147,7 @@ model Appointment {
 }
 
 model Encounter {
+  workspaceId String @default(dbgenerated("current_setting('hms.workspace_id', true)")) @map("workspace_id")
   id              String       @id @default(uuid())
   patientId       String       @map("patient_id")
   patient         Patient      @relation(fields: [patientId], references: [id])
@@ -165,6 +171,7 @@ model Encounter {
 }
 
 model Prescription {
+  workspaceId String @default(dbgenerated("current_setting('hms.workspace_id', true)")) @map("workspace_id")
   id              String    @id @default(uuid())
   encounterId     String    @map("encounter_id")
   encounter       Encounter @relation(fields: [encounterId], references: [id])
@@ -188,8 +195,9 @@ model Prescription {
 }
 
 model Medication {
+  workspaceId String @default(dbgenerated("current_setting('hms.workspace_id', true)")) @map("workspace_id")
   id               String   @id @default(uuid())
-  name             String   @unique
+  name             String
   unit             String
   currentStock     Int      @default(0) @map("current_stock")
   reorderThreshold Int      @default(10) @map("reorder_threshold")
@@ -199,10 +207,12 @@ model Medication {
   prescriptions Prescription[]
 
   @@index([currentStock])
+  @@unique([workspaceId, name])
   @@map("medications")
 }
 
 model TestOrder {
+  workspaceId String @default(dbgenerated("current_setting('hms.workspace_id', true)")) @map("workspace_id")
   id              String          @id @default(uuid())
   patientId       String          @map("patient_id")
   patient         Patient         @relation(fields: [patientId], references: [id])
@@ -226,6 +236,7 @@ model TestOrder {
 }
 
 model Invoice {
+  workspaceId String @default(dbgenerated("current_setting('hms.workspace_id', true)")) @map("workspace_id")
   id                       String        @id @default(uuid())
   patientId                String        @map("patient_id")
   patient                  Patient       @relation(fields: [patientId], references: [id])
@@ -247,6 +258,7 @@ model Invoice {
 }
 
 model InvoiceItem {
+  workspaceId String @default(dbgenerated("current_setting('hms.workspace_id', true)")) @map("workspace_id")
   id          String  @id @default(uuid())
   invoiceId   String  @map("invoice_id")
   invoice     Invoice @relation(fields: [invoiceId], references: [id])
@@ -258,6 +270,7 @@ model InvoiceItem {
 }
 
 model Payment {
+  workspaceId String @default(dbgenerated("current_setting('hms.workspace_id', true)")) @map("workspace_id")
   id          String        @id @default(uuid())
   invoiceId   String        @map("invoice_id")
   invoice     Invoice       @relation(fields: [invoiceId], references: [id])
@@ -271,6 +284,7 @@ model Payment {
 }
 
 model Department {
+  workspaceId String @default(dbgenerated("current_setting('hms.workspace_id', true)")) @map("workspace_id")
   id         String   @id @default(uuid())
   nameAr     String   @map("name_ar")
   nameEn     String   @map("name_en")
@@ -284,6 +298,7 @@ model Department {
 }
 
 model Bed {
+  workspaceId String @default(dbgenerated("current_setting('hms.workspace_id', true)")) @map("workspace_id")
   id           String    @id @default(uuid())
   departmentId String    @map("department_id")
   department   Department @relation(fields: [departmentId], references: [id])
@@ -299,6 +314,7 @@ model Bed {
 }
 
 model Admission {
+  workspaceId String @default(dbgenerated("current_setting('hms.workspace_id', true)")) @map("workspace_id")
   id              String    @id @default(uuid())
   patientId       String    @map("patient_id")
   patient         Patient   @relation(fields: [patientId], references: [id])
@@ -316,6 +332,7 @@ model Admission {
 }
 
 model AuditLog {
+  workspaceId String @default(dbgenerated("current_setting('hms.workspace_id', true)")) @map("workspace_id")
   id         String   @id @default(uuid())
   userId     String   @map("user_id")
   user       User     @relation(fields: [userId], references: [id], onUpdate: Restrict)

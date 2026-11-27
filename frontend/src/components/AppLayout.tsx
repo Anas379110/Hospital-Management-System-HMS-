@@ -1,4 +1,4 @@
-import { Alert, Box, Button, Container, Divider, Drawer, IconButton, Paper, Stack, Typography } from '@mui/material';
+import { MenuItem, Select, Alert, Box, Button, Container, Divider, Drawer, IconButton, Paper, Stack, Typography } from '@mui/material';
 import { useState } from 'react';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useTranslation } from 'react-i18next';
@@ -6,11 +6,11 @@ import { Outlet, NavLink } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { canAccessPage } from '../auth/permissions';
 
-const pages = ['patients', 'appointments', 'departments', 'pharmacy', 'lab', 'billing', 'users'];
+const pages = ['audit','patients', 'appointments', 'departments', 'pharmacy', 'lab', 'billing', 'users'];
 
 export default function AppLayout() {
   const { t, i18n } = useTranslation();
-  const { user, logout } = useAuth();
+  const { user, logout, switchDemoRole } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
 
   function toggleLocale() {
@@ -38,6 +38,7 @@ export default function AppLayout() {
           <Stack direction="row" alignItems="center" gap={1} flexWrap="wrap">
             {user && <Box sx={{ px: 1, display: { xs: 'none', md: 'block' } }}><Typography fontWeight={650}><bdi>{user.username}</bdi></Typography><Typography variant="caption" color="text.secondary">{t(`roles.${user.role}`)}</Typography></Box>}
             <Button variant="outlined" onClick={toggleLocale} sx={{ minHeight: 44, textTransform: 'none' }}>{i18n.language === 'ar' ? 'English' : 'العربية'}</Button>
+            {user && localStorage.getItem('hms_demo')==='true' && <Select size="small" value={user.role} inputProps={{'aria-label':t('demo.role')}} onChange={e=>{void switchDemoRole(e.target.value).catch(()=>logout());}}>{['admin','receptionist','doctor','nurse','manager','pharmacist','lab_tech','billing_clerk'].map(role=><MenuItem key={role} value={role}>{t('roles.'+role)}</MenuItem>)}</Select>}
             {user && <Button onClick={logout} sx={{ minHeight: 44, display: { xs: 'none', md: 'inline-flex' } }}>{t('auth.logout')}</Button>}
           </Stack>
         </Stack>
@@ -53,7 +54,7 @@ export default function AppLayout() {
         </Box>
       </Drawer>
       <Container maxWidth="xl" sx={{ py: { xs: 2, md: 3 } }}>
-        <Alert severity="info" icon={false} sx={{ mb: 3, bgcolor: '#e6f1f3', color: '#204854' }}>{t('app.demoNotice')}</Alert>
+        <Alert severity="info" icon={false} sx={{ mb: 3, bgcolor: '#e6f1f3', color: '#204854' }}>{localStorage.getItem('hms_demo')==='true'?t('demo.notice'):t('app.demoNotice')}</Alert>
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: '220px minmax(0, 1fr)' }, gap: 3, alignItems: 'start' }}>
           {user && <Paper component="nav" aria-label={t('nav.label')} elevation={0} sx={{ display: { xs: 'none', md: 'block' }, border: '1px solid #dbe3e8', borderRadius: 3, p: 2 }}>
             <Typography variant="overline" color="text.secondary">{t('nav.workspace')}</Typography>

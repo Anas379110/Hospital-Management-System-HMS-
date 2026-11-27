@@ -9,7 +9,7 @@ import { getApiErrorMessage } from '../api/client';
 
 export default function LoginPage() {
   const { t } = useTranslation();
-  const { login } = useAuth();
+  const { login, startDemo } = useAuth();
   const navigate = useNavigate();
 
   const [username, setUsername] = useState('');
@@ -38,7 +38,10 @@ export default function LoginPage() {
         <Typography variant="h5" mb={3} textAlign="center" fontWeight={700}>
           {t('app.title')}
         </Typography>
-        <form onSubmit={handleSubmit}>
+        <Alert severity="info" sx={{mb:2}}>{t('demo.notice')}</Alert>
+        <Button fullWidth variant="contained" disabled={loading} onClick={async()=>{setLoading(true);setError(null);try{await startDemo();navigate('/patients');}catch(err){setError(getApiErrorMessage(err,t('errors.generic')));}finally{setLoading(false);}}}>{t('demo.start')}</Button>
+        {error && <Alert severity="error">{error}</Alert>}
+        {import.meta.env.VITE_PUBLIC_DEMO !== 'true' && <form onSubmit={handleSubmit}>
           <TextField
             fullWidth
             label={t('auth.username')}
@@ -72,7 +75,7 @@ export default function LoginPage() {
           >
             {t('auth.login')}
           </Button>
-        </form>
+        </form>}
       </Paper>
     </Box>
   );

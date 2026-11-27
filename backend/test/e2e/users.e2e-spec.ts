@@ -14,6 +14,7 @@ describe('Users (e2e)', () => {
   const prismaMock = {
     $transaction: jest.fn((callback: (tx: unknown) => unknown): unknown => callback(prismaMock)), $executeRaw: jest.fn(), $queryRaw: jest.fn().mockResolvedValue([]),
     user: {
+      findFirst: jest.fn().mockResolvedValue(null),
       findMany: jest.fn().mockResolvedValue([]),
       findUnique: jest.fn().mockImplementation(({ where }) => Promise.resolve(where.id ? { id: where.id, isActive: true, role: "admin" } : null)),
       create: jest.fn().mockImplementation(({ data }) =>

@@ -40,6 +40,10 @@ export class PatientsController {
     return this.patientsService.search(search);
   }
 
+  @Get('billing-lookup')
+  @Roles(Role.billing_clerk, Role.admin)
+  billingLookup(@Query('search') search = '') { return this.patientsService.billingLookup(search); }
+
   @Get(':id')
   @Roles(Role.receptionist, Role.doctor, Role.nurse, Role.admin, Role.manager)
   findOne(@Param('id') id: string) {

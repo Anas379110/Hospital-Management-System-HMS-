@@ -51,7 +51,7 @@ export class AdmissionsService {
     }).catch((error: unknown) => {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
         const target = error.meta?.target;
-        if (Array.isArray(target) && target.includes('bed_id')) {
+        if ((Array.isArray(target) && target.includes('bed_id')) || (target == null && error.meta?.modelName === 'Admission')) {
           throw new ConflictException({ error: {
             code: 'BED_NOT_AVAILABLE', message: 'السرير مشغول أو تحت الصيانة — اختر سريراً آخر', details: [],
           } });

@@ -1,8 +1,11 @@
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../hooks/useAuth';
 import { canManageBilling } from '../auth/permissions';
+import { useQuery } from '@tanstack/react-query';
+import { apiClient } from '../api/client';
 import { useState } from 'react';
 import {
+  Autocomplete,
   Alert,
   Box,
   Button,
@@ -38,6 +41,8 @@ export default function BillingPage() {
   const addInvoiceItem = useAddInvoiceItem();
   const [saved, setSaved] = useState(false);
   const [patientId, setPatientId] = useState('');
+  const [patientSearch,setPatientSearch]=useState('');
+  const patientLookup=useQuery({queryKey:['billing-patient',patientSearch],enabled:writable&&patientSearch.trim().length>=2,queryFn:async()=>(await apiClient.get<{id:string;mrn:string;fullName:string}[]>('/patients/billing-lookup',{params:{search:patientSearch}})).data});
   const [insurancePercent, setInsurancePercent] = useState('0');
   const [items, setItems] = useState<ItemRow[]>([{ description: '', quantity: '1', unitPrice: '' }]);
   const [createError, setCreateError] = useState<string | null>(null);
@@ -139,13 +144,10 @@ export default function BillingPage() {
           <Typography variant="subtitle1" fontWeight={600} mb={2}>
             {t('billing.new')}
           </Typography>
-          <TextField
-            fullWidth
-            margin="normal"
-            label={t('billing.patientId')}
-            value={patientId}
-            onChange={(e) => setPatientId(e.target.value)}
-          />
+          <Autocomplete openText={t('billing.showPatientOptions')} closeText={t('billing.closePatientOptions')} options={patientLookup.data??[]} getOptionLabel={p=>p.mrn+' '+p.fullName} filterOptions={x=>x}
+            onInputChange={(_,value,reason)=>{if(reason==='input'){setPatientSearch(value);setPatientId('');}}}
+            onChange={(_,value)=>setPatientId(value?.id??'')} isOptionEqualToValue={(a,b)=>a.id===b.id}
+            renderInput={params=><TextField {...params} margin="normal" label={t('billing.patientLookup')} helperText={t('billing.patientLookupHint')} error={patientLookup.isError}/>}/>
           <TextField
             fullWidth
             margin="normal"

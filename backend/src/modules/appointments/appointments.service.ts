@@ -39,7 +39,7 @@ export class AppointmentsService {
   private rethrowSlotConflict(error: unknown): never {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
       const target = error.meta?.target;
-      if ((Array.isArray(target) && target.includes('doctor_id') && target.includes('scheduled_at')) || target === 'appointments_doctor_time_unique') {
+      if ((Array.isArray(target) && target.includes('doctor_id') && target.includes('scheduled_at')) || target === 'appointments_doctor_time_unique' || (target == null && error.meta?.modelName === 'Appointment')) {
         throw new ConflictException({ error: {
           code: 'APPOINTMENT_CONFLICT', message: 'الطبيب لديه موعد آخر محجوز بنفس التوقيت', details: [],
         } });

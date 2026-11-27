@@ -1,3 +1,4 @@
+import { WorkspaceInterceptor } from './prisma/workspace.interceptor';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_INTERCEPTOR, APP_GUARD } from '@nestjs/core';
@@ -36,6 +37,7 @@ import { AuditInterceptor } from './common/interceptors/audit.interceptor';
     // كل وحدات نطاق MMP (SCOPE.md §Should) مكتملة الآن
   ],
   providers: [
+    { provide: APP_INTERCEPTOR, useClass: WorkspaceInterceptor },
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,

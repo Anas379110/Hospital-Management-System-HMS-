@@ -7,6 +7,7 @@ export const allRoles: readonly Role[] = [
 // Matches read permissions in the current backend controllers. This is UX only;
 // the API remains responsible for authorization of each operation.
 export const pageRoles: Record<string, readonly Role[]> = {
+  audit: ['admin'],
   users: ['admin'],
   registration: ['admin', 'receptionist'],
   patients: ['admin', 'receptionist', 'doctor', 'nurse', 'manager'],

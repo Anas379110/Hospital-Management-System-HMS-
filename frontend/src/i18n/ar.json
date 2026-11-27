@@ -23,7 +23,8 @@
     "lab": "المختبر والأشعة",
     "billing": "الفوترة التجريبية",
     "departmentDirectory": "دليل الأقسام",
-    "users": "إدارة المستخدمين التجريبيين"
+    "users": "إدارة المستخدمين التجريبيين",
+    "audit": "سجل المساحة التجريبية"
   },
   "patients": {
     "title": "المرضى",
@@ -230,7 +231,11 @@
     "paymentHistory": "الدفعات الوهمية المسجلة",
     "noPayments": "لا توجد دفعات مسجلة.",
     "addExistingItem": "إضافة بند لهذه الفاتورة",
-    "itemSaved": "أُضيف بند الفاتورة وحُدث الرصيد."
+    "itemSaved": "أُضيف بند الفاتورة وحُدث الرصيد.",
+    "patientLookup": "ابحث برقم الملف أو اسم المريض الوهمي",
+    "patientLookupHint": "حرفان على الأقل. اختر النتيجة قبل إنشاء الفاتورة.",
+    "showPatientOptions": "عرض المرضى المطابقين",
+    "closePatientOptions": "إخفاء المرضى المطابقين"
   },
   "users": {
     "title": "إدارة المستخدمين التجريبيين",
@@ -258,5 +263,55 @@
     "cancel": "إلغاء",
     "lockout": "لا يمكنك تعطيل حسابك أو آخر مدير نشط.",
     "taken": "اسم المستخدم مستخدم بالفعل."
+  },
+  "demo": {
+    "notice": "مساحة وهمية خاصة بهذا المتصفح. لا تدخل بيانات حقيقية. ينتهي الوصول بعد 24 ساعة من عدم النشاط. تُحذف المساحة وبياناتها وسجلها بالفحص كل ساعة، عادة خلال الساعة التالية، وقد يتأخر الحذف عند توقف الخدمة أو نفاد الحصة. يحذف الفحص السجلات الحية؛ قد تبقى ضمن سجل الاستعادة لدى المزود لمدة تصل إلى 6 ساعات. لا ننشئ نسخاً احتياطية خارجية لبيانات الزوار.",
+    "start": "ابدأ مساحة تجريبية خاصة",
+    "role": "الدور التجريبي",
+    "auditNotice": "آخر 100 عملية مختصرة في مساحتك فقط. لا تظهر بيانات المرضى أو كلمات المرور.",
+    "noEvents": "لا توجد عمليات مسجلة بعد."
+  },
+  "audit": {
+    "unknownAction": "عملية مسجلة",
+    "unknownEntity": "سجل",
+    "actions": {
+      "PATIENT_CREATED": "تسجيل مريض",
+      "PATIENT_UPDATED": "تعديل مريض",
+      "APPOINTMENT_CREATED": "حجز موعد",
+      "APPOINTMENT_UPDATED": "تعديل موعد",
+      "APPOINTMENT_CANCELLED": "إلغاء موعد",
+      "PATIENT_ADMITTED": "قبول مريض",
+      "PATIENT_DISCHARGED": "تخريج مريض",
+      "ENCOUNTER_CREATED": "إنشاء زيارة",
+      "ENCOUNTER_UPDATED": "تعديل زيارة",
+      "ENCOUNTER_SOFT_DELETED": "حذف زيارة",
+      "PRESCRIPTION_ADDED": "إضافة وصفة",
+      "PRESCRIPTION_DISPENSED": "صرف وصفة",
+      "INVOICE_CREATED": "إنشاء فاتورة",
+      "INVOICE_ITEM_ADDED": "إضافة بند فاتورة",
+      "PAYMENT_RECORDED": "تسجيل دفعة",
+      "USER_CREATED": "إنشاء مستخدم",
+      "USER_UPDATED": "تعديل مستخدم",
+      "USER_STATUS_CHANGED": "تغيير حالة مستخدم",
+      "STOCK_ADJUSTED": "تعديل المخزون",
+      "MEDICATION_CREATED": "إضافة دواء",
+      "TEST_ORDER_CREATED": "طلب فحص",
+      "TEST_RESULT_RECORDED": "تسجيل نتيجة فحص"
+    },
+    "entities": {
+      "User": "مستخدم",
+      "Patient": "مريض",
+      "Appointment": "موعد",
+      "Encounter": "زيارة",
+      "Prescription": "وصفة",
+      "Medication": "دواء",
+      "TestOrder": "طلب فحص",
+      "Invoice": "فاتورة",
+      "InvoiceItem": "بند فاتورة",
+      "Payment": "دفعة",
+      "Department": "قسم",
+      "Bed": "سرير",
+      "Admission": "قبول مريض"
+    }
   }
 }

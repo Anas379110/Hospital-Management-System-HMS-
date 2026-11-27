@@ -1,3 +1,5 @@
+import { DemoService } from './demo.service';
+import { DemoController } from './demo.controller';
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
@@ -14,12 +16,14 @@ import { JwtStrategy } from './strategies/jwt.strategy';
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
         secret: config.getOrThrow<string>('JWT_SECRET'),
-        signOptions: { expiresIn: config.get<string>('JWT_EXPIRES_IN') ?? '8h' },
+        // Public demo expiry is the database's sliding24h idle deadline.
+        // A fixed JWT lifetime would log out active visitors early.
+        signOptions: config.get<string>('HMS_PUBLIC_DEMO') === 'true' ? {} : { expiresIn: config.get<string>('JWT_EXPIRES_IN') ?? '8h' },
       }),
     }),
   ],
-  providers: [AuthService, JwtStrategy],
-  controllers: [AuthController],
+  providers: [AuthService, JwtStrategy, DemoService],
+  controllers: [AuthController, DemoController],
   exports: [AuthService],
 })
 export class AuthModule {}

@@ -24,7 +24,7 @@ export class UsersService {
     const passwordHash = await bcrypt.hash(dto.password, SALT_ROUNDS);
     return this.prisma.$transaction(async tx => {
     await requireActor(tx, actor, [Role.admin]);
-    const existing = await tx.user.findUnique({ where: { username: dto.username } });
+    const existing = await tx.user.findFirst({ where: { username: dto.username } });
     if (existing) {
       throw new ConflictException({
         error: {

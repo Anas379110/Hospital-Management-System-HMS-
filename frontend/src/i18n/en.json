@@ -23,7 +23,8 @@
     "lab": "Lab and radiology",
     "billing": "Simulated billing",
     "departmentDirectory": "Department directory",
-    "users": "Fictional user management"
+    "users": "Fictional user management",
+    "audit": "Workspace audit"
   },
   "patients": {
     "title": "Patients",
@@ -230,7 +231,11 @@
     "paymentHistory": "Recorded fictional payments",
     "noPayments": "No payments recorded.",
     "addExistingItem": "Add item to this invoice",
-    "itemSaved": "Invoice item added. Balance updated."
+    "itemSaved": "Invoice item added. Balance updated.",
+    "patientLookup": "Find fictional patient by MRN or name",
+    "patientLookupHint": "At least two characters. Select a result before creating the invoice.",
+    "showPatientOptions": "Show matching patients",
+    "closePatientOptions": "Hide matching patients"
   },
   "users": {
     "title": "Fictional user management",
@@ -258,5 +263,55 @@
     "cancel": "Cancel",
     "lockout": "You cannot disable your own account or the last active administrator.",
     "taken": "That username is already used."
+  },
+  "demo": {
+    "notice": "Fictional workspace for this browser. Do not enter real data. Access expires after 24 hours of inactivity. An hourly check deletes the workspace, its data and audit, usually in the next hour. Service or quota limits can delay deletion. Cleanup removes live records; provider recovery history may retain them for up to 6 hours. We do not export visitor backups.",
+    "start": "Start a private demo workspace",
+    "role": "Demo role",
+    "auditNotice": "Last 100 redacted events in your workspace only. No patient details or passwords are shown.",
+    "noEvents": "No events recorded yet."
+  },
+  "audit": {
+    "unknownAction": "Recorded action",
+    "unknownEntity": "Record",
+    "actions": {
+      "PATIENT_CREATED": "Patient created",
+      "PATIENT_UPDATED": "Patient updated",
+      "APPOINTMENT_CREATED": "Appointment created",
+      "APPOINTMENT_UPDATED": "Appointment updated",
+      "APPOINTMENT_CANCELLED": "Appointment cancelled",
+      "PATIENT_ADMITTED": "Patient admitted",
+      "PATIENT_DISCHARGED": "Patient discharged",
+      "ENCOUNTER_CREATED": "Encounter created",
+      "ENCOUNTER_UPDATED": "Encounter updated",
+      "ENCOUNTER_SOFT_DELETED": "Encounter soft deleted",
+      "PRESCRIPTION_ADDED": "Prescription added",
+      "PRESCRIPTION_DISPENSED": "Prescription dispensed",
+      "INVOICE_CREATED": "Invoice created",
+      "INVOICE_ITEM_ADDED": "Invoice item added",
+      "PAYMENT_RECORDED": "Payment recorded",
+      "USER_CREATED": "User created",
+      "USER_UPDATED": "User updated",
+      "USER_STATUS_CHANGED": "User status changed",
+      "STOCK_ADJUSTED": "Stock adjusted",
+      "MEDICATION_CREATED": "Medication created",
+      "TEST_ORDER_CREATED": "Test order created",
+      "TEST_RESULT_RECORDED": "Test result recorded"
+    },
+    "entities": {
+      "User": "User",
+      "Patient": "Patient",
+      "Appointment": "Appointment",
+      "Encounter": "Encounter",
+      "Prescription": "Prescription",
+      "Medication": "Medication",
+      "TestOrder": "Test Order",
+      "Invoice": "Invoice",
+      "InvoiceItem": "Invoice Item",
+      "Payment": "Payment",
+      "Department": "Department",
+      "Bed": "Bed",
+      "Admission": "Admission"
+    }
   }
 }

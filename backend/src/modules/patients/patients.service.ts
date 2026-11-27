@@ -89,6 +89,12 @@ export class PatientsService {
     });
   }
 
+  async billingLookup(query: string) {
+    const search=query.trim().slice(0,80);
+    if (search.length<2) return [];
+    return this.prisma.patient.findMany({where:{OR:[{mrn:{contains:search,mode:'insensitive'}},{fullName:{contains:search,mode:'insensitive'}}]},take:20,select:{id:true,mrn:true,fullName:true}});
+  }
+
   async findOne(id: string) {
     const patient = await this.prisma.patient.findUnique({ where: { id } });
     if (!patient) {

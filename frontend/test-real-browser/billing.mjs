@@ -19,7 +19,7 @@ try{
  process.env.DATABASE_URL=url;
  process.env.JWT_SECRET=randomBytes(32).toString('hex');
  const migration=spawnSync('node',['node_modules/prisma/build/index.js','migrate','deploy'],{cwd:backend,env:process.env,encoding:'utf8'});if(migration.status!==0)throw new Error('migration failed');
- prisma=new PrismaClient();const hash=await require(backend+'/node_modules/bcrypt').hash(password,4);
+ prisma=new PrismaClient();await prisma.$executeRawUnsafe("INSERT INTO demo_workspaces(id) VALUES('browser-test')");const hash=await require(backend+'/node_modules/bcrypt').hash(password,4);
  await prisma.user.create({data:{username:'fictional_reception',passwordHash:hash,fullName:'Fictional Reception',role:'receptionist'}});
  const nurse=await prisma.user.create({data:{username:'fictional_fixture_doctor',passwordHash:hash,fullName:'Fictional Doctor',role:'doctor'}});
  const department=await prisma.department.create({data:{nameAr:'قسم تجريبي',nameEn:'Fictional Department',totalBeds:1}});
@@ -45,7 +45,7 @@ try{
   const login=async username=>{await page.goto('http://127.0.0.1:5196/login');await page.evaluate(lang=>{localStorage.clear();localStorage.setItem('hms_locale',lang)},lang);await page.reload();await page.getByRole('textbox',{name:lang==='ar'?'اسم المستخدم':'Username',exact:true}).fill(username);await page.locator('input[type=password]').fill(password);await page.getByRole('button',{name:lang==='ar'?'تسجيل الدخول':'Log In',exact:true}).click();await page.waitForURL(username==='fictional_billing'?'**/billing':'**/patients');if(username!=='fictional_billing')await page.goto('http://127.0.0.1:5196/billing')};
   await login('fictional_billing');
   const billingStorage=await page.evaluate(()=>Object.fromEntries(Object.entries(localStorage)));
-  await page.getByRole('textbox',{name:lang==='ar'?'معرّف المريض':'Patient ID',exact:true}).fill(patient.id);
+  await page.getByRole('combobox',{name:lang==='ar'?'ابحث برقم الملف أو اسم المريض الوهمي':'Find fictional patient by MRN or name',exact:true}).fill('Fictional Browser');await page.getByRole('option',{name:/Fictional Browser Patient/}).click();
   await page.getByRole('textbox',{name:lang==='ar'?'الوصف':'Description',exact:true}).fill('Fictional service');
   const price=page.getByRole('spinbutton',{name:lang==='ar'?'سعر الوحدة، ليرة صحيحة':'Unit price (integer SYP)',exact:true});
   await price.fill('1e3');if(!await page.getByRole('button',{name:lang==='ar'?'إنشاء الفاتورة':'Create invoice',exact:true}).isDisabled())throw new Error('scientific price enabled');await price.fill('100');

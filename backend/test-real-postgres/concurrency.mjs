@@ -22,6 +22,7 @@ try{
  const migration=spawnSync('node',['node_modules/prisma/build/index.js','migrate','deploy'],{cwd:backend,env:{...process.env,DATABASE_URL:url},encoding:'utf8'});
  results.migration={exit:migration.status,stdout:migration.stdout,stderr:migration.stderr};
  if(migration.status!==0)throw new Error('Migration failed');
+ const fixtureOwner=new PrismaClient({datasources:{db:{url}}});await fixtureOwner.$executeRawUnsafe("INSERT INTO demo_workspaces(id) VALUES('baseline-test')");await fixtureOwner.$disconnect();
  if(process.env.HMS_TEST_OWNER_RUNTIME!=='1'){
   migrationOwner=new PrismaClient({datasources:{db:{url}}});
   const runtimePassword=require('node:crypto').randomBytes(24).toString('hex');
@@ -121,7 +122,7 @@ try{
  const moved=await Promise.allSettled([later,extra].map(a=>new AppointmentsService(prisma).update(a.id,{scheduledAt:'2026-12-01T13:00:00.000Z'},scheduleActor.id)));
  const moveOutcomes=moved.map(r=>r.status==='fulfilled'?'success':({status:r.reason.getStatus?.(),code:r.reason.getResponse?.().error?.code}));
  results.checks.push({name:'simultaneous reschedule to same empty slot',outcomes:moveOutcomes});
- if(moveOutcomes.filter(o=>o==='success').length!==1||moveOutcomes.filter(o=>o.status===409&&o.code==='APPOINTMENT_CONFLICT').length!==1)throw new Error('reschedule race invariant failed');
+ if(moveOutcomes.filter(o=>o==='success').length!==1||moveOutcomes.filter(o=>o.status===409&&o.code==='APPOINTMENT_CONFLICT').length!==1)throw new Error('reschedule race invariant failed '+JSON.stringify(moved.map(r=>r.status==='fulfilled'?'ok':JSON.stringify({error:String(r.reason),code:r.reason.code,meta:r.reason.meta}))));
  const rollbackBed=await prisma.bed.create({data:{departmentId:dep.id,bedNumber:'SYN-ROLLBACK',status:'available'}});
  try{await new AdmissionsService(prisma).create({patientId:'00000000-0000-4000-a000-000000000000',bedId:rollbackBed.id},user.id);throw new Error('missing patient accepted')}catch(e){if(e.message==='missing patient accepted')throw e}
  const rollbackState=(await prisma.bed.findUniqueOrThrow({where:{id:rollbackBed.id}})).status;
@@ -245,6 +246,7 @@ try{
  // Privilege proof only in disposable local DB, not a deployed role/migration.
  await (migrationOwner??prisma).$executeRawUnsafe('CREATE ROLE hms_test_audit_writer NOLOGIN');
  await (migrationOwner??prisma).$executeRawUnsafe('GRANT USAGE ON SCHEMA public TO hms_test_audit_writer');
+ await (migrationOwner??prisma).$executeRawUnsafe('GRANT SELECT ON demo_workspaces TO hms_test_audit_writer');
  await (migrationOwner??prisma).$executeRawUnsafe('GRANT SELECT, INSERT ON audit_logs TO hms_test_audit_writer');
  const asAuditWriter=fn=>(migrationOwner??prisma).$transaction(async tx=>{await tx.$executeRawUnsafe('SET LOCAL ROLE hms_test_audit_writer');return fn(tx)});
  const restrictedAudit=await asAuditWriter(tx=>tx.auditLog.create({data:{userId:user.id,action:'SYNTHETIC_PERMISSION_TEST',entityType:'Admission',entityId:firstAdmission.id}}));
@@ -292,7 +294,7 @@ try{
   }
   const loginLogs=[];
   app.useLogger(Object.fromEntries(['log','error','warn','debug','verbose','fatal'].map(level=>[level,(...args)=>loginLogs.push(args.map(value=>typeof value==='string'?value:JSON.stringify(value)).join(' '))])));
-  const inactiveLoginUser=await prisma.user.findUniqueOrThrow({where:{username:'http_receptionist'}});
+  const inactiveLoginUser=await prisma.user.findFirstOrThrow({where:{username:'http_receptionist'}});
   await prisma.user.update({where:{id:inactiveLoginUser.id},data:{isActive:false}});
   const inactiveLogin=await fetch(origin+'/api/v1/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:'http_receptionist',password})});
   const inactiveBody=await inactiveLogin.json();
@@ -393,7 +395,7 @@ try{
    await post('/admissions/'+dischargeTarget.id+'/discharge',role,{dischargeNotes:'Fictional HTTP role check'},allowed?201:403);
    const admitRows=await prisma.auditLog.findMany({where:{entityId:dischargeTarget.id,action:'PATIENT_ADMITTED'}});
    const dischargeRows=await prisma.auditLog.findMany({where:{entityId:dischargeTarget.id,action:'PATIENT_DISCHARGED'}});
-   const expectedActor=allowed?(await prisma.user.findUniqueOrThrow({where:{username:'http_'+role}})).id:user.id;
+   const expectedActor=allowed?(await prisma.user.findFirstOrThrow({where:{username:'http_'+role}})).id:user.id;
    if(admitRows.length!==1||admitRows[0].userId!==expectedActor||dischargeRows.length!==(allowed?1:0)||allowed&&dischargeRows[0].userId!==expectedActor)throw new Error('HTTP transactional audit count or actor mismatch');
    if(!allowed){const stillActive=await prisma.admission.findUniqueOrThrow({where:{id:dischargeTarget.id}});if(stillActive.dischargedAt!==null)throw new Error('denied discharge changed state')}
    admissionMutationAssertions+=2;
@@ -424,7 +426,7 @@ try{
 
 
   const contractPatient=await post('/patients','receptionist',{fullName:'Fictional Contract Patient',dateOfBirth:'1981-01-01',gender:'male',phone:'0000000000'},201);
-  const contractDoctor=await prisma.user.findUniqueOrThrow({where:{username:'http_doctor'}});
+  const contractDoctor=await prisma.user.findFirstOrThrow({where:{username:'http_doctor'}});
   const otherDoctor=await prisma.user.create({data:{username:'synthetic_other_doctor',passwordHash:'not-a-login',fullName:'Fictional Other Doctor',role:'doctor'}});
   const contractAppointment=await prisma.appointment.create({data:{patientId:contractPatient.id,doctorId:contractDoctor.id,departmentId:dep.id,scheduledAt:new Date('2026-12-10T09:00:00Z')}});
   const foreignAppointment=await prisma.appointment.create({data:{patientId:patients[0].id,doctorId:otherDoctor.id,departmentId:dep.id,scheduledAt:new Date('2026-12-11T09:00:00Z')}});
@@ -449,7 +451,7 @@ try{
   const stillContract=await prisma.patient.findUniqueOrThrow({where:{id:contractPatient.id}});
   if(stillContract.mrn!==contractPatient.mrn||stillContract.createdBy!==contractPatient.createdBy)throw new Error('patient identity changed');
   const beforeDisabledCount=await prisma.patient.count();
-  const receptionistId=(await prisma.user.findUniqueOrThrow({where:{username:'http_receptionist'}})).id;
+  const receptionistId=(await prisma.user.findFirstOrThrow({where:{username:'http_receptionist'}})).id;
   await prisma.user.update({where:{id:receptionistId},data:{isActive:false}});
   await post('/patients','receptionist',{fullName:'Fictional Disabled Actor',dateOfBirth:'1982-01-01',gender:'male',phone:'0000000000'},401);
   const disabledRead=await fetch(origin+'/api/v1/patients?search=Fictional',{headers:{Authorization:'Bearer '+tokens.receptionist}});
@@ -523,7 +525,7 @@ try{
    results.checks.push({name:'lab order and result SQL-audit-rejected HTTP rollback',operations:2,status:503,pendingStatePreserved:true,noSuccessAudit:true});
   }finally{await (migrationOwner??prisma).$executeRawUnsafe('DROP TRIGGER hms_test_lab_audit_rejection ON audit_logs');await (migrationOwner??prisma).$executeRawUnsafe('DROP FUNCTION hms_test_reject_lab_audit()')}
 
-  const adminActor=await prisma.user.findUniqueOrThrow({where:{username:'http_admin'}});
+  const adminActor=await prisma.user.findFirstOrThrow({where:{username:'http_admin'}});
   const auditAppointment=await post('/appointments','receptionist',{patientId:contractPatient.id,doctorId:contractDoctor.id,departmentId:dep.id,scheduledAt:'2026-12-20T09:00:00Z'},201);
   const auditUser=await post('/users','admin',{username:'fictional_audited_user',password:password,fullName:'Fictional Audited User',role:'nurse'},201);
   if(auditUser.passwordHash)throw new Error('user create hash exposed');
@@ -647,7 +649,7 @@ try{
    await (migrationOwner??prisma).$executeRawUnsafe('DROP FUNCTION hms_test_reject_clinical_audit()');
   }
   const patient=await post('/patients','receptionist',{fullName:'Fictional Workflow Patient',dateOfBirth:'1990-01-01',gender:'female',phone:'0000000000'},201);
-  const httpDoctor=await prisma.user.findUniqueOrThrow({where:{username:'http_doctor'}});
+  const httpDoctor=await prisma.user.findFirstOrThrow({where:{username:'http_doctor'}});
   const appointment=await post('/appointments','receptionist',{patientId:patient.id,doctorId:httpDoctor.id,departmentId:dep.id,scheduledAt:'2026-12-02T09:00:00.000Z'},201);
   const encounter=await post('/encounters','doctor',{patientId:patient.id,appointmentId:appointment.id,chiefComplaint:'Synthetic demonstration',diagnosis:'Fictional note only',notes:'Not clinical advice'},201);
   await post('/encounters','receptionist',{patientId:patient.id,chiefComplaint:'Synthetic demonstration',diagnosis:'Fictional note only'},403);
@@ -661,7 +663,7 @@ try{
   for(const value of ['Synthetic demonstration','Fictional note only','Not clinical advice'])if(auditText.includes(value))throw new Error('audit clinical text leaked');
   if(audit.oldValue!==null)throw new Error('untrusted audit before-state retained');
   if(audit.newValue.diagnosis!=='[REDACTED]'||audit.newValue.patientId!==patient.id)throw new Error('audit snapshot contract failed');
-  const deniedAudits=await prisma.auditLog.count({where:{userId:(await prisma.user.findUniqueOrThrow({where:{username:'http_receptionist'}})).id,action:'ENCOUNTER_CREATED'}});
+  const deniedAudits=await prisma.auditLog.count({where:{userId:(await prisma.user.findFirstOrThrow({where:{username:'http_receptionist'}})).id,action:'ENCOUNTER_CREATED'}});
   if(deniedAudits!==0)throw new Error('denied operation recorded as success');
   results.checks.push({name:'real HTTP audit persisted before response completion',actorActionEntity:true,clinicalTextRedacted:true,clientBeforeStateIgnored:true,deniedNotRecordedAsSuccess:true,scope:'successful mutation audit only; not denied/login-event auditing or atomic transaction guarantee'});
   results.checks.push({name:'real HTTP reception registration to appointment to doctor encounter',persistedLinkage:true,receptionEncounterDenied:403,nurseRecordsRead:200,scope:'API/database journey, not browser UX acceptance'});

@@ -9,7 +9,7 @@ describe('Auth (e2e)', () => {
   let app: INestApplication;
 
   const prismaMock = {
-    user: { findUnique: jest.fn() },
+    user: { findFirst: jest.fn(), findUnique: jest.fn() },
     auditLog: { create: jest.fn().mockResolvedValue({}) },
   };
 
@@ -33,7 +33,7 @@ describe('Auth (e2e)', () => {
   });
 
   it('POST /auth/login ببيانات خاطئة → 401 برسالة موحَّدة', async () => {
-    prismaMock.user.findUnique.mockResolvedValue(null);
+    prismaMock.user.findFirst.mockResolvedValue(null);
 
     const res = await request(app.getHttpServer())
       .post('/api/v1/auth/login')

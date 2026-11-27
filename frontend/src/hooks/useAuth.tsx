@@ -5,6 +5,8 @@ import type { CurrentUser } from '../types/api';
 interface AuthContextValue {
   user: CurrentUser | null;
   login: (username: string, password: string) => Promise<void>;
+  startDemo: () => Promise<void>;
+  switchDemoRole: (role: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -27,13 +29,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser({ userId: loggedInUser.id, username: loggedInUser.username, role: loggedInUser.role });
   }, []);
 
+  const saveDemo = useCallback((data: {accessToken:string;user:{id:string;username:string;role:CurrentUser['role']}}) => {
+    const next={userId:data.user.id,username:data.user.username,role:data.user.role};
+    localStorage.setItem('hms_token',data.accessToken);localStorage.setItem('hms_user',JSON.stringify(next));localStorage.setItem('hms_demo','true');setUser(next);
+  },[]);
+  const startDemo=useCallback(async()=>{const {data}=await apiClient.post('/demo/start',{});saveDemo(data);},[saveDemo]);
+  const switchDemoRole=useCallback(async(role:string)=>{const {data}=await apiClient.post('/demo/role',{role});saveDemo(data);window.location.href='/';},[saveDemo]);
   const logout = useCallback(() => {
     localStorage.removeItem('hms_token');
     localStorage.removeItem('hms_user');
     setUser(null);
   }, []);
 
-  return <AuthContext.Provider value={{ user, login, logout }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ user, login, logout, startDemo, switchDemoRole }}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth(): AuthContextValue {
