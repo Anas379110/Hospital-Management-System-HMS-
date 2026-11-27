@@ -1,0 +1,23 @@
+{
+  "scope": "Disposable actual HTTP active-view freshness, fictional data only",
+  "mode": "local cluster identity checked",
+  "complete": true,
+  "checks": [
+    "Real separate nurse HTTP writer -> Admin browser occupied within measured interval",
+    "Hidden16s no periodic requests, return immediate refetch to discharged state",
+    "Offline16s no periodic requests, manual disabled, reconnect/manual successful",
+    "Read503 retains last good bed data with explicit stale warning, recovery clears",
+    "Overview external appointment appears by15s polling, bilingual desktop/390px pixels, zero pageerrors"
+  ],
+  "scriptSha256": "a78fc73c2adfaa25dda6fd3578e69bbc9e737388306b080af24dfe0b84152284",
+  "startedAt": "2026-11-27T21:05:24.606Z",
+  "runtime": {
+    "role": "hms_runtime_freshness",
+    "superuser": false,
+    "bypassRls": false,
+    "auditMutationsDenied": 3
+  },
+  "admissionPropagationMs": 15414,
+  "resumePropagationMs": 105,
+  "finishedAt": "2026-11-27T21:06:54.623Z"
+}

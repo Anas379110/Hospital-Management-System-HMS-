@@ -1,0 +1,13 @@
+# Active-view freshness slice
+
+Approved behavior November27 22:09, Admin clarification22:10. Plan sent before code. No new framework/dependency/schema/grant/provider changes. Overview and department directory/bed board refresh read queries every15seconds only while visible and online. Manual refresh follows the same gate. Screen return enables a staleTime0 query, refetching immediately. Polling target is not an instant-delivery guarantee: requests/server/network can take longer.
+
+Retain last good data and mark stale on missing success, read error, hidden/offline, age15seconds, or resume before confirmed success. Combined board timestamp is the older confirmed department/bed read. No mutation retry added. Other useDepartments consumers keep their former30secondcache/retry/focus defaults without new polling. AbortSignal supplied on relevant reads. In-flight work is not claimed to cancel server-side.
+
+Unit policy3tests plus existing56frontend tests passed, lint/build. Restricted nonowner/RLS clean local PostgreSQL17/18 real HTTP/browser harness passed. Separate nurse HTTP writer admission appeared on Admin browser in14964ms/15414ms including server/render latency, resume after hidden discharge94ms/105ms. Hidden16seconds no periodic reads, offline16seconds no periodic reads and manual disabled; reconnect/manual read200. Simulated read503 retained last good beds and showed explicit stale warning, recovery cleared. Overview hidden pause tested and external appointment appears by polling. Bilingual ENdesktop/AR390px images inspected, no pageerrors. Browser visibility property/event is controlled for deterministic hidden test, not OS-level browser suspension proof. Role authorization is unchanged and inherited from prior tested endpoints.
+
+Not yet independently reviewed, exact-head CI not yet run, not published/deployed. Local test evidence does not establish hosted release. Whole HMS remains incomplete. Persistent waitlist separate, additive live DB authority still gated.
+
+Final harness SHA256a78fc73c2adfaa25dda6fd3578e69bbc9e737388306b080af24dfe0b84152284 passed PG17 and18 after unique runtime role update. Matching CI uses isolated empty hms_test_freshness database and uploads report alongside all browser artifacts. Test appointment day explicitly set to UTC date in UI to remove crossing-midnight ambiguity; no application date policy change.
+
+Independent static code/security/QA review found no blockers and verified final harness hashes/evidence/translation parity/CI wiring, without rerunning runtime tests. Arabic cadence typo corrected per review. Backend213unit/62mockHTTP unchanged tests passed. Exact CI/publication/hosted proof still pending at source preparation.

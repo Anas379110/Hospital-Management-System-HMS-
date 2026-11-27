@@ -348,7 +348,7 @@
   },
   "overview": {
     "title": "Operational overview",
-    "description": "Workspace totals only. Refreshes every minute while visible. No patient details.",
+    "description": "Workspace totals only. No patient details.",
     "day": "Appointment day",
     "refresh": "Refresh overview",
     "updated": "Last updated {{time}}",
@@ -378,5 +378,14 @@
     "conflict": "This record changed, is occupied or has linked history. Lists refreshed. Close this dialog and check before trying again.",
     "forbidden": "Your current role cannot change setup. Refresh or sign in again.",
     "invalid": "Check the required fields and their length before trying again."
+  },
+  "freshness": {
+    "refresh": "Refresh now",
+    "refreshing": "Refreshing",
+    "cadence": "Refreshes every 15 seconds while this screen is visible and online. Updates can be delayed by network or server response.",
+    "updated": "Last confirmed update {{time}}",
+    "offline": "Offline. Shown data may be out of date. Refresh will resume when connected.",
+    "hidden": "Refresh paused while this screen is hidden. Shown data may be out of date.",
+    "stale": "Waiting for a confirmed update. Shown data may be out of date."
   }
 }

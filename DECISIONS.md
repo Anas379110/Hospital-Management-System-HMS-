@@ -132,3 +132,6 @@
 ## Decision 028 — Approved setup roles and preserved history, candidate November27
 
 User approved workflow rules22:09 and clarified Admin rather than Manager22:10. Extend existing department/bed schema and stack. Admin setup and available/maintenance only; doctor/nurse admission/discharge unchanged. No delete when linked history exists. Locks/CAS serialize setup/admission and actual count updates, with audit in same transaction. Bilingual confirmation UI does not implement authorization. No schema/migration required for this slice. Waitlist and live DB gate separate. Candidate remains unreviewed/unpublished until review/exact CI/hosted checks.
+
+## November28 active-view reads
+Keep existing React Query, no WebSocket/SSE or new dependency. Fifteen-second visible-online reads on overview/departmentbed views, manual refresh and last-confirmed/stale state, no mutation retries. Read failures retain old data honestly. Query staleTime0 only for live views supports immediate resume. Hidden/offline starts no new periodic reads, already-running server work not claimed cancelled. No schema or provider changes.

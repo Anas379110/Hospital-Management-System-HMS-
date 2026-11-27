@@ -107,3 +107,9 @@ and freshness are still open; no live schema/grant change is included here.
 ## Department setup candidate November27
 
 Local after b584561: seven Admin setup writes, occupied relabel allowed, maintenance/delete protected, linked-history deletion rejected, redacted atomic audit, app-lock bed labels and actual count.213unit/62mockHTTP/56frontend/18contracts plus actualPG17/18/EN+ARbrowser pass. Independent review remediation pending closure, then exact CI/hosted proof. No schema or grant delta. Application-lock uniqueness and bounded race evidence, not DB constraint or exhaustive interleavings. Waitlist/freshness remain open.
+
+## Active-view freshness November28 candidate
+Approved behavior November27 22:09. Overview and department/bed board use shared read-only visible-online15second query policy with manual refresh, oldest confirmed timestamp and stale/error/pause state. Unit policy tests plus restricted PG17/18 HTTP/browser evidence in docs/testing/evidence/active-freshness-pg{17,18}-20261128.json. Deterministic synthetic visibility event/state, no OS suspension guarantee. CI/publication/hosted proof remain pending at candidate preparation. Persistent waitlist separate live DB gate unchanged.
+
+### Setup release reconciliation November27 23:53 Istanbul
+Historical candidate entries above record the state at their preparation. Setup exact fe787f55f41b154e301eef04d02248a243678d5e subsequently passed exactCI46065044976 on PG17/18, mergedPR10, and RenderLiveFree plus actual hosted fictional ENdesktop/AR390px smoke. FR5.1 approved Admin setup/maintenance now shipped in this scoped demo. History-linked deletion blocked; occupied relabel preserves IDs/history, occupied maintenance blocked. NativeSwagger27schemas52ops. App-lock uniqueness and redacted historical labels remain limits. FR5.4 cross-client15sfreshness still candidate, not hosted. Persistent FIFOwaitlist remains open and separately liveDBgated.

@@ -1,3 +1,4 @@
+import ReadFreshness from '../components/ReadFreshness';
 import DepartmentSetup from '../components/DepartmentSetup';
 import { useEffect, useState } from 'react';
 import { Alert, Autocomplete, Box, Button, Card, CardContent, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Grid, MenuItem, Stack, TextField, Typography } from '@mui/material';
@@ -15,7 +16,7 @@ export default function DepartmentsPage() {
   const { t, i18n } = useTranslation();
   const bedsAllowed = !!user && canViewBeds(user.role);
   const admissionAllowed = !!user && canAdmitPatient(user.role);
-  const departments = useDepartments();
+  const departments = useDepartments(true);
   const [selectedDept, setSelectedDept] = useState('');
   const beds = useDepartmentBeds(bedsAllowed ? selectedDept || undefined : undefined);
   const [dialog, setDialog] = useState<{ bed: Bed; mode: 'admit' | 'discharge' } | null>(null);
@@ -53,9 +54,10 @@ export default function DepartmentsPage() {
 
   return <Box sx={{ p: { xs: 2, sm: 4 } }}>
     <Typography variant="h5" component="h1" fontWeight={700} mb={3}>{t(bedsAllowed ? 'departments.title' : 'departments.directory')}</Typography>
+    <ReadFreshness reads={bedsAllowed && selectedDept ? [departments, beds] : [departments]} />
     {success && <Alert severity="success" role="status" sx={{ mb: 2 }}>{success}</Alert>}
     {departments.isLoading && <CircularProgress aria-label={t('patients.loading')} />}
-    {departments.isError && <Alert severity="error" action={<Button onClick={() => void departments.refetch()}>{t('patients.retry')}</Button>}>{t('errors.generic')}</Alert>}
+    {departments.isError && <Alert severity="error" action={<Button disabled={!departments.freshness.active} onClick={() => void departments.freshness.refresh()}>{t('patients.retry')}</Button>}>{t('errors.generic')}</Alert>}
     {departments.data?.length === 0 && <Alert severity="info">{t('departments.empty')}</Alert>}
     {!!departments.data?.length && <TextField select fullWidth label={t('departments.choose')} value={selectedDept} onChange={e => setSelectedDept(e.target.value)} sx={{ mb: 3 }}>
       {departments.data.map(d => <MenuItem key={d.id} value={d.id}>{i18n.language === 'ar' ? d.nameAr : d.nameEn}</MenuItem>)}
@@ -64,7 +66,7 @@ export default function DepartmentsPage() {
     {!bedsAllowed && <Alert severity="info">{t('departments.directoryOnly')}</Alert>}
     {bedsAllowed && !selectedDept && <Alert severity="info">{t('departments.chooseHint')}</Alert>}
     {beds.isLoading && <CircularProgress aria-label={t('patients.loading')} />}
-    {beds.isError && <Alert severity="error" action={<Button onClick={() => void beds.refetch()}>{t('patients.retry')}</Button>}>{t('errors.generic')}</Alert>}
+    {beds.isError && <Alert severity="error" action={<Button disabled={!beds.freshness.active} onClick={() => void beds.freshness.refresh()}>{t('patients.retry')}</Button>}>{t('errors.generic')}</Alert>}
     {beds.data?.length === 0 && <Alert severity="info">{t('departments.noBeds')}</Alert>}
     {beds.data && <>
       <Stack direction="row" gap={2} flexWrap="wrap" sx={{ mb: 2 }}>
