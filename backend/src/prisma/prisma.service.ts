@@ -1,13 +1,22 @@
-import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import { Injectable, OnModuleInit, OnModuleDestroy, ServiceUnavailableException } from '@nestjs/common';
 import { PrismaClient, Prisma } from '@prisma/client';
 import { AsyncLocalStorage } from 'node:async_hooks';
+import { existsSync } from 'node:fs';
 import { workspaceContext, demoMode } from './workspace-context';
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
   constructor() {
-    super();
-    const transaction = this.$transaction.bind(this);
+    super(demoMode() ? { transactionOptions: { maxWait: 30000, timeout: 10000 } } : undefined);
+    const rawTransaction = this.$transaction.bind(this);
+    let pending = 0;
+    const transaction = (async (...args: unknown[]) => {
+      if (!demoMode()) return (rawTransaction as (...a: unknown[]) => Promise<unknown>)(...args);
+      if (pending >= 24) throw new ServiceUnavailableException({error:{code:'DEMO_BUSY',message:'Demo is busy. Try again shortly.',details:[]}});
+      pending++;
+      try { return await (rawTransaction as (...a: unknown[]) => Promise<unknown>)(...args); }
+      finally { pending--; }
+    }) as typeof this.$transaction;
     const transactionScope = new AsyncLocalStorage<boolean>();
     const scope = async (tx: Prisma.TransactionClient) => {
       const id = workspaceContext.getStore();
@@ -50,12 +59,25 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     this.$transaction = scopedTransaction as typeof this.$transaction;
   }
   async onModuleInit() {
+    let requireTls = false;
+    if (demoMode()) {
+      const url = new URL(process.env.DATABASE_URL!);
+      requireTls = !['localhost', '127.0.0.1', '[::1]'].includes(url.hostname);
+      if (requireTls && (url.searchParams.get('sslmode') !== 'verify-full' || !url.searchParams.get('sslcert') || !existsSync(url.searchParams.get('sslcert')!))) {
+        throw new Error('Remote public demo database requires verify-full and an existing CA certificate');
+      }
+    }
     await this.$connect();
     if (demoMode()) {
       // Query the session role, not application-configured role names. Fail before HTTP listen.
       const check = new PrismaClient();
       let rows: {unsafe:boolean}[];
-      try { rows = await check.$queryRawUnsafe<{unsafe:boolean}[]>(`SELECT (
+      try {
+        if (requireTls) {
+          const ssl = await check.$queryRawUnsafe<{ssl:boolean}[]>('SELECT ssl FROM pg_stat_ssl WHERE pid=pg_backend_pid()');
+          if (ssl[0]?.ssl !== true) throw new Error('Public demo database session must use TLS');
+        }
+        rows = await check.$queryRawUnsafe<{unsafe:boolean}[]>(`SELECT (
         (SELECT rolsuper OR rolbypassrls OR rolcreaterole OR rolcreatedb FROM pg_roles WHERE rolname=current_user)
         OR EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relkind='r' AND pg_has_role(c.relowner,'USAGE'))
         OR has_schema_privilege(current_user,'public','CREATE')

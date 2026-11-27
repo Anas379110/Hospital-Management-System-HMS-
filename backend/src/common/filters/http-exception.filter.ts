@@ -61,11 +61,17 @@ export class AllExceptionsFilter implements ExceptionFilter {
       status = Number(exception.status);
       code = HttpStatus[status] ?? 'BAD_REQUEST';
       message = 'Invalid request body';
+    } else if (process.env.HMS_PUBLIC_DEMO === 'true' && exception instanceof Error && 'code' in exception && ['P2028','P2024'].includes(String(exception.code))) {
+      status = HttpStatus.SERVICE_UNAVAILABLE;
+      code = 'DEMO_BUSY';
+      message = 'Demo is busy. Try again shortly.';
+      response.setHeader('Retry-After', '5');
     } else {
       // خطأ غير متوقع — لا نُظهر تفاصيله للمستخدم، فقط نسجله داخلياً
       this.logger.error({ code: 'UNHANDLED_REQUEST_ERROR' });
     }
 
+    if (status === 503 && code === 'DEMO_BUSY') response.setHeader('Retry-After', '5');
     response.status(status).json({ error: { code, message, details } });
   }
 }
