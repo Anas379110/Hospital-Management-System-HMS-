@@ -33,7 +33,7 @@ Use the owner's supported TLS route. Verify existing executor can SET existing
 hms_migration and has REFERENCES on old parents. Keep application on old release
 until atomic DB commit and structural readback succeeds. Use one transaction,
 SET LOCAL lock_timeout='3s', statement_timeout='30s', then exact migration SQL and
-waitlist-grants.sql. Abort on timeout/drift/error, no automatic retries or
+waitlist-grants.sql and exact Prisma ledger record using shared waitlist-upgrade-transaction.mjs. It verifies old ledger/checksums, advisory transaction lock, newtable absence and pinnedSQLhashes; full structural audit runs before commit. Audit failure rolls back table/grants/ledger together. Abort on timeout/drift/error, no automatic retries or
 termination of other sessions. Grant delta transfers only the new table to
 hms_migration, revokes PUBLIC/runtime/cleanup/provider-role access to that table,
 and gives runtime SELECT INSERT UPDATE only. Do not rerun broad fresh-install

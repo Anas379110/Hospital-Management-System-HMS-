@@ -1,17 +1,20 @@
 {
   "scope": "Same-disposable-cluster logical backup/restore and old-install additive upgrade. Not hosted backup or provider PITR.",
   "complete": true,
-  "startedAt": "2026-11-27T21:57:15.710Z",
+  "startedAt": "2026-11-27T22:08:02.821Z",
   "checks": [
     "Exact old migrations, non-super postgres executor with existing migration membership and fictional workspace before upgrade",
-    "Exact additive migration and grant delta commit as NOSUPER postgres, all prior rows and function bodies/ACL unchanged",
-    "Full new18-table structural audit passes, only local TLS probe omitted; cron catalog is fixture not scheduler proof",
+    "Injected post-ledger audit failure rolls back table, grants and ledger; all old rows/catalog unchanged",
+    "Exact additive migration, grants and Prisma ledger commit atomically as NOSUPER postgres; all prior business rows/function bodies/ACL unchanged",
+    "Full new18-table structural audit passes in transaction, only local TLS probe omitted; cron catalog is fixture not scheduler proof",
     "New waitlistDELETE/cleanup/anon grant drift rejected",
+    "Prisma migrate status independently recognizes exact completed migration history",
     "Matching-version custom-format dump/empty distinct restore match all rows+catalog; source unchanged, restored runtime scoped read works andDELETE denied"
   ],
-  "scriptSha256": "b14298a3bc07983c34416bb72f3d8554dc5e9cfa440778e633186ed89b449759",
+  "scriptSha256": "b38f4e9d18d2f6a20edc9daee141c597789a3c7965b608c5d9d46ea6b1680566",
   "migrationSha256": "dae1aaa83bfaa9c87dec396ec692ad5d6347f99923a797bfda8b550de8980a8f",
   "inputSha256": {
+    "prisma/demo/waitlist-upgrade-transaction.mjs": "cef1a026218d1ac8375c706d1ee48f16f736f095bcaf0a1888e2d324caa47979",
     "prisma/demo/supabase-normalize.sql": "834bb3171b26a3accbc29334047e4b2d898060b5a7485ef79fbfb8dc578cfad3",
     "prisma/schema.prisma": "3d4c557752dde410162c2f41fa1e7934e509ad251fd91cc71a2687416f871e9c",
     "prisma/migrations/20261128005000_department_waitlist/migration.sql": "dae1aaa83bfaa9c87dec396ec692ad5d6347f99923a797bfda8b550de8980a8f",
@@ -27,12 +30,18 @@
     "../frontend/src/hooks/useWaitlist.ts": "b8a958e7a7927e9fc091be65fcd113f8ee8fa174ca203b1dde6d979620134d20"
   },
   "postgres": "PostgreSQL 17.12 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 7.5.0-3ubuntu1~18.04) 7.5.0, 64-bit",
+  "ledger": {
+    "migrationName": "20261128005000_department_waitlist",
+    "checksum": "dae1aaa83bfaa9c87dec396ec692ad5d6347f99923a797bfda8b550de8980a8f",
+    "ledgerId": "54e0b05e-f05b-4737-b4c2-09e2fac2786d",
+    "atomicTableGrantsLedger": true
+  },
   "dumpVersion": "pg_dump (PostgreSQL) 17.10 (Ubuntu 17.10-1.pgdg22.04+1)",
   "restoreVersion": "pg_restore (PostgreSQL) 17.10 (Ubuntu 17.10-1.pgdg22.04+1)",
   "archive": {
-    "bytes": 109446,
-    "sha256": "be7ff960a090d7e588b7436a59b23fbdb4506245b36bbdcaa69c7fc1fdceae2f",
+    "bytes": 111003,
+    "sha256": "a4796b980d94ef163d9d8f1dd70563cbc3775f7b3081d08ad78c8a406f874662",
     "retained": true
   },
-  "finishedAt": "2026-11-27T21:57:16.024Z"
+  "finishedAt": "2026-11-27T22:08:04.032Z"
 }
