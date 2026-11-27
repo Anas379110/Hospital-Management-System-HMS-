@@ -8,7 +8,7 @@ describe('provider qualification guards',()=>{
   process.env.HMS_PUBLIC_DEMO='true';process.env.DATABASE_URL=url;const p=new PrismaService();await expect(p.onModuleInit()).rejects.toThrow('requires verify-full');await p.$disconnect();
  });
  it.each(['P2028','P2024'])('maps pool pressure to bounded503 with no error leakage',code=>{
-  process.env.HMS_PUBLIC_DEMO='true';const response={setHeader:jest.fn(),status:jest.fn().mockReturnThis(),json:jest.fn()};const e=Object.assign(new Error('private driver diagnostics'),{code});new AllExceptionsFilter().catch(e,{switchToHttp:()=>({getResponse:()=>response})} as never);expect(response.status).toHaveBeenCalledWith(503);expect(response.setHeader).toHaveBeenCalledWith('Retry-After','5');expect(response.json).toHaveBeenCalledWith({error:{code:'DEMO_BUSY',message:'Demo is busy. Try again shortly.',details:[]}});
+  process.env.HMS_PUBLIC_DEMO='true';const response={setHeader:jest.fn(),status:jest.fn().mockReturnThis(),json:jest.fn()};const e=Object.assign(new Error(code === 'P2028' ? 'Transaction API error: Unable to start a transaction in the given time.' : 'private driver diagnostics'),{code});new AllExceptionsFilter().catch(e,{switchToHttp:()=>({getResponse:()=>response})} as never);expect(response.status).toHaveBeenCalledWith(503);expect(response.setHeader).toHaveBeenCalledWith('Retry-After','5');expect(response.json).toHaveBeenCalledWith({error:{code:'DEMO_BUSY',message:'Demo is busy. Try again shortly.',details:[]}});
  });
 });
 
@@ -19,4 +19,8 @@ it('keeps capacity after client unsubscribe until work settles',async()=>{
  expect(()=>gate.intercept(ctx,{handle:()=>new Subject()})).toThrow('Service Unavailable');
  work.forEach(s=>{s.next({ok:true});s.complete()});await new Promise(r=>setImmediate(r));
  const last=new Subject();const sub=gate.intercept(ctx,{handle:()=>last}).subscribe();last.next({});last.complete();sub.unsubscribe();
+});
+
+it.each(['Transaction API error: Transaction already closed: A commit cannot be executed on an expired transaction.', 'Transaction API error: Transaction not found.', 'private uncertain commit failure'])('does not claim a possibly executed P2028 is safe to retry: %s',message=>{
+ process.env.HMS_PUBLIC_DEMO='true';const response={setHeader:jest.fn(),status:jest.fn().mockReturnThis(),json:jest.fn()};new AllExceptionsFilter().catch(Object.assign(new Error(message),{code:'P2028'}),{switchToHttp:()=>({getResponse:()=>response})} as never);expect(response.status).toHaveBeenCalledWith(500);expect(response.json).toHaveBeenCalledWith(expect.objectContaining({error:expect.objectContaining({code:'INTERNAL_ERROR'})}));
 });

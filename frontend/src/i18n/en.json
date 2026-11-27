@@ -57,7 +57,9 @@
     "generic": "An unexpected error occurred, please try again later or contact support",
     "unauthorized": "Session expired, please log in again",
     "forbidden": "You do not have access to this workspace.",
-    "back": "Go to your workspace"
+    "back": "Go to your workspace",
+    "writeUnknown": "The connection ended without a confirmed result. This write may have completed. Do not submit it again until you check the current records and audit log.",
+    "demoBusy": "The demo is busy. This request was not completed. Wait a few seconds before trying again."
   },
   "roles": {
     "admin": "Administrator",
@@ -242,7 +244,9 @@
     "patientLookup": "Find fictional patient by MRN or name",
     "patientLookupHint": "At least two characters. Select a result before creating the invoice.",
     "showPatientOptions": "Show matching patients",
-    "closePatientOptions": "Hide matching patients"
+    "closePatientOptions": "Hide matching patients",
+    "unknownHold": "Billing writes are paused in this tab. Open the invoice, or use the workspace admin audit log to check a new invoice. Only unlock after checking the result.",
+    "reconciled": "I checked the records and audit. Allow billing writes"
   },
   "users": {
     "title": "Fictional user management",

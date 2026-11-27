@@ -20,7 +20,7 @@ import {
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useCreateInvoice, useInvoice, useRecordPayment, useAddInvoiceItem } from '../hooks/useBilling';
-import { getApiErrorCode, getApiErrorMessage } from '../api/client';
+import { getApiErrorCode, getApiErrorMessage, isUnknownWriteOutcome } from '../api/client';
 
 import { decimalInteger } from './billingNumbers';
 
@@ -33,7 +33,12 @@ interface ItemRow {
 export default function BillingPage() {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
-  const writable = !!user && canManageBilling(user.role);
+  const lockKey = 'hms-billing-unknown'; // Same-tab lock survives role switching and reload.
+
+  const [unknownWrite, setUnknownWrite] = useState(() => import.meta.env.VITE_PUBLIC_DEMO === 'true' && sessionStorage.getItem(lockKey) === 'true');
+  const writable = !!user && canManageBilling(user.role) && !unknownWrite;
+  function holdUnknown(error: unknown) { if (import.meta.env.VITE_PUBLIC_DEMO === 'true' && isUnknownWriteOutcome(error)) { sessionStorage.setItem(lockKey, 'true'); setUnknownWrite(true); } }
+
   const displayError = (error: unknown) => getApiErrorCode(error) === 'AUDIT_PERSISTENCE_FAILED' ? t('departments.auditFailure') : getApiErrorMessage(error, t('errors.generic'));
   const [newItem, setNewItem] = useState<ItemRow>({ description: '', quantity: '1', unitPrice: '' });
   const [itemError, setItemError] = useState<string | null>(null);
@@ -46,8 +51,8 @@ export default function BillingPage() {
   const [insurancePercent, setInsurancePercent] = useState('0');
   const [items, setItems] = useState<ItemRow[]>([{ description: '', quantity: '1', unitPrice: '' }]);
   const [createError, setCreateError] = useState<string | null>(null);
-  const [activeInvoiceId, setActiveInvoiceId] = useState<string | null>(null);
-  const [lookupId, setLookupId] = useState('');
+  const [activeInvoiceId, setActiveInvoiceId] = useState<string | null>(() => new URLSearchParams(window.location.search).get('invoice'));
+  const [lookupId, setLookupId] = useState(() => new URLSearchParams(window.location.search).get('invoice') ?? '');
 
   const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card' | 'insurance'>('cash');
@@ -84,7 +89,7 @@ export default function BillingPage() {
       });
       setActiveInvoiceId(invoice.id); setSaved(true); setPaymentSuccess(false); setPaymentError(null); setPaymentAmount(''); setItemSuccess(false); setItemError(null);
     } catch (err) {
-      setCreateError(displayError(err));
+      holdUnknown(err); setCreateError(displayError(err));
     }
   }
 
@@ -94,7 +99,7 @@ export default function BillingPage() {
     try {
       await addInvoiceItem.mutateAsync({ invoiceId: invoice.id, item: { description: newItem.description.trim(), quantity: Number(newItem.quantity), unitPrice: Number(newItem.unitPrice) } });
       setNewItem({ description: '', quantity: '1', unitPrice: '' }); setItemSuccess(true);
-    } catch (error) { setItemError(displayError(error)); }
+    } catch (error) { holdUnknown(error); setItemError(displayError(error)); }
   }
 
   async function handlePayment() {
@@ -109,7 +114,7 @@ export default function BillingPage() {
       setPaymentAmount(''); setPaymentError(null); setPaymentSuccess(true);
     } catch (err) {
       // FR-8.4: رسالة "المبلغ أكبر من المتبقي" تظهر هنا حرفياً كما بالـ Backend
-      setPaymentError(displayError(err));
+      holdUnknown(err); setPaymentError(displayError(err));
     }
   }
 
@@ -119,6 +124,10 @@ export default function BillingPage() {
         {t('billing.title')}
       </Typography>
 
+      {unknownWrite && <Alert severity="warning" role="alert" sx={{mb:2}}>
+        {t('errors.writeUnknown')} {t('billing.unknownHold')}
+        <Button onClick={() => { sessionStorage.removeItem(lockKey); setUnknownWrite(false); }}>{t('billing.reconciled')}</Button>
+      </Alert>}
       {/* تحميل فاتورة موجودة بمعرِّفها مباشرة */}
       <Card sx={{ mb: 3 }}>
         <CardContent>

@@ -72,6 +72,10 @@ jobs:
       - run: createdb -h 127.0.0.1 -U hms_test hms_test_browser && createdb -h 127.0.0.1 -U hms_test hms_test_stock && createdb -h 127.0.0.1 -U hms_test hms_test_workflows && createdb -h 127.0.0.1 -U hms_test hms_test_appointments && createdb -h 127.0.0.1 -U hms_test hms_test_billing && createdb -h 127.0.0.1 -U hms_test hms_test_users
         env:
           PGPASSWORD: isolated-ci-only
+      - run: node test-real-browser/client-pressure.mjs
+        working-directory: frontend
+        env:
+          HMS_BROWSER_EXECUTABLE: /usr/bin/google-chrome
       - run: node test-real-browser/public-clinical.mjs
         working-directory: frontend
         env:
