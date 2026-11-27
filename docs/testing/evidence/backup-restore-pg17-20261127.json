@@ -1,0 +1,222 @@
+{
+  "scriptSha256": "ec5b00797d457eb378dfadae7c0b9a0a6898134379f7f977096fb46b90ca7384",
+  "workingTreeDirty": true,
+  "scope": "Local logical custom-format backup/restore of fictional data to an empty distinct database in same verified disposable cluster",
+  "sourceCommit": "37424a3d14bce813f9ce78aa0b97fecdb11992db",
+  "startedAt": "2026-11-27T19:20:08.306Z",
+  "complete": true,
+  "checks": [
+    "Both actual cluster identities verified before any restore effect",
+    "Distinct empty target, no overwrite/clean/drop option",
+    "Full row counts and ordered JSON digests match all public tables including10040patients and40audits",
+    "RLS flags/policies/tablegrants/constraints/functions/sequences match",
+    "Source unchanged after restore",
+    "Restored restricted runtime sees10040onlyinownworkspace/zeroabsentworkspace andcannotupdateauditlogs"
+  ],
+  "localPostmaster": {
+    "pid": 6178,
+    "systemIdentifier": "7712933189828319259"
+  },
+  "identity": {
+    "actualDataDirectory": "/tmp/hms_test_perf_20261127_backup4_pg17",
+    "explicitPort": 55498,
+    "sourceDatabase": "hms_test_perf_backup_source",
+    "targetDatabase": "hms_test_perf_backup_restore",
+    "verifiedBeforeEffects": true
+  },
+  "postgres": "PostgreSQL 17.12 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 7.5.0-3ubuntu1~18.04) 7.5.0, 64-bit",
+  "dumpVersion": "pg_dump (PostgreSQL) 17.10 (Ubuntu 17.10-1.pgdg22.04+1)",
+  "restoreVersion": "pg_restore (PostgreSQL) 17.10 (Ubuntu 17.10-1.pgdg22.04+1)",
+  "dumpMs": 84,
+  "archive": {
+    "bytes": 451555,
+    "sha256": "176adf57eb0dfa0914e0907bbe1a2815e7847ee744152687db18e971a523289c",
+    "localPath": "/tmp/hms_test_perf_backup_WskJci/fictional.dump",
+    "retainedFictionalOnly": true
+  },
+  "restoreMs": 117,
+  "twoWorkspaceChecks": {
+    "createdAfterImmutableRestoreComparison": true,
+    "checks": [
+      {
+        "workspace": "da8ceb20-85b9-4c87-8c23-1471b7c66249",
+        "table": "patients",
+        "rows": 10040,
+        "foreign_rows": 0
+      },
+      {
+        "workspace": "da8ceb20-85b9-4c87-8c23-1471b7c66249",
+        "table": "users",
+        "rows": 8,
+        "foreign_rows": 0
+      },
+      {
+        "workspace": "da8ceb20-85b9-4c87-8c23-1471b7c66249",
+        "table": "departments",
+        "rows": 1,
+        "foreign_rows": 0
+      },
+      {
+        "workspace": "06f7e9c2-14e5-45a8-a0df-3009f0f71b72",
+        "table": "patients",
+        "rows": 1,
+        "foreign_rows": 0
+      },
+      {
+        "workspace": "06f7e9c2-14e5-45a8-a0df-3009f0f71b72",
+        "table": "users",
+        "rows": 8,
+        "foreign_rows": 0
+      },
+      {
+        "workspace": "06f7e9c2-14e5-45a8-a0df-3009f0f71b72",
+        "table": "departments",
+        "rows": 1,
+        "foreign_rows": 0
+      }
+    ]
+  },
+  "restrictedRuntime": {
+    "roleAttributes": {
+      "rolname": "hms_runtime",
+      "rolsuper": false,
+      "rolbypassrls": false
+    },
+    "nonOwnerVerified": true,
+    "auditDeleteTruncateDenied": true,
+    "role": "hms_runtime",
+    "workspaceRows": 10040,
+    "absentWorkspaceRows": 0,
+    "auditUpdateDenied": true
+  },
+  "rowDigests": [
+    {
+      "table": "_prisma_migrations",
+      "rls": false,
+      "count": 5,
+      "sha256": "0688a1ca1fa4e5c7904cd5242470c52741be6db842b2a6f2bd6a992cb162cc20"
+    },
+    {
+      "table": "admissions",
+      "rls": true,
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "table": "appointments",
+      "rls": true,
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "table": "audit_logs",
+      "rls": true,
+      "count": 40,
+      "sha256": "c56a2d6dfc4a68d1a68347903a737bd15bbfd79967580cccc3494d7820939d39"
+    },
+    {
+      "table": "beds",
+      "rls": true,
+      "count": 2,
+      "sha256": "b1af97d9d64a9ebb1e5774ef8a50cf55022190035fad2da037973a4ca3b7aa25"
+    },
+    {
+      "table": "demo_workspaces",
+      "rls": true,
+      "count": 1,
+      "sha256": "a9a4ae9b957071456d0558e7fb70ca674acf824a99b3aa1783dfdd91561a9163"
+    },
+    {
+      "table": "departments",
+      "rls": true,
+      "count": 1,
+      "sha256": "fd8fe2c249146a71741ade188e65b3b6bf0046250bb4b3b9ce57784ff4397dce"
+    },
+    {
+      "table": "encounters",
+      "rls": true,
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "table": "hms_cleanup_state",
+      "rls": false,
+      "count": 1,
+      "sha256": "0f28931c23ff8172c53e4250c8d345dcc16f4d138b3c278845b30ec53fd56728"
+    },
+    {
+      "table": "invoice_items",
+      "rls": true,
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "table": "invoices",
+      "rls": true,
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "table": "medications",
+      "rls": true,
+      "count": 1,
+      "sha256": "18953b18bb84c090f467d29899d3711be37e4551df594c6b1055a8ccc25cb48c"
+    },
+    {
+      "table": "patients",
+      "rls": true,
+      "count": 10040,
+      "sha256": "f5e86a1644150c460807e96e458a05f1b0fbf22fbf1a7be326cadae4d8bff91e"
+    },
+    {
+      "table": "payments",
+      "rls": true,
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "table": "prescriptions",
+      "rls": true,
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "table": "test_orders",
+      "rls": true,
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "table": "users",
+      "rls": true,
+      "count": 8,
+      "sha256": "c78111b7d8e314650cab3f63721bd71d8db4182fd1ca909ae4c09be6d6c93699"
+    }
+  ],
+  "catalogCounts": {
+    "policies": 15,
+    "grants": 178,
+    "constraints": 71,
+    "functions": 4,
+    "sequences": 0
+  },
+  "additionalCatalogCounts": {
+    "indexes": 61,
+    "triggers": 0,
+    "columns": 145,
+    "enums": 32,
+    "relationSecurity": 78,
+    "schemaAcl": 1,
+    "functionAcl": 4
+  },
+  "additionalCatalogSha256": "843119c81e8b9108db5151097826cd7a591c2db8339ccc928930067ca916e2c9",
+  "catalogSha256": "eb4f841f6143e2568652ef19aea07e1ed4aa65a978dae85b771f53b08d4ea759",
+  "finishedAt": "2026-11-27T19:20:09.149Z",
+  "limitations": [
+    "Logical whole-database restore within same local cluster, not separate host/storage or role reconstruction",
+    "No scheduled daily backup, retention policy, encryption/key custody, external copy, PITR or recovery objective accepted",
+    "No live/provider database read or write, no real patient data",
+    "No power-cut/disk-failure, hosted availability or full application-after-restore certification",
+    "Dump/restore milliseconds are observations, not RPO/RTO guarantees"
+  ]
+}

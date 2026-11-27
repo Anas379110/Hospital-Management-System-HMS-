@@ -1,6 +1,6 @@
 # Current requirements traceability
 
-Reconciled27 November2026 against2ad6bb2. This file supersedes the historical57/57all-covered claim, not the original requirements. Original SRS targets stay intact. Implemented means code exists, not complete acceptance, clinical readiness or legal certification. Tests below name actual suites, without asserting each suite proves every stated requirement.
+Reconciled27 November2026 against deployed37424a3 and the local qualification evidence named below. This file supersedes the historical57/57all-covered claim, not the original requirements. Original SRS targets stay intact. Implemented means code exists, not complete acceptance, clinical readiness or legal certification. Tests below name actual suites, without asserting each suite proves every stated requirement.
 
 ## Evidence key
 
@@ -9,8 +9,9 @@ Reconciled27 November2026 against2ad6bb2. This file supersedes the historical57/
 - Real browser: `frontend/test-real-browser/public-{clinical,stock,workflows,appointments,billing,users}.mjs` and `isolation.mjs`, actual public-mode app and isolated fictional PostgreSQL. Scoped views/scenarios, not all possible role/state combinations.
 - Local performance: `backend/test-real-postgres/performance.mjs`, `docs/testing/evidence/performance-pg17-20261127.json` and `performance-pg18-20261127.json`. Actual local HTTP+nonownerRLS DB, not mocks and not hosted performance.
 - Local crash: `backend/test-real-postgres/crash-recovery.mjs`, `docs/testing/evidence/crash-recovery-pg18-20261127.json`, observed committed rows/audits retained and uncommitted sentinel absent after immediate process stop/restart, not WAL or physical-power-loss certification.
+- Local restore/offline: [qualification and limits](../testing/BACKUP-OFFLINE-QUALIFICATION.md), actual logical restorePG17/18andproductionbrowser external-network denial. These do not establish daily backups, independent-host disaster recovery or full intranet deployment.
 - Current controller/DTO/role paths: [route inventory](../api/ROUTE-INVENTORY.json), generated [OpenAPI](../api/openapi.yaml), [API service rules](../api/API.md).
-- Exact source hosted CI: https://github.com/Anas379110/Hospital-Management-System-HMS-/actions/runs/46032128551 , PostgreSQL17and18. Public fictional demonstration https://hms-isolated-qualification.onrender.com/ . CI is execution evidence for named suites, not every original requirement.
+- Exact source hosted CI: https://github.com/Anas379110/Hospital-Management-System-HMS-/actions/runs/46052612548 , PostgreSQL17and18. Public fictional demonstration https://hms-isolated-qualification.onrender.com/ . CI is execution evidence for named suites, not every original requirement.
 
 ## Original FR1..5
 
@@ -61,8 +62,8 @@ Reconciled27 November2026 against2ad6bb2. This file supersedes the historical57/
 
 ## Use-case alternatives and unresolved decisions
 
-- UC1no available bed: missing persistent waitlist and queue UI. Current rejection/empty options do not satisfy the stated waitlist alternative.
-- UC1state update for every viewer/US5near-realtime: no measured cross-client freshness target. Choose bounded polling versus push only after explicit alternatives, do not assert immediate propagation.
+- UC1no available bed: missing persistent waitlist and queue UI. User-approved manual FIFO doctor/nurse add/cancel and same-department closure on admission, no inferred medical priority or automatic admission. Implementation/tests remain open; separate liveDBgate applies.
+- UC1state update for every viewer/US5near-realtime: user-approved active-view15secondpolling/manualrefresh, pause hidden/offline and show stale state; implementation and measured cross-client evidence remain open. Do not assert immediate propagation.
 - UC2out-of-stock alternative: safe rejection exists. Alternative-drug suggestion and persistent unavailable/shortage workflow not implemented as an accepted clinical decision process. Optional original wording does not establish a clinical substitution requirement.
 - Eight roles and eleven capability groups are represented, not eleven completed requirement certificates.
 
@@ -72,13 +73,17 @@ Reconciled27 November2026 against2ad6bb2. This file supersedes the historical57/
 | --- | --- | --- |
 |10k+patients and basicAPI<300msonmediumserver/normal load | actual local10k+40fixture,1and4concurrentclientbenchmark, all600timedsamplesperrun<300msinactualguardedPG17.12andPG18.7reruns | Bounded local evidence only. Medium-server definition, normal workload, rich related history and Free hosted performance not established |
 | bcrypt/HTTPS/audit/API RBAC | bcrypt, hostedHTTPS, transaction audit and scoped authorization checks | Scoped engineering evidence. Not deployment-wide/intranetTLS or security certification |
-| intranet without internet + daily local backup | proposed deployment files, local source/dependencies | Not qualified. Browser asset/runtime dependency inventory and repeatable offline deployment/backup/restore remain |
+| intranet without internet + daily local backup | proposed deployment files, local source/dependencies | Partial local evidence: actual logical dump/restorePG17/18matched all public rows/catalogs and restricted RLS/audit protections; measured production browser paths made no external requests with external routing denied. Full network-disconnected deployment, clean offline install, independent storage and scheduled daily backup remain unqualified |
 | no loss on sudden power failure | DBtransactions, recorded rollback/contention checks and localPG18process-crash recovery preservingcommits/rejectinguncommittedsentinel | Physical power-loss target not established. Transactions do not prove physical power-loss durability; backup/restore/crash matrix required |
 | RTL/LTR and clear contrast | scoped Arabic/English pixel/axe checks | Scoped passed views, no full route/state/browser/WCAG certification |
-| i18n and OpenAPI | existing translations; offline generated metadata contract | Partial. Live Swagger DTO schemas empty; generator fixes checked repository reference, not live view. Full response schema and all strings not certified |
+| i18n and OpenAPI | existing translations; native shared runtime Swagger and independent offline metadata contract; exactCI and actual hosted docsJSON/UI verified | Native runtime23requestschemas/44operations populated, actual hosted desktop/mobile inspected. fullName/phone nullPATCH400/readback verified. Full success-response schemas and all strings not certified |
 | cited legal compliance | historical SRS names a statute | Unverified legal target, no assertion that citation or compliance is correct; needs current legal/source review for any actual deployment |
 | modular monolith / future FHIR | module layout and domain entities | Architecture shape exists; extraction/FHIR interoperability not demonstrated |
 
 ## Acceptance rule
 
 A row changes to accepted only with source, named execution/evidence and limits. A unit/mock suite does not become real PostgreSQL evidence; localhost does not become hosted qualification; a public demo release does not close original functional gaps. Preserve original requirements until the user changes them.
+
+## Approved workflow decisions, not implementation claims
+
+User approved27November2026: Admin/receptionist manually mark attendance or no-show, no reopening final states, no no-show with linked encounter; Admin department/bed setup and maintenance, doctor/nurse admission/discharge, no occupied-bed maintenance or deletion of history-linked records; doctor/nurse manual FIFO waitlist and same-department close on admission; active-view15secondpolling with hidden/offline pause/manualrefresh/stale indication. Manager receives no new writes. These settle behavior only. Implementation, tests and separately reviewed live database changes remain open.
