@@ -1,7 +1,7 @@
 import { ApiOperation, ApiResponse, ApiQuery, ApiExtension } from '@nestjs/swagger';
 import { RecordAttendanceDto } from './dto/record-attendance.dto';
 import { FindAppointmentsDto } from './dto/find-appointments.dto';
-import { Body, Controller, Get, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { AppointmentsService } from './appointments.service';
@@ -105,11 +105,14 @@ export class AppointmentsController {
   @ApiExtension('x-roles', ['receptionist', 'admin'])
   @ApiExtension('x-auth', 'roles')
   @ApiResponse({ status: 201, description: 'Attendance recorded. Response shape is service-defined.' })
-  @ApiResponse({ status: 400, description: 'Invalid attendance status' })
+  @ApiResponse({ status: 400, description: 'Malformed appointment UUID or invalid attendance status' })
   @ApiResponse({ status: 401, description: 'Authentication required' })
   @ApiResponse({ status: 403, description: 'Role forbidden' })
   @ApiResponse({ status: 429, description: 'Rate limit exceeded' })
-  recordAttendance(@Param('id') id: string, @Body() dto: RecordAttendanceDto, @Req() req: { user: { userId: string } }) {
+  @ApiResponse({ status: 404, description: 'Appointment not found in current workspace' })
+  @ApiResponse({ status: 409, description: 'Final appointment or no-show with linked encounter; refresh before choosing another action' })
+  @ApiResponse({ status: 503, description: 'Audit persistence failed, status change rolled back' })
+  recordAttendance(@Param('id', new ParseUUIDPipe()) id: string, @Body() dto: RecordAttendanceDto, @Req() req: { user: { userId: string } }) {
     return this.appointmentsService.recordAttendance(id, dto, req.user.userId);
   }
 

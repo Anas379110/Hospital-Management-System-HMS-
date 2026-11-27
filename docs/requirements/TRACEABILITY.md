@@ -87,3 +87,19 @@ A row changes to accepted only with source, named execution/evidence and limits.
 ## Approved workflow decisions, not implementation claims
 
 User approved27November2026: Admin/receptionist manually mark attendance or no-show, no reopening final states, no no-show with linked encounter; Admin department/bed setup and maintenance, doctor/nurse admission/discharge, no occupied-bed maintenance or deletion of history-linked records; doctor/nurse manual FIFO waitlist and same-department close on admission; active-view15secondpolling with hidden/offline pause/manualrefresh/stale indication. Manager receives no new writes. These settle behavior only. Implementation, tests and separately reviewed live database changes remain open.
+
+
+### Manual attendance candidate, local qualification
+
+Admin/receptionist manual completed/no_show action is implemented in the
+attendance source branch. Scheduled only; final states cannot reopen, no_show
+cannot coexist with a linked encounter, and encounter creation never implies
+attendance. Same-row locking and transactional redacted audit are tested on
+actual disposable PostgreSQL17 and18. HTTP cases cover all six forbidden roles,
+401/400/404/409, cross-workspace rejection, audit-failure503 rollback, attendance
+versus attendance and no_show versus encounter races. Local production-browser
+cases cover cancel without write, conflict close/refetch, final/doctor hidden
+actions and EN desktop/AR390px confirmation commits. These are selected local
+cases, not full workflow coverage. Exact-head hosted CI, source publication and
+hosted release of this candidate remain pending. Department/bed setup, waitlist
+and freshness are still open; no live schema/grant change is included here.

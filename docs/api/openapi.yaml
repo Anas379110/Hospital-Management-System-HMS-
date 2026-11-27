@@ -1047,8 +1047,17 @@
           "403": {
             "description": "Current persisted role is not permitted"
           },
+          "404": {
+            "description": "Appointment not found in current workspace"
+          },
+          "409": {
+            "description": "Final appointment or no-show with linked encounter; refresh before choosing another action"
+          },
           "429": {
             "description": "Rate limit exceeded"
+          },
+          "503": {
+            "description": "Audit persistence failed, status change rolled back"
           }
         },
         "security": [

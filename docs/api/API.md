@@ -75,8 +75,8 @@ The snapshot does not model every Transform decorator: username/fullName/user-se
 The live application's native Swagger UI is served at `/api/docs`, with JSON at
 `/api/docs-json`. Both use `backend/src/api-documentation.ts`. The checked-in
 `docs/api/native-openapi.json` snapshot records that same runtime builder.
-All 23 request schemas now have explicit native annotations; three search DTOs
-are represented as query parameters. All 44 controller operations include role,
+All 24 request schemas now have explicit native annotations; three search DTOs
+are represented as query parameters. All 45 controller operations include role,
 security, status-code and query metadata. The independent offline reference and
 route inventory remain a separate check, not the document served by Swagger.
 
@@ -131,3 +131,27 @@ actual native schemas/query parameters: patient name2/3, invoice item count
 user search1/2/100/101. HTTP docs tests use the production application setup
 through an injected Nest test-app factory with mocked Prisma, isolated database
 URL and restored environment. No live database is contacted by those tests.
+
+
+## Manual appointment attendance
+
+`POST /appointments/{id}/attendance` accepts exactly `{ "status": "completed" }`
+or `{ "status": "no_show" }`. Admin and receptionist only. Attendance is manual;
+creating or completing an encounter does not silently record attendance.
+Only scheduled appointments can change. Completed, no_show and cancelled are
+final, including an identical repeat request. A linked encounter blocks no_show,
+but does not block manual completed. The appointment row lock is shared with
+encounter creation. Mutation and redacted audit commit together.
+
+- 201: status and one attendance audit committed.
+- 400: malformed appointment UUID or invalid/missing/null/extra body property.
+- 401/403: current authentication/role does not permit this action.
+- 404 `APPOINTMENT_NOT_FOUND`: absent or inaccessible in current workspace.
+- 409 `APPOINTMENT_FINAL` or `APPOINTMENT_HAS_ENCOUNTER`: no write or attendance
+  audit. Client closes the stale confirmation, refreshes, and asks the user to
+  check current state before choosing again. It never retries the write.
+- 503 `AUDIT_PERSISTENCE_FAILED`: status mutation rolled back. Other network/5xx
+  failures have unknown outcomes and must not be automatically retried.
+
+These service statuses are explicitly included for this new endpoint. Other
+routes' declared status sets are still not exhaustive service-error catalogues.

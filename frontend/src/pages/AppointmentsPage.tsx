@@ -26,6 +26,7 @@ export default function AppointmentsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [attendanceNotice, setAttendanceNotice] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [patientSearch, setPatientSearch] = useState('');
@@ -88,6 +89,7 @@ export default function AppointmentsPage() {
     </Stack>
     <Typography sx={{ mb: 1 }}>{t(days === 7 ? 'appointments.sevenFrom' : 'appointments.dayFrom', { date: displayDate })}</Typography>
     <Typography variant="body2" color="text.secondary" mb={2}>{t('appointments.timezone', { zone: Intl.DateTimeFormat().resolvedOptions().timeZone })}</Typography>
+    {attendanceNotice && <Alert severity="warning" role="alert" sx={{ mb: 2 }} action={<Button onClick={() => void appointments.refetch()}>{t('appointments.retry')}</Button>}>{attendanceNotice}</Alert>}
     {success && <Alert severity="success" role="status" sx={{ mb: 2 }}>{success}</Alert>}
     {appointments.isLoading && <CircularProgress aria-label={t('appointments.loading')} />}
     {appointments.isError && <Alert severity="error" action={<Button onClick={() => void appointments.refetch()}>{t('appointments.retry')}</Button>}>{getApiErrorCode(appointments.error) === 'APPOINTMENT_RANGE_TOO_LARGE' ? t('appointments.tooMany') : t('appointments.loadError')}</Alert>}
@@ -120,7 +122,7 @@ export default function AppointmentsPage() {
     <Dialog open={!!attendanceTarget} onClose={() => {if(!attendance.isPending)setAttendanceTarget(null);}} aria-labelledby="attendance-title">
       <DialogTitle id="attendance-title">{t('appointments.attendanceTitle')}</DialogTitle>
       <DialogContent><Typography>{t(attendanceTarget?.status==='completed'?'appointments.markAttended':'appointments.markNoShow')}</Typography><Typography>{t('appointments.attendanceFinal')}</Typography>{actionError && <Alert severity="error">{actionError}</Alert>}</DialogContent>
-      <DialogActions><Button disabled={attendance.isPending} onClick={()=>setAttendanceTarget(null)}>{t('appointments.cancelAction')}</Button><Button disabled={attendance.isPending} onClick={async()=>{if(!attendanceTarget)return;setActionError(null);try{await attendance.mutateAsync(attendanceTarget);setAttendanceTarget(null);setSuccess(t('appointments.attendanceSaved'));}catch(error){setActionError(errorMessage(error));}}}>{t('appointments.confirmAttendance')}</Button></DialogActions>
+      <DialogActions><Button disabled={attendance.isPending} onClick={()=>setAttendanceTarget(null)}>{t('appointments.cancelAction')}</Button><Button disabled={attendance.isPending} onClick={async()=>{if(!attendanceTarget)return;setActionError(null);try{setAttendanceNotice(null);setSuccess(null);await attendance.mutateAsync(attendanceTarget);setAttendanceTarget(null);setSuccess(t('appointments.attendanceSaved'));}catch(error){const code=getApiErrorCode(error);if(code==='APPOINTMENT_FINAL'||code==='APPOINTMENT_HAS_ENCOUNTER'||code==='APPOINTMENT_NOT_FOUND'){setAttendanceTarget(null);setAttendanceNotice(t('appointments.attendanceConflict'));void appointments.refetch();}else setActionError(errorMessage(error));}}}>{t('appointments.confirmAttendance')}</Button></DialogActions>
     </Dialog>
     <Dialog open={dialogOpen} onClose={() => { if (!pendingSave) setDialogOpen(false); }} fullWidth maxWidth="sm">
       <DialogTitle>{t(editing ? 'appointments.edit' : 'appointments.new')}</DialogTitle><DialogContent>

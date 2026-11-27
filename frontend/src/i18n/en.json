@@ -204,7 +204,7 @@
     "attendanceTitle": "Record attendance",
     "attendanceFinal": "This decision is final and cannot be reopened.",
     "attendanceSaved": "Attendance recorded.",
-    "attendanceConflict": "This appointment is final or has a linked encounter. Refresh before trying another action.",
+    "attendanceConflict": "This appointment changed or is no longer available. The list is being refreshed. Check its current status before choosing another action.",
     "confirmAttendance": "Confirm attendance",
     "cancelAction": "Back"
   },

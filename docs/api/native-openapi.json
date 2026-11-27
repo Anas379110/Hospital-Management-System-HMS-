@@ -932,7 +932,7 @@
             "description": "Attendance recorded. Response shape is service-defined."
           },
           "400": {
-            "description": "Invalid attendance status"
+            "description": "Malformed appointment UUID or invalid attendance status"
           },
           "401": {
             "description": "Authentication required"
@@ -940,8 +940,17 @@
           "403": {
             "description": "Role forbidden"
           },
+          "404": {
+            "description": "Appointment not found in current workspace"
+          },
+          "409": {
+            "description": "Final appointment or no-show with linked encounter; refresh before choosing another action"
+          },
           "429": {
             "description": "Rate limit exceeded"
+          },
+          "503": {
+            "description": "Audit persistence failed, status change rolled back"
           }
         },
         "security": [
