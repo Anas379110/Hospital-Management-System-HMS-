@@ -58,15 +58,21 @@ try{
   const create=()=>page.getByRole('button',{name:lang==='ar'?'إنشاء الفاتورة':'Create invoice',exact:true});
   // Even a structured 500 is unknown to the browser. Database inspection below
   // establishes rollback before the test explicitly acknowledges reconciliation.
+  let billingPosts=0,observedPosts=0;page.on('request',request=>{if(request.method()==='POST'&&new URL(request.url()).pathname.startsWith('/api/v1/invoices'))billingPosts++});
   const failure=()=>page.getByRole('button',{name:lang==='ar'?'فحصت السجلات والتدقيق. السماح بكتابات الفواتير':'I checked the records and audit. Allow billing writes',exact:true});
-  const acknowledge=async()=>{await failure().click()};
-  await create().click();await failure().waitFor();if(await prisma.invoice.count()!==before.invoices||await prisma.auditLog.count()!==before.audits)throw new Error('invoice failure changed state');
+  const verifyHeld=async()=>{
+   await failure().waitFor();await page.waitForTimeout(300);
+   if(billingPosts!==observedPosts+1)throw new Error('billing auto retry or duplicate post');observedPosts=billingPosts;
+   if(await create().count()||await page.getByRole('button',{name:lang==='ar'?'تسجيل الدفعة':'Record payment',exact:true}).count()||await page.getByRole('button',{name:lang==='ar'?'إضافة بند لهذه الفاتورة':'Add item to this invoice',exact:true}).count())throw new Error('unknown billing write controls visible');
+  };
+  const acknowledge=async()=>{const before=billingPosts;await failure().click();await page.waitForTimeout(100);if(billingPosts!==before)throw new Error('acknowledgement retried write')};
+  await create().click();await verifyHeld();if(await prisma.invoice.count()!==before.invoices||await prisma.auditLog.count()!==before.audits)throw new Error('invoice failure changed state');
   await page.waitForTimeout(300);await page.screenshot({path:artifacts+'/billing-create-failure-'+lang+'.png',fullPage:true});
   await prisma.$executeRawUnsafe('DROP TRIGGER hms_test_browser_audit_failure ON audit_logs');await acknowledge();await create().click();await page.getByText(lang==='ar'?'أُنشئت فاتورة وهمية. لم يُخصم أي مبلغ حقيقي.':'Fictional invoice created. No money was charged.',{exact:true}).waitFor();
   const invoice=await prisma.invoice.findFirstOrThrow({orderBy:{createdAt:'desc'}});if(await prisma.invoice.count()!==before.invoices+1||await prisma.auditLog.count()!==before.audits+1)throw new Error('invoice retry audit mismatch');
   const amount=page.getByRole('spinbutton',{name:lang==='ar'?'المبلغ، ليرة صحيحة':'Amount (integer SYP)',exact:true});await amount.fill('1e1');if(!await page.getByRole('button',{name:lang==='ar'?'تسجيل الدفعة':'Record payment',exact:true}).isDisabled())throw new Error('scientific payment enabled');await amount.fill('101');if(!await page.getByRole('button',{name:lang==='ar'?'تسجيل الدفعة':'Record payment',exact:true}).isDisabled())throw new Error('overpayment enabled');await amount.fill('40');const paymentAudits=await prisma.auditLog.count();
-  await prisma.$executeRawUnsafe('CREATE TRIGGER hms_test_browser_audit_failure BEFORE INSERT ON audit_logs FOR EACH ROW EXECUTE FUNCTION hms_test_browser_audit_reject()');
-  const pay=()=>page.getByRole('button',{name:lang==='ar'?'تسجيل الدفعة':'Record payment',exact:true});await pay().click();await failure().waitFor();if(await prisma.payment.count({where:{invoiceId:invoice.id}})!==0||await prisma.auditLog.count()!==paymentAudits)throw new Error('payment failure changed state');
+  observedPosts=billingPosts;await prisma.$executeRawUnsafe('CREATE TRIGGER hms_test_browser_audit_failure BEFORE INSERT ON audit_logs FOR EACH ROW EXECUTE FUNCTION hms_test_browser_audit_reject()');
+  const pay=()=>page.getByRole('button',{name:lang==='ar'?'تسجيل الدفعة':'Record payment',exact:true});await pay().click();await verifyHeld();if(await prisma.payment.count({where:{invoiceId:invoice.id}})!==0||await prisma.auditLog.count()!==paymentAudits)throw new Error('payment failure changed state');
   await page.waitForTimeout(300);await page.screenshot({path:artifacts+'/billing-payment-failure-'+lang+'.png',fullPage:true});await prisma.$executeRawUnsafe('DROP TRIGGER hms_test_browser_audit_failure ON audit_logs');await acknowledge();await pay().click();await page.getByText(lang==='ar'?'سُجلت الدفعة الوهمية وحُدث الرصيد.':'Fictional payment recorded. Balance updated.',{exact:true}).waitFor();
   await page.getByTestId('billing-paid').filter({hasText:lang==='ar'?'٤٠':'40'}).waitFor();await page.getByTestId('billing-remaining').filter({hasText:lang==='ar'?'٦٠':'60'}).waitFor();await page.getByText(lang==='ar'?/مدفوعة جزئياً/:/Partially paid/).waitFor();
   if((await prisma.payment.aggregate({where:{invoiceId:invoice.id},_sum:{amount:true}}))._sum.amount!==40||await prisma.auditLog.count()!==paymentAudits+1)throw new Error('payment retry mismatch');
@@ -83,8 +89,8 @@ try{
   await addSection.getByRole('spinbutton',{name:lang==='ar'?'سعر الوحدة، ليرة صحيحة':'Unit price (integer SYP)',exact:true}).fill('25');
   await addSection.getByRole('spinbutton',{name:lang==='ar'?'الكمية':'Quantity',exact:true}).fill('0');if(!await addSection.getByRole('button',{name:lang==='ar'?'إضافة بند لهذه الفاتورة':'Add item to this invoice',exact:true}).isDisabled())throw new Error('zero add quantity enabled');await addSection.getByRole('spinbutton',{name:lang==='ar'?'الكمية':'Quantity',exact:true}).fill('1');
   const itemBefore=await prisma.invoiceItem.count({where:{invoiceId:invoice.id}}),itemAudits=await prisma.auditLog.count();
-  await prisma.$executeRawUnsafe('CREATE TRIGGER hms_test_browser_audit_failure BEFORE INSERT ON audit_logs FOR EACH ROW EXECUTE FUNCTION hms_test_browser_audit_reject()');
-  const add=()=>addSection.getByRole('button',{name:lang==='ar'?'إضافة بند لهذه الفاتورة':'Add item to this invoice',exact:true});await add().click();await failure().waitFor();
+  observedPosts=billingPosts;await prisma.$executeRawUnsafe('CREATE TRIGGER hms_test_browser_audit_failure BEFORE INSERT ON audit_logs FOR EACH ROW EXECUTE FUNCTION hms_test_browser_audit_reject()');
+  const add=()=>addSection.getByRole('button',{name:lang==='ar'?'إضافة بند لهذه الفاتورة':'Add item to this invoice',exact:true});await add().click();await verifyHeld();
   if(await prisma.invoiceItem.count({where:{invoiceId:invoice.id}})!==itemBefore||await prisma.auditLog.count()!==itemAudits)throw new Error('item failure mutated state');
   await prisma.$executeRawUnsafe('DROP TRIGGER hms_test_browser_audit_failure ON audit_logs');await acknowledge();await add().click();
   await page.getByText(lang==='ar'?'أُضيف بند الفاتورة وحُدث الرصيد.':'Invoice item added. Balance updated.',{exact:true}).waitFor();await page.getByTestId('billing-remaining').filter({hasText:lang==='ar'?'٨٥':'85'}).waitFor();
@@ -107,7 +113,7 @@ try{
   await openInvoice(cancelled.id);await page.getByRole('region',{name:lang==='ar'?'بنود الفاتورة':'Invoice items',exact:true}).getByText(/Fictional cancelled service/).waitFor();
   if(await pay().count()||await addSection.count())throw new Error('cancelled invoice has write controls');
   await denyMutation(cancelled.id,'items',{description:'Blocked cancelled extra',quantity:1,unitPrice:1});await denyMutation(cancelled.id,'payments',{amount:1,method:'cash'});
-  const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth);if(errors.length||overflow)throw new Error('billing runtime/overflow');results.checks.push({lang,invoiceRollbackReconciledBeforeRetry:true,paymentRollbackReconciledBeforeRetry:true,managerReadOnly:true,managerContentVerified:true,itemAuditRollbackReconciledBeforeRetry:true,itemDetailVisible:true,historyExactAmountsMethods:true,paidCancelledHttp409NoMutation:true,paidCancelledNoWriteControls:true,visiblePaymentBalanceStatusUpdated:true,scientificPricePaymentBlocked:true,runtimeErrors:errors.length,overflow});await page.close();
+  const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth);if(errors.length||overflow)throw new Error('billing runtime/overflow');results.checks.push({lang,unknownAudit500HoldNoAutomaticRetry:true,acknowledgementDoesNotRetry:true,invoiceRollbackReconciledBeforeRetry:true,paymentRollbackReconciledBeforeRetry:true,managerReadOnly:true,managerContentVerified:true,itemAuditRollbackReconciledBeforeRetry:true,itemDetailVisible:true,historyExactAmountsMethods:true,paidCancelledHttp409NoMutation:true,paidCancelledNoWriteControls:true,visiblePaymentBalanceStatusUpdated:true,scientificPricePaymentBlocked:true,runtimeErrors:errors.length,overflow});await page.close();
  }
  results.assertionsPassed=true;console.log(JSON.stringify(results,null,2));
 }catch(e){if(currentPage)await currentPage.screenshot({path:artifacts+'/unexpected-failure.png',fullPage:true}).catch(()=>{});results.error=String(e?.stack??e).replaceAll(password,'[REDACTED]');console.error(results.error);process.exitCode=1}
