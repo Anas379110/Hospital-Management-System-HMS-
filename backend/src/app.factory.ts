@@ -1,3 +1,4 @@
+import { trustedProxyAddresses } from './common/trusted-proxies';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import * as express from 'express';
@@ -10,6 +11,7 @@ import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 /** Shared request contract for production and actual HTTP integration tests. */
 export async function createApplication(options: { logger?: false } = {}) {
   const app = await NestFactory.create(AppModule, options);
+  app.getHttpAdapter().getInstance().set('trust proxy', trustedProxyAddresses(process.env.HMS_TRUSTED_PROXY_ADDRESSES));
   app.use((_req: unknown, _res: unknown, next: () => void) => workspaceContext.run('', next));
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
   app.useGlobalFilters(new AllExceptionsFilter());

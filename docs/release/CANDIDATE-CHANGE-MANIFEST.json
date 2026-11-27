@@ -1,12 +1,12 @@
 {
   "status": "local candidate only; hosted gates open; not published",
-  "capturedAt": "2026-11-27T00:37:17.339771+00:00",
+  "capturedAt": "2026-11-27T00:52:54.186139+00:00",
   "comparedWith": "frozen118source-transfer baseline; no source changes to frozen tree",
   "changedFiles": [
     {
       "path": ".env.example",
-      "sha256": "9a232fcfcb0edc8de09e528d3635e9b369f67f69366dbdd11cf1671d41cbe244",
-      "bytes": 420
+      "sha256": "6082edb858b610d2e887ae0f1cc665b31546978b5ace167e986077d8e9277dff",
+      "bytes": 538
     },
     {
       "path": ".github/workflows/ci.yml",
@@ -35,13 +35,18 @@
     },
     {
       "path": "backend/src/app.factory.ts",
-      "sha256": "fb3aa8ef74115b98190dc83cc7f1595013ae5ea561fd4e918a9cd937079e77d1",
-      "bytes": 1437
+      "sha256": "f4878023c5582353d58d30e3dfb18a3e19152a87b11f48a69fb5587f07101f53",
+      "bytes": 1624
     },
     {
       "path": "backend/src/app.module.ts",
       "sha256": "708c398eeca9afe67db5b37191f99c0886d6655552570dc821d97ed2c2af9afd",
       "bytes": 2170
+    },
+    {
+      "path": "backend/src/common/trusted-proxies.ts",
+      "sha256": "53769040652be73a419e5f6be23017be377eb511b87ea079160e10b393b1b012",
+      "bytes": 690
     },
     {
       "path": "backend/src/modules/admissions/admissions.service.ts",
@@ -124,14 +129,19 @@
       "bytes": 3265
     },
     {
+      "path": "backend/test/unit/trusted-proxies.spec.ts",
+      "sha256": "e0c40e204192bc4f91e8aa2bd5169658f3b1a41282749943f79493a905422b20",
+      "bytes": 575
+    },
+    {
       "path": "backend/test-real-postgres/concurrency.mjs",
       "sha256": "3cbd6ab874ca86b25d675bd2b68fdcde80449d231e7f88b3e8ec51133ce94649",
       "bytes": 87462
     },
     {
       "path": "docs/release/ISOLATED-DEMO-OPERATIONS.md",
-      "sha256": "8219b9d2ba5888ade8017c5f61fb9d45b32f9bb2989c480c4f4668b2120ac5fc",
-      "bytes": 6765
+      "sha256": "12f6890fdc93a33f049679adae50370da992ddda14f27e737d8ad64da3d7876c",
+      "bytes": 7884
     },
     {
       "path": "docs/release/ISOLATION-IMPLEMENTATION-PLAN.md",
@@ -230,8 +240,8 @@
     },
     {
       "path": "frontend/test-real-browser/isolation.mjs",
-      "sha256": "96e3fcf11241b3df92d0dfb56c9f67ce1c0ac6cef475e978892714852211d637",
-      "bytes": 27215
+      "sha256": "a37806760407650ecf679449b16e48f9b0ce21d903169386ab5914aae5e6cfc7",
+      "bytes": 29107
     },
     {
       "path": "frontend/test-real-browser/public-appointments.mjs",

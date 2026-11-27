@@ -135,15 +135,15 @@ const {workspaceContext}=require(base+'/dist/src/prisma/workspace-context.js');
   await page.evaluate(data=>{localStorage.setItem('hms_token',data.accessToken);localStorage.setItem('hms_user',JSON.stringify({userId:data.user.id,username:data.user.username,role:data.user.role}));localStorage.setItem('hms_demo','true')},a.data);
   await page.goto(host+'/patients');await page.getByRole('heading').first().waitFor();await page.getByRole('textbox').first().fill('Fictional');await page.getByText('Fictional Demo Patient',{exact:true}).waitFor();
   await page.screenshot({path:artifacts+'/isolation-patients-'+lang+'.png',fullPage:true});
-  if(lang==='ar'){
-    const menu=page.getByRole('button',{name:'التنقل',exact:true});
+  {
+    await page.setViewportSize({width:390,height:1000});const menu=page.getByRole('button',{name:lang==='ar'?'التنقل':'Navigation',exact:true});
     // Accessible nav label may vary with translation. Locate current first header button.
     const trigger=await menu.count()?menu:page.locator('header button').first();await trigger.focus();await page.keyboard.press('Enter');await page.getByRole('presentation').last().waitFor();await page.evaluate(async()=>Promise.all(document.getAnimations().filter(a=>a.effect?.getTiming().iterations!==Infinity).map(a=>a.finished.catch(()=>{}))));
-    await page.screenshot({path:artifacts+'/drawer-'+lang+'.png',fullPage:true});await page.keyboard.press('Escape');if(!await trigger.evaluate(e=>e===document.activeElement))throw Error('drawer focus not restored');
+    const drawer=page.locator('.MuiDrawer-paper');const bounds=await drawer.boundingBox();if(!bounds||(lang==='ar'?Math.abs(bounds.x+bounds.width-390)>2:Math.abs(bounds.x)>2))throw Error('drawer wrong side '+lang);await page.screenshot({path:artifacts+'/drawer-'+lang+'.png',fullPage:true});await page.keyboard.press('Escape');if(!await trigger.evaluate(e=>e===document.activeElement))throw Error('drawer focus not restored');
     result.views.push({route:'drawer',lang,width:390,keyboardFocusRestored:true});
   }
 
-  const picker=page.getByRole('combobox',{name:lang==='ar'?'الدور التجريبي':'Demo role',exact:true});await picker.click();await page.getByRole('option',{name:lang==='ar'?'مدير النظام':'Administrator',exact:true}).click();
+  await page.setViewportSize({width:lang==='ar'?390:1440,height:1000});const picker=page.getByRole('combobox',{name:lang==='ar'?'الدور التجريبي':'Demo role',exact:true});await picker.click();await page.getByRole('option',{name:lang==='ar'?'مدير النظام':'Administrator',exact:true}).click();
   await page.waitForFunction(()=>JSON.parse(localStorage.getItem('hms_user')||'{}').role==='admin');await page.waitForLoadState('networkidle');await page.goto(host+'/audit');await page.getByRole('heading').first().waitFor();await page.screenshot({path:artifacts+'/isolation-audit-'+lang+'.png',fullPage:true});
   for(const route of ['patients','audit','users','billing']){
    await page.goto(host+'/'+route);await page.getByRole('heading').first().waitFor();await page.evaluate(()=>document.fonts.ready);const scan=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();result.axe.push({lang,route,violations:scan.violations,passes:scan.passes.map(x=>x.id),incomplete:scan.incomplete.map(x=>({id:x.id,nodes:x.nodes.map(n=>n.target)}))});if(scan.violations.length)throw Error(lang+' '+route+' axe '+JSON.stringify(scan.violations));
@@ -156,10 +156,11 @@ const {workspaceContext}=require(base+'/dist/src/prisma/workspace-context.js');
   await page.close();
  }
  const landings={admin:'patients',receptionist:'patients',doctor:'patients',nurse:'patients',manager:'patients',pharmacist:'pharmacy',lab_tech:'lab',billing_clerk:'billing'};
- for(const [role,route] of Object.entries(landings)){
+ for(const lang of ['en','ar'])for(const [role,route] of Object.entries(landings)){
   const session=await call('demo/role',b.data.accessToken,{role});const context=await browser.newContext({viewport:{width:320,height:740}});const page=await context.newPage();
-  await page.goto(host+'/login');await page.evaluate(data=>{localStorage.setItem('hms_token',data.accessToken);localStorage.setItem('hms_user',JSON.stringify({userId:data.user.id,username:data.user.username,role:data.user.role}));localStorage.setItem('hms_demo','true');localStorage.setItem('hms_locale','en')},session.data);await page.goto(host+'/');await page.waitForURL('**/'+route);await page.getByRole('heading').first().waitFor();
-  if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth))throw Error('320role landing overflow '+role);await page.screenshot({path:artifacts+'/landing-'+role+'-320.png',fullPage:true});result.views.push({role,route,lang:'en',width:320,overflow:false});await context.close();
+  await page.goto(host+'/login');await page.evaluate(data=>{localStorage.setItem('hms_token',data.accessToken);localStorage.setItem('hms_user',JSON.stringify({userId:data.user.id,username:data.user.username,role:data.user.role}));localStorage.setItem('hms_demo','true');localStorage.setItem('hms_locale',data.lang)}, {...session.data,lang});await page.goto(host+'/');await page.waitForURL('**/'+route);await page.getByRole('heading').first().waitFor();
+  if(role==='billing_clerk'){const picker=page.getByRole('combobox',{name:lang==='ar'?'ابحث برقم الملف أو اسم المريض الوهمي':'Find fictional patient by MRN or name',exact:true});await picker.fill('Fictional');await page.getByRole('option',{name:/Fictional Demo Patient/}).waitFor();await page.screenshot({path:artifacts+'/billing-picker-'+lang+'-320.png',fullPage:true});await page.keyboard.press('Escape');result.views.push({role,route:'billing-picker',lang,width:320});}
+  if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth))throw Error('320role landing overflow '+role);await page.screenshot({path:artifacts+'/landing-'+role+'-'+lang+'-320.png',fullPage:true});result.views.push({role,route,lang,width:320,overflow:false});await context.close();
  }
  result.checks.push('8role expected production landing routes at320px no overflow');
  result.checks.push('320px production entry no horizontal overflow, visible warning/locale/action');
@@ -186,6 +187,7 @@ const {workspaceContext}=require(base+'/dist/src/prisma/workspace-context.js');
  if((await call('patients',a.data.accessToken)).status!==401)throw Error('deleted workspace token accepted');
  // Test rate gate after the3actual anonymous starts, no proxy-header assumptions.
  const throttled=await call('demo/start',null,{});if(throttled.status!==429)throw Error('fourth anonymous start not throttled');
+ const forgedIp=await fetch(host+'/api/v1/demo/start',{method:'POST',headers:{'Content-Type':'application/json','X-Forwarded-For':'203.0.113.19'},body:'{}'});if(forgedIp.status!==429)throw Error('untrusted forwarded header bypassed throttle');result.checks.push('default proxy configuration ignores spoofed forwardedIP for bootstrap throttle');
  // Direct SQL cap permits expired-row reaping without changing sliding inactivity.
  await owner.query("INSERT INTO demo_workspaces(id,expires_at) SELECT gen_random_uuid()::text,now()-interval '1 second' FROM generate_series(1,101)");
  await runtime.query('SELECT hms_create_demo_workspace($1)',[require('node:crypto').randomUUID()]);
@@ -193,6 +195,10 @@ const {workspaceContext}=require(base+'/dist/src/prisma/workspace-context.js');
  await owner.query("INSERT INTO demo_workspaces(id) SELECT gen_random_uuid()::text FROM generate_series(1,100-(SELECT count(*)::int FROM demo_workspaces))");
  let capped=false;try{await runtime.query('SELECT hms_create_demo_workspace($1)',[require('node:crypto').randomUUID()])}catch(e){capped=e.code==='P0001'&&e.message.includes('capacity')};if(!capped)throw Error('100workspace cap not enforced');
  let structured=false;try{await app.get(require(base+'/dist/src/modules/auth/demo.service.js').DemoService).create()}catch(e){structured=e.getStatus?.()===503&&e.getResponse?.().error?.code==='DEMO_CAPACITY_REACHED'}if(!structured)throw Error('capacity not structured503');
+ // Fresh application resets only its in-memory rate window, never visitor data.
+ const capacityApp=await require(base+'/dist/src/app.factory.js').createApplication({logger:false});await capacityApp.listen(0,'127.0.0.1');
+ try {const response=await fetch((await capacityApp.getUrl())+'/api/v1/demo/start',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});const body=await response.json();if(response.status!==503||body.error?.code!=='DEMO_CAPACITY_REACHED')throw Error('HTTP capacity response contract');}finally{await capacityApp.close()}
+ result.checks.push('actual HTTP start returns503 JSON DEMO_CAPACITY_REACHED at capacity');
  result.checks.push('capacity maps to structured503 DEMO_CAPACITY_REACHED');
  result.checks.push('deletedworkspace401, fourthanonymousstart429, bootstrap expired reaping,100liveworkspace cap');
  result.checks.push('direct cross-workspace composite FK denied; cleanup purges actual invoice/items/audit and preserves other8users');
