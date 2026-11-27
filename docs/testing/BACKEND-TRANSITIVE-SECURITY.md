@@ -5,7 +5,7 @@
 ## Minimal patch choice
 
 Pin transitive qs6.17.1 and uuid11.1.1 through npm overrides. Both stay within
-installed major versions. Avoid npm audit fix --force: it proposes Nest12 and
+installed major versions, but exceed the exact/caret ranges declared by some dependent packages. Overrides therefore need explicit edge-shape and real-HTTP compatibility evidence; same-major alone is not compatibility proof. Avoid npm audit fix --force: it proposes Nest12 and
 would turn a transitive patch into a framework/Swagger/scheduler compatibility
 round. Nest10 currently has no newer version than installed10.4.22 in the
 registry. No schema, grant, provider or first-party runtime behavior change.
@@ -44,7 +44,7 @@ a distinct build-tooling review before claiming all dependencies remediated.
 
 Source search covers backend/src. Dependency caller inspection covers installed
 Express query parser, body-parser urlencoded parser, Nest schedule orchestrator
-and common FileTypeValidator. Static reachability evidence is bounded to this
+and common FileTypeValidator. First-party source reachability was checked by the implementing worker, not independently rechecked by the dependency reviewer. Static reachability evidence is bounded to this
 source and configuration, not a general guarantee about arbitrary future code.
 
 ## Checks executed locally
