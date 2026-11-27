@@ -11,6 +11,8 @@ Reconciled27 November2026. Fictional-data demonstration, not hospital readiness 
 
 ## Current engineering evidence
 
+The later documentation/tooling/local-benchmark commits have NOT run exact-head hosted CI and have NOT been deployed. Only public source2ad6bb2and its linked exact-source CI above have that release evidence.
+
 [Local10kqualification](docs/testing/PERFORMANCE-QUALIFICATION.md) contains exact runner, workload, raw samples and limits. Actual compiled app/nonownerRLS/PostgreSQL, not a mocked service. A local result does not prove Free hosted latency, representative medium-server load,10kcomplete longitudinal records or power-loss durability.
 
 [API reference](docs/api/API.md) and [traceability](docs/requirements/TRACEABILITY.md) distinguish current implementation from original target requirements. The generated repository OpenAPI has actual route/role/DTO validation metadata. The live Swagger DTO schemas remain incomplete until an explicitly tested source/runtime documentation fix is selected and released.
