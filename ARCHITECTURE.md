@@ -1,3 +1,5 @@
+> Historical project reference. Current release/evidence and explicit missing requirements are in [current verification](VERIFICATION.md) and [traceability](docs/requirements/TRACEABILITY.md). Historical counts, complete-module assertions, untested-migration/CI statements and source paths below must not override current code or evidence. Canonical active Prisma schema is backend/prisma/schema.prisma. Original target requirements are not weakened by this notice.
+
 # ARCHITECTURE.md — نظام إدارة المشافي (HMS)
 
 ## 1. Architecture Overview

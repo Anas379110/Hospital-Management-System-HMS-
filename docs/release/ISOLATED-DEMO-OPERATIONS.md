@@ -1,6 +1,14 @@
 # Isolated fictional demo operations
 
-Candidate only. This document is a procedure, not evidence of a hosted deployment.
+## Current release status,27November2026
+
+The public fictional release is live from2ad6bb2at https://hms-isolated-qualification.onrender.com/ . Exact-source PostgreSQL17/18CIpassed: https://github.com/Anas379110/Hospital-Management-System-HMS-/actions/runs/46032128551 . Public ENdesktop/ARmobile start/read and fictional patient registration/readback were accepted. This is a demo release, not completion of original functional/nonfunctional targets. See [current verification](../../VERIFICATION.md), [requirements gaps](../requirements/TRACEABILITY.md) and [API](../api/API.md).
+
+Cleanup readiness is automatic request-time protection: database heartbeat newer than actual DBstart, nonfuture and within90minutes, checked before bootstrap/touch. Runtime cannot execute cleanup or read/write cleanup state. The actual17:00UTCscheduledcleanupadvancedtheheartbeatandpassedreadiness/audit. Hourly read-only availability monitoring is alert-only, not automatic public shutdown or the safety boundary. Dailycron-historyprune'sactualscheduledobservationremainsseparateatthissnapshot.
+
+Qualification mode and its private identity endpoint are disabled in the public release. Actual Render Cloudflare rate-identity mode is configured. Two-real-client-network bucket separation remains unmeasured. Actual provider pause/resume was not performed. The hidden-resume case preserving DBstartwithfreshheartbeat remains undetectable within90minutes; do not substitute a blanket provider-resume guarantee. No ad hoc pause, forced503, clock change, grant widening or teardown is implied.
+
+The sections below retain the historical qualification procedure and observations. Statements below that no source publication/deploy/CI/public acceptance occurred, that the next hourly run is awaited, or that all proxy acceptance remains unmeasured are superseded by this status and current verification. Historical pressure/isolation samples retain their narrow scope and are not a capacity promise. Do not execute a historical procedure as a fresh instruction or use it as approval for any live effect.
 
 ## Boundaries
 
