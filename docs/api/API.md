@@ -68,3 +68,65 @@ No rate control is a guarantee against distributed abuse. Two-real-network bucke
 The generated file inventories controller routes whether or not a particular deployment mode makes a route usable. `/demo/*` is usable only in public mode; outside it the service returns404. Health is public-mode middleware only. All exposed controller routes are under the actual global throttle even where the snapshot does not repeat deployment-specific limits in each operation. `x-guards`/`x-roles` record metadata, not a claim all service-level outcomes are enumerated.
 
 The snapshot does not model every Transform decorator: username/fullName/user-search trimming is described here and enforced by current DTOs, not inferred as an OpenAPI regex. Named primitive query parameters do not get DTO nullability automatically. `force=true` is a literal string comparison, not a universal boolean conversion. Unknown non-DTO query parameters are not uniformly rejected by global DTO validation. Query nullable flags originate from optional DTO metadata and are not a promise that URLstrings are converted to JSONnull. Inspect service rules before constructing a client from this reference.
+
+
+## Native Nest documentation (2026-11-27)
+
+The live application's native Swagger UI is served at `/api/docs`, with JSON at
+`/api/docs-json`. Both use `backend/src/api-documentation.ts`. The checked-in
+`docs/api/native-openapi.json` snapshot records that same runtime builder.
+All 23 request schemas now have explicit native annotations; three search DTOs
+are represented as query parameters. All 44 controller operations include role,
+security, status-code and query metadata. The independent offline reference and
+route inventory remain a separate check, not the document served by Swagger.
+
+Success response bodies are deliberately not described as verified response
+DTOs. Status descriptions are present, but service-defined result shapes still
+need a separate response-contract round. This change fixes empty request models;
+it does not finish every API or hospital workflow requirement.
+
+After `npm run build` in `backend`, run:
+
+```sh
+node test-real-postgres/export-openapi.mjs --check
+node --test test-real-postgres/openapi-contract.test.mjs test-real-postgres/native-openapi.test.mjs
+```
+
+Regenerate the native snapshot only after reviewing intentional annotation
+changes: `node test-real-postgres/native-openapi.test.mjs --snapshot`.
+The native contract gate compares every request field, required property,
+validator constraint, route role, bearer requirement and reference status code.
+It also checks query limits and snapshot drift. The HTTP documentation test
+serves the real Nest Swagger UI/JSON with a mocked Prisma provider, not a live
+PostgreSQL database. Local visual inspection covered 1280px desktop and 390px
+mobile request schema views. No live database, deployment, workflow policy or
+provider setting is changed by documentation generation or these tests.
+
+### Scope and known validation/service mismatch
+
+The annotation contract checks describe DTO validation and declared controller
+metadata, not every service-thrown error or all possible database failures.
+Documented response-code sets mirror the independent controller reference;
+they are not an exhaustive service error catalogue. Query string transforms
+(for example trimmed user search and number conversion for appointment pages)
+remain runtime behavior, not fully expressible by these schema constraints.
+`x-auth` explicitly distinguishes public, any-authenticated-user and role-limited
+operations; `x-roles: []` alone must not be read as public access.
+
+`UpdatePatientDto` has exactly six optional properties and excludes dateOfBirth
+and gender. The shared ValidationPipe rejects either excluded field with400
+because forbidNonWhitelisted is enabled, rather than silently stripping it.
+The existing PartialType/IsOptional behavior accepts null fullName or phone at
+the DTO boundary. `PatientsService.update` forwards that DTO directly to Prisma,
+while both database columns are non-nullable. This is a pre-existing validator/
+service mismatch that can become a database error (normally surfaced as500);
+it has not been fixed or silently narrowed by documentation changes. Native
+nullable annotations truthfully describe validation only, not update success.
+A future behavior fix needs an explicit decision and regression test.
+
+No-DB ValidationPipe tests compare accepted/rejected boundary values against the
+actual native schemas/query parameters: patient name2/3, invoice item count
+0/1/50/51, quantity0/1, coverage100/101, appointment page0/1/10000/10001,
+user search1/2/100/101. HTTP docs tests use the production application setup
+through an injected Nest test-app factory with mocked Prisma, isolated database
+URL and restored environment. No live database is contacted by those tests.

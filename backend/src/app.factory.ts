@@ -7,15 +7,15 @@ import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import * as express from 'express';
 import { workspaceContext } from './prisma/workspace-context';
-import { ValidationPipe } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 
 /** Shared request contract for production and actual HTTP integration tests. */
-export async function createApplication(options: { logger?: false } = {}) {
+export async function createApplication(options: { logger?: false; appFactory?: () => Promise<INestApplication> } = {}) {
   validateRateLimitIdentityConfiguration();
-  const app = await NestFactory.create(AppModule, options);
+  const app = options.appFactory ? await options.appFactory() : await NestFactory.create(AppModule, { logger: options.logger });
   app.getHttpAdapter().getInstance().set('trust proxy', trustedProxyAddresses(process.env.HMS_TRUSTED_PROXY_ADDRESSES));
   app.use(qualificationGate());
   app.use(qualificationIdentity());

@@ -1,0 +1,2678 @@
+{
+  "components": {
+    "schemas": {
+      "AddInvoiceItemDto": {
+        "properties": {
+          "description": {
+            "minLength": 2,
+            "type": "string"
+          },
+          "quantity": {
+            "maximum": 2147483647,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "unitPrice": {
+            "maximum": 2147483647,
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "description",
+          "quantity",
+          "unitPrice"
+        ],
+        "type": "object"
+      },
+      "AdjustStockDto": {
+        "properties": {
+          "delta": {
+            "maximum": 2147483647,
+            "minimum": -2147483647,
+            "not": {
+              "enum": [
+                0
+              ]
+            },
+            "type": "integer"
+          },
+          "reason": {
+            "maxLength": 256,
+            "minLength": 3,
+            "nullable": true,
+            "type": "string"
+          },
+          "reasonCode": {
+            "enum": [
+              "restock",
+              "correction",
+              "disposal"
+            ],
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "delta"
+        ],
+        "type": "object"
+      },
+      "CancelAppointmentDto": {
+        "properties": {
+          "reason": {
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "CreateAdmissionDto": {
+        "properties": {
+          "bedId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "patientId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "patientId",
+          "bedId"
+        ],
+        "type": "object"
+      },
+      "CreateAppointmentDto": {
+        "properties": {
+          "departmentId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "doctorId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "patientId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "scheduledAt": {
+            "description": "ISO8601 validated date/date-time; see route notes for stricter range rules",
+            "type": "string"
+          }
+        },
+        "required": [
+          "patientId",
+          "doctorId",
+          "departmentId",
+          "scheduledAt"
+        ],
+        "type": "object"
+      },
+      "CreateEncounterDto": {
+        "properties": {
+          "appointmentId": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "chiefComplaint": {
+            "minLength": 2,
+            "type": "string"
+          },
+          "diagnosis": {
+            "minLength": 2,
+            "type": "string"
+          },
+          "notes": {
+            "nullable": true,
+            "type": "string"
+          },
+          "patientId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "patientId",
+          "chiefComplaint",
+          "diagnosis"
+        ],
+        "type": "object"
+      },
+      "CreateInvoiceDto": {
+        "properties": {
+          "admissionId": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "insuranceCoveragePercent": {
+            "maximum": 100,
+            "minimum": 0,
+            "nullable": true,
+            "type": "integer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/InvoiceItemInputDto"
+            },
+            "maxItems": 50,
+            "minItems": 1,
+            "type": "array"
+          },
+          "patientId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "patientId",
+          "items"
+        ],
+        "type": "object"
+      },
+      "CreateMedicationDto": {
+        "properties": {
+          "currentStock": {
+            "maximum": 2147483647,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "name": {
+            "minLength": 2,
+            "type": "string"
+          },
+          "reorderThreshold": {
+            "maximum": 2147483647,
+            "minimum": 0,
+            "nullable": true,
+            "type": "integer"
+          },
+          "unit": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "unit",
+          "currentStock"
+        ],
+        "type": "object"
+      },
+      "CreatePatientDto": {
+        "properties": {
+          "address": {
+            "nullable": true,
+            "type": "string"
+          },
+          "dateOfBirth": {
+            "description": "ISO8601 validated date/date-time; see route notes for stricter range rules",
+            "type": "string"
+          },
+          "emergencyContactName": {
+            "nullable": true,
+            "type": "string"
+          },
+          "emergencyContactPhone": {
+            "nullable": true,
+            "type": "string"
+          },
+          "fullName": {
+            "minLength": 3,
+            "type": "string"
+          },
+          "gender": {
+            "enum": [
+              "male",
+              "female"
+            ],
+            "type": "string"
+          },
+          "nationalId": {
+            "nullable": true,
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "fullName",
+          "dateOfBirth",
+          "gender",
+          "phone"
+        ],
+        "type": "object"
+      },
+      "CreatePrescriptionDto": {
+        "properties": {
+          "dosage": {
+            "type": "string"
+          },
+          "duration": {
+            "type": "string"
+          },
+          "medicationName": {
+            "minLength": 2,
+            "type": "string"
+          },
+          "notes": {
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "medicationName",
+          "dosage",
+          "duration"
+        ],
+        "type": "object"
+      },
+      "CreateTestOrderDto": {
+        "properties": {
+          "encounterId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "patientId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "testName": {
+            "minLength": 2,
+            "type": "string"
+          },
+          "testType": {
+            "enum": [
+              "lab",
+              "radiology"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "patientId",
+          "encounterId",
+          "testType",
+          "testName"
+        ],
+        "type": "object"
+      },
+      "CreateUserDto": {
+        "properties": {
+          "fullName": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "password": {
+            "minLength": 8,
+            "type": "string"
+          },
+          "role": {
+            "enum": [
+              "admin",
+              "receptionist",
+              "doctor",
+              "nurse",
+              "manager",
+              "pharmacist",
+              "lab_tech",
+              "billing_clerk"
+            ],
+            "type": "string"
+          },
+          "username": {
+            "maxLength": 100,
+            "minLength": 3,
+            "type": "string"
+          }
+        },
+        "required": [
+          "username",
+          "password",
+          "fullName",
+          "role"
+        ],
+        "type": "object"
+      },
+      "DeleteEncounterDto": {
+        "properties": {
+          "reason": {
+            "minLength": 5,
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason"
+        ],
+        "type": "object"
+      },
+      "DischargeAdmissionDto": {
+        "properties": {
+          "dischargeNotes": {
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "DispensePrescriptionDto": {
+        "properties": {
+          "medicationId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "quantityDispensed": {
+            "maximum": 2147483647,
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "medicationId",
+          "quantityDispensed"
+        ],
+        "type": "object"
+      },
+      "InvoiceItemInputDto": {
+        "properties": {
+          "description": {
+            "minLength": 2,
+            "type": "string"
+          },
+          "quantity": {
+            "maximum": 2147483647,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "unitPrice": {
+            "maximum": 2147483647,
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "description",
+          "quantity",
+          "unitPrice"
+        ],
+        "type": "object"
+      },
+      "LoginDto": {
+        "properties": {
+          "password": {
+            "minLength": 6,
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "username",
+          "password"
+        ],
+        "type": "object"
+      },
+      "RecordPaymentDto": {
+        "properties": {
+          "amount": {
+            "maximum": 2147483647,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "method": {
+            "enum": [
+              "cash",
+              "card",
+              "insurance"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "amount",
+          "method"
+        ],
+        "type": "object"
+      },
+      "RecordResultDto": {
+        "properties": {
+          "result": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "resultNotes": {
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "type": "object"
+      },
+      "SetUserStatusDto": {
+        "properties": {
+          "isActive": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "isActive"
+        ],
+        "type": "object"
+      },
+      "SwitchRoleDto": {
+        "properties": {
+          "role": {
+            "enum": [
+              "admin",
+              "receptionist",
+              "doctor",
+              "nurse",
+              "manager",
+              "pharmacist",
+              "lab_tech",
+              "billing_clerk"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "role"
+        ],
+        "type": "object"
+      },
+      "UpdateAppointmentDto": {
+        "properties": {
+          "departmentId": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "scheduledAt": {
+            "description": "ISO8601 validated date/date-time; see route notes for stricter range rules",
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "UpdatePatientDto": {
+        "properties": {
+          "address": {
+            "nullable": true,
+            "type": "string"
+          },
+          "emergencyContactName": {
+            "nullable": true,
+            "type": "string"
+          },
+          "emergencyContactPhone": {
+            "nullable": true,
+            "type": "string"
+          },
+          "fullName": {
+            "minLength": 3,
+            "nullable": true,
+            "type": "string"
+          },
+          "nationalId": {
+            "nullable": true,
+            "type": "string"
+          },
+          "phone": {
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "bearer": {
+        "bearerFormat": "JWT",
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "contact": {},
+    "description": "Fictional data only. Request DTOs and query parameters are annotated in source. Success result shapes remain service-defined unless explicitly described. Public demo workspace role switching is intentional, not a production identity feature. Public mode and deployment limits are described in docs/api/API.md.",
+    "title": "HMS fictional demo API",
+    "version": "0.3.0"
+  },
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/v1/admissions": {
+      "post": {
+        "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization.",
+        "operationId": "AdmissionsController_create",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAdmissionDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
+          },
+          "403": {
+            "description": "Current persisted role is not permitted"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "AdmissionsController.create",
+        "tags": [
+          "admissions"
+        ],
+        "x-auth": "roles",
+        "x-roles": [
+          "doctor",
+          "nurse"
+        ]
+      }
+    },
+    "/api/v1/admissions/{id}/discharge": {
+      "post": {
+        "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization.",
+        "operationId": "AdmissionsController_discharge",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DischargeAdmissionDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
+          },
+          "403": {
+            "description": "Current persisted role is not permitted"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "AdmissionsController.discharge",
+        "tags": [
+          "admissions"
+        ],
+        "x-auth": "roles",
+        "x-roles": [
+          "doctor",
+          "nurse"
+        ]
+      }
+    },
+    "/api/v1/appointments": {
+      "get": {
+        "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization.",
+        "operationId": "AppointmentsController_find",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "maximum": 10000,
+              "minimum": 1,
+              "nullable": true,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "doctor_id",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "nullable": true,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Strict YYYY-MM-DD UTC calendar date",
+            "in": "query",
+            "name": "date",
+            "required": false,
+            "schema": {
+              "nullable": true,
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+              "type": "string"
+            }
+          },
+          {
+            "description": "ISO8601 validated date/date-time; see route notes for stricter range rules",
+            "in": "query",
+            "name": "start",
+            "required": false,
+            "schema": {
+              "nullable": true,
+              "type": "string"
+            }
+          },
+          {
+            "description": "ISO8601 validated date/date-time; see route notes for stricter range rules",
+            "in": "query",
+            "name": "end",
+            "required": false,
+            "schema": {
+              "nullable": true,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
+          },
+          "403": {
+            "description": "Current persisted role is not permitted"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "AppointmentsController.find",
+        "tags": [
+          "appointments"
+        ],
+        "x-auth": "roles",
+        "x-roles": [
+          "receptionist",
+          "doctor",
+          "admin"
+        ]
+      },
+      "post": {
+        "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization.",
+        "operationId": "AppointmentsController_create",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAppointmentDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
+          },
+          "403": {
+            "description": "Current persisted role is not permitted"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "AppointmentsController.create",
+        "tags": [
+          "appointments"
+        ],
+        "x-auth": "roles",
+        "x-roles": [
+          "receptionist",
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/appointments/options": {
+      "get": {
+        "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization.",
+        "operationId": "AppointmentsController_options",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
+          },
+          "403": {
+            "description": "Current persisted role is not permitted"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "AppointmentsController.options",
+        "tags": [
+          "appointments"
+        ],
+        "x-auth": "roles",
+        "x-roles": [
+          "receptionist",
+          "doctor",
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/appointments/{id}": {
+      "patch": {
+        "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization.",
+        "operationId": "AppointmentsController_update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAppointmentDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
+          },
+          "403": {
+            "description": "Current persisted role is not permitted"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "AppointmentsController.update",
+        "tags": [
+          "appointments"
+        ],
+        "x-auth": "roles",
+        "x-roles": [
+          "receptionist",
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/appointments/{id}/cancel": {
+      "post": {
+        "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization.",
+        "operationId": "AppointmentsController_cancel",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelAppointmentDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
+          },
+          "403": {
+            "description": "Current persisted role is not permitted"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "AppointmentsController.cancel",
+        "tags": [
+          "appointments"
+        ],
+        "x-auth": "roles",
+        "x-roles": [
+          "receptionist",
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization.",
+        "operationId": "AuthController_login",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "summary": "AuthController.login",
+        "tags": [
+          "auth"
+        ],
+        "x-auth": "public",
+        "x-roles": []
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization.",
+        "operationId": "AuthController_logout",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "AuthController.logout",
+        "tags": [
+          "auth"
+        ],
+        "x-auth": "any-authenticated-user",
+        "x-roles": []
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization.",
+        "operationId": "AuthController_me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "AuthController.me",
+        "tags": [
+          "auth"
+        ],
+        "x-auth": "any-authenticated-user",
+        "x-roles": []
+      }
+    },
+    "/api/v1/demo/audit": {
+      "get": {
+        "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization.",
+        "operationId": "DemoController_audit",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
+          },
+          "403": {
+            "description": "Current persisted role is not permitted"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "DemoController.audit",
+        "x-auth": "roles",
+        "x-availability": "HMS_PUBLIC_DEMO=true only; service returns404 outside public mode",
+        "x-roles": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/demo/role": {
+      "post": {
+        "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization.",
+        "operationId": "DemoController_role",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SwitchRoleDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "DemoController.role",
+        "x-auth": "any-authenticated-user",
+        "x-availability": "HMS_PUBLIC_DEMO=true only; service returns404 outside public mode",
+        "x-roles": []
+      }
+    },
+    "/api/v1/demo/start": {
+      "post": {
+        "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization.",
+        "operationId": "DemoController_start",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "summary": "DemoController.start",
+        "x-auth": "public",
+        "x-availability": "HMS_PUBLIC_DEMO=true only; service returns404 outside public mode",
+        "x-roles": []
+      }
+    },
+    "/api/v1/departments": {
+      "get": {
+        "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization.",
+        "operationId": "DepartmentsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
+          },
+          "403": {
+            "description": "Current persisted role is not permitted"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "DepartmentsController.findAll",
+        "tags": [
+          "departments"
+        ],
+        "x-auth": "roles",
+        "x-roles": [
+          "receptionist",
+          "doctor",
+          "nurse",
+          "admin",
+          "manager"
+        ]
+      }
+    },
+    "/api/v1/departments/overview": {
+      "get": {
+        "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization.",
+        "operationId": "DepartmentsController_overview",
+        "parameters": [
+          {
+            "description": "ISO8601 validated date/date-time; see route notes for stricter range rules",
+            "in": "query",
+            "name": "start",
+            "required": true,
+            "schema": {
+              "pattern": "(Z|[+-]\\d{2}:\\d{2})$",
+              "type": "string"
+            }
+          },
+          {
+            "description": "ISO8601 validated date/date-time; see route notes for stricter range rules",
+            "in": "query",
+            "name": "end",
+            "required": true,
+            "schema": {
+              "pattern": "(Z|[+-]\\d{2}:\\d{2})$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
+          },
+          "403": {
+            "description": "Current persisted role is not permitted"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "DepartmentsController.overview",
+        "tags": [
+          "departments"
+        ],
+        "x-auth": "roles",
+        "x-roles": [
+          "manager",
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/departments/{id}/beds": {
+      "get": {
+        "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization.",
+        "operationId": "DepartmentsController_getBeds",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
+          },
+          "403": {
+            "description": "Current persisted role is not permitted"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "DepartmentsController.getBeds",
+        "tags": [
+          "departments"
+        ],
+        "x-auth": "roles",
+        "x-roles": [
+          "doctor",
+          "nurse",
+          "admin",
+          "manager"
+        ]
+      }
+    },
+    "/api/v1/departments/{id}/beds/summary": {
+      "get": {
+        "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization.",
+        "operationId": "DepartmentsController_getBedsSummary",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
+          },
+          "403": {
+            "description": "Current persisted role is not permitted"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "DepartmentsController.getBedsSummary",
+        "tags": [
+          "departments"
+        ],
+        "x-auth": "roles",
+        "x-roles": [
+          "manager",
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/encounters": {
+      "post": {
+        "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization.",
+        "operationId": "EncountersController_create",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateEncounterDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
+          },
+          "403": {
+            "description": "Current persisted role is not permitted"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "EncountersController.create",
+        "tags": [
+          "encounters"
+        ],
+        "x-auth": "roles",
+        "x-roles": [
+          "doctor"
+        ]
+      }
+    },
+    "/api/v1/encounters/{id}": {
+      "delete": {
+        "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization.",
+        "operationId": "EncountersController_softDelete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteEncounterDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
+          },
+          "403": {
+            "description": "Current persisted role is not permitted"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "EncountersController.softDelete",
+        "tags": [
+          "encounters"
+        ],
+        "x-auth": "roles",
+        "x-roles": [
+          "doctor",
+          "admin"
+        ]
+      },
+      "get": {
+        "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization.",
+        "operationId": "EncountersController_findOne",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
+          },
+          "403": {
+            "description": "Current persisted role is not permitted"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "EncountersController.findOne",
+        "tags": [
+          "encounters"
+        ],
+        "x-auth": "roles",
+        "x-roles": [
+          "doctor",
+          "nurse",
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/encounters/{id}/prescriptions": {
+      "post": {
+        "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization.",
+        "operationId": "EncountersController_addPrescription",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePrescriptionDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
+          },
+          "403": {
+            "description": "Current persisted role is not permitted"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "EncountersController.addPrescription",
+        "tags": [
+          "encounters"
+        ],
+        "x-auth": "roles",
+        "x-roles": [
+          "doctor"
+        ]
+      }
+    },
+    "/api/v1/invoices": {
+      "post": {
+        "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization.",
+        "operationId": "BillingController_create",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateInvoiceDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
+          },
+          "403": {
+            "description": "Current persisted role is not permitted"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "BillingController.create",
+        "tags": [
+          "billing"
+        ],
+        "x-auth": "roles",
+        "x-roles": [
+          "billing_clerk",
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/invoices/{id}": {
+      "get": {
+        "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization.",
+        "operationId": "BillingController_getOne",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
+          },
+          "403": {
+            "description": "Current persisted role is not permitted"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "BillingController.getOne",
+        "tags": [
+          "billing"
+        ],
+        "x-auth": "roles",
+        "x-roles": [
+          "billing_clerk",
+          "admin",
+          "manager"
+        ]
+      }
+    },
+    "/api/v1/invoices/{id}/items": {
+      "post": {
+        "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization.",
+        "operationId": "BillingController_addItem",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddInvoiceItemDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
+          },
+          "403": {
+            "description": "Current persisted role is not permitted"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "BillingController.addItem",
+        "tags": [
+          "billing"
+        ],
+        "x-auth": "roles",
+        "x-roles": [
+          "billing_clerk",
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/invoices/{id}/payments": {
+      "post": {
+        "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization.",
+        "operationId": "BillingController_recordPayment",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordPaymentDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
+          },
+          "403": {
+            "description": "Current persisted role is not permitted"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "BillingController.recordPayment",
+        "tags": [
+          "billing"
+        ],
+        "x-auth": "roles",
+        "x-roles": [
+          "billing_clerk",
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/medications": {
+      "get": {
+        "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization.",
+        "operationId": "PharmacyController_listMedications",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
+          },
+          "403": {
+            "description": "Current persisted role is not permitted"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "PharmacyController.listMedications",
+        "tags": [
+          "pharmacy"
+        ],
+        "x-auth": "roles",
+        "x-roles": [
+          "pharmacist",
+          "admin"
+        ]
+      },
+      "post": {
+        "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization.",
+        "operationId": "PharmacyController_createMedication",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMedicationDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
+          },
+          "403": {
+            "description": "Current persisted role is not permitted"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "PharmacyController.createMedication",
+        "tags": [
+          "pharmacy"
+        ],
+        "x-auth": "roles",
+        "x-roles": [
+          "pharmacist",
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/medications/low-stock": {
+      "get": {
+        "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization.",
+        "operationId": "PharmacyController_lowStock",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
+          },
+          "403": {
+            "description": "Current persisted role is not permitted"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "PharmacyController.lowStock",
+        "tags": [
+          "pharmacy"
+        ],
+        "x-auth": "roles",
+        "x-roles": [
+          "pharmacist",
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/medications/{id}/stock": {
+      "patch": {
+        "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization.",
+        "operationId": "PharmacyController_adjustStock",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdjustStockDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
+          },
+          "403": {
+            "description": "Current persisted role is not permitted"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "PharmacyController.adjustStock",
+        "tags": [
+          "pharmacy"
+        ],
+        "x-auth": "roles",
+        "x-roles": [
+          "pharmacist",
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/patients": {
+      "get": {
+        "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization.",
+        "operationId": "PatientsController_search",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
+          },
+          "403": {
+            "description": "Current persisted role is not permitted"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "PatientsController.search",
+        "tags": [
+          "patients"
+        ],
+        "x-auth": "roles",
+        "x-roles": [
+          "receptionist",
+          "doctor",
+          "nurse",
+          "admin",
+          "manager"
+        ]
+      },
+      "post": {
+        "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization.",
+        "operationId": "PatientsController_create",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "force",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePatientDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
+          },
+          "403": {
+            "description": "Current persisted role is not permitted"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "PatientsController.create",
+        "tags": [
+          "patients"
+        ],
+        "x-auth": "roles",
+        "x-roles": [
+          "admin",
+          "receptionist"
+        ]
+      }
+    },
+    "/api/v1/patients/billing-lookup": {
+      "get": {
+        "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization.",
+        "operationId": "PatientsController_billingLookup",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
+          },
+          "403": {
+            "description": "Current persisted role is not permitted"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "PatientsController.billingLookup",
+        "tags": [
+          "patients"
+        ],
+        "x-auth": "roles",
+        "x-roles": [
+          "billing_clerk",
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/patients/{id}": {
+      "get": {
+        "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization.",
+        "operationId": "PatientsController_findOne",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
+          },
+          "403": {
+            "description": "Current persisted role is not permitted"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "PatientsController.findOne",
+        "tags": [
+          "patients"
+        ],
+        "x-auth": "roles",
+        "x-roles": [
+          "receptionist",
+          "doctor",
+          "nurse",
+          "admin",
+          "manager"
+        ]
+      },
+      "patch": {
+        "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization.",
+        "operationId": "PatientsController_update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePatientDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
+          },
+          "403": {
+            "description": "Current persisted role is not permitted"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "PatientsController.update",
+        "tags": [
+          "patients"
+        ],
+        "x-auth": "roles",
+        "x-roles": [
+          "admin",
+          "receptionist"
+        ]
+      }
+    },
+    "/api/v1/patients/{id}/records": {
+      "get": {
+        "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization.",
+        "operationId": "PatientsController_getMedicalRecords",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
+          },
+          "403": {
+            "description": "Current persisted role is not permitted"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "PatientsController.getMedicalRecords",
+        "tags": [
+          "patients"
+        ],
+        "x-auth": "roles",
+        "x-roles": [
+          "doctor",
+          "nurse",
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/patients/{id}/test-results": {
+      "get": {
+        "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization.",
+        "operationId": "LabController_getPatientResults",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
+          },
+          "403": {
+            "description": "Current persisted role is not permitted"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "LabController.getPatientResults",
+        "tags": [
+          "lab"
+        ],
+        "x-auth": "roles",
+        "x-roles": [
+          "doctor",
+          "nurse",
+          "admin",
+          "lab_tech"
+        ]
+      }
+    },
+    "/api/v1/prescriptions/pending": {
+      "get": {
+        "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization.",
+        "operationId": "PharmacyController_pendingPrescriptions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
+          },
+          "403": {
+            "description": "Current persisted role is not permitted"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "PharmacyController.pendingPrescriptions",
+        "tags": [
+          "pharmacy"
+        ],
+        "x-auth": "roles",
+        "x-roles": [
+          "pharmacist",
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/prescriptions/{id}/dispense": {
+      "post": {
+        "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization.",
+        "operationId": "PharmacyController_dispense",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DispensePrescriptionDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
+          },
+          "403": {
+            "description": "Current persisted role is not permitted"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "PharmacyController.dispense",
+        "tags": [
+          "pharmacy"
+        ],
+        "x-auth": "roles",
+        "x-roles": [
+          "pharmacist",
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/test-orders": {
+      "post": {
+        "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization.",
+        "operationId": "LabController_create",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTestOrderDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
+          },
+          "403": {
+            "description": "Current persisted role is not permitted"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "LabController.create",
+        "tags": [
+          "lab"
+        ],
+        "x-auth": "roles",
+        "x-roles": [
+          "doctor"
+        ]
+      }
+    },
+    "/api/v1/test-orders/pending": {
+      "get": {
+        "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization.",
+        "operationId": "LabController_pending",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
+          },
+          "403": {
+            "description": "Current persisted role is not permitted"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "LabController.pending",
+        "tags": [
+          "lab"
+        ],
+        "x-auth": "roles",
+        "x-roles": [
+          "lab_tech",
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/test-orders/{id}/result": {
+      "post": {
+        "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization.",
+        "operationId": "LabController_recordResult",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordResultDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
+          },
+          "403": {
+            "description": "Current persisted role is not permitted"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "LabController.recordResult",
+        "tags": [
+          "lab"
+        ],
+        "x-auth": "roles",
+        "x-roles": [
+          "lab_tech",
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/users": {
+      "get": {
+        "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization.",
+        "operationId": "UsersController_search",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "search",
+            "required": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 2,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
+          },
+          "403": {
+            "description": "Current persisted role is not permitted"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "UsersController.search",
+        "tags": [
+          "users"
+        ],
+        "x-auth": "roles",
+        "x-roles": [
+          "admin"
+        ]
+      },
+      "post": {
+        "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization.",
+        "operationId": "UsersController_create",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
+          },
+          "403": {
+            "description": "Current persisted role is not permitted"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "UsersController.create",
+        "tags": [
+          "users"
+        ],
+        "x-auth": "roles",
+        "x-roles": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/users/{id}/status": {
+      "patch": {
+        "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization.",
+        "operationId": "UsersController_setStatus",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetUserStatusDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
+          },
+          "403": {
+            "description": "Current persisted role is not permitted"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "UsersController.setStatus",
+        "tags": [
+          "users"
+        ],
+        "x-auth": "roles",
+        "x-roles": [
+          "admin"
+        ]
+      }
+    }
+  },
+  "servers": [],
+  "tags": []
+}

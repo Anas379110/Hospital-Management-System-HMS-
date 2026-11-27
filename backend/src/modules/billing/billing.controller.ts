@@ -1,3 +1,4 @@
+import { ApiOperation, ApiResponse, ApiExtension } from '@nestjs/swagger';
 import { Body, Controller, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
@@ -24,12 +25,28 @@ export class BillingController {
   @Post()
   @Roles(Role.billing_clerk, Role.admin)
   @Audit('INVOICE_CREATED', 'Invoice', true)
+  @ApiOperation({"summary": "BillingController.create", "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization."})
+  @ApiExtension('x-roles', ["billing_clerk", "admin"])
+  @ApiExtension('x-auth', 'roles')
+  @ApiResponse({"status": 201, "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."})
+  @ApiResponse({"status": 400, "description": "Invalid request"})
+  @ApiResponse({"status": 401, "description": "Missing/expired token, inactive current user, or invalid/expired workspace"})
+  @ApiResponse({"status": 403, "description": "Current persisted role is not permitted"})
+  @ApiResponse({"status": 429, "description": "Rate limit exceeded"})
   create(@Body() dto: CreateInvoiceDto, @Req() req: AuthedRequest) {
     return this.billingService.createInvoice(dto, req.user.userId);
   }
 
   @Get(':id')
   @Roles(Role.billing_clerk, Role.admin, Role.manager)
+  @ApiOperation({"summary": "BillingController.getOne", "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization."})
+  @ApiExtension('x-roles', ["billing_clerk", "admin", "manager"])
+  @ApiExtension('x-auth', 'roles')
+  @ApiResponse({"status": 200, "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."})
+  @ApiResponse({"status": 400, "description": "Invalid request"})
+  @ApiResponse({"status": 401, "description": "Missing/expired token, inactive current user, or invalid/expired workspace"})
+  @ApiResponse({"status": 403, "description": "Current persisted role is not permitted"})
+  @ApiResponse({"status": 429, "description": "Rate limit exceeded"})
   getOne(@Param('id') id: string) {
     return this.billingService.getInvoice(id);
   }
@@ -37,6 +54,14 @@ export class BillingController {
   @Post(':id/items')
   @Roles(Role.billing_clerk, Role.admin)
   @Audit('INVOICE_ITEM_ADDED', 'InvoiceItem', true)
+  @ApiOperation({"summary": "BillingController.addItem", "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization."})
+  @ApiExtension('x-roles', ["billing_clerk", "admin"])
+  @ApiExtension('x-auth', 'roles')
+  @ApiResponse({"status": 201, "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."})
+  @ApiResponse({"status": 400, "description": "Invalid request"})
+  @ApiResponse({"status": 401, "description": "Missing/expired token, inactive current user, or invalid/expired workspace"})
+  @ApiResponse({"status": 403, "description": "Current persisted role is not permitted"})
+  @ApiResponse({"status": 429, "description": "Rate limit exceeded"})
   addItem(@Param('id') id: string, @Body() dto: AddInvoiceItemDto, @Req() req: AuthedRequest) {
     return this.billingService.addItem(id, dto, req.user.userId);
   }
@@ -44,6 +69,14 @@ export class BillingController {
   @Post(':id/payments')
   @Roles(Role.billing_clerk, Role.admin)
   @Audit('PAYMENT_RECORDED', 'Payment', true)
+  @ApiOperation({"summary": "BillingController.recordPayment", "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization."})
+  @ApiExtension('x-roles', ["billing_clerk", "admin"])
+  @ApiExtension('x-auth', 'roles')
+  @ApiResponse({"status": 201, "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."})
+  @ApiResponse({"status": 400, "description": "Invalid request"})
+  @ApiResponse({"status": 401, "description": "Missing/expired token, inactive current user, or invalid/expired workspace"})
+  @ApiResponse({"status": 403, "description": "Current persisted role is not permitted"})
+  @ApiResponse({"status": 429, "description": "Rate limit exceeded"})
   recordPayment(@Param('id') id: string, @Body() dto: RecordPaymentDto, @Req() req: AuthedRequest) {
     return this.billingService.recordPayment(id, dto, req.user.userId);
   }
