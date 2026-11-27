@@ -13,6 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     strategy:
+      fail-fast: false
       matrix:
         postgres: [17, 18]
     services:
@@ -64,6 +65,8 @@ jobs:
         working-directory: frontend
       - run: npm run build
         working-directory: frontend
+        env:
+          VITE_PUBLIC_DEMO: true
       - run: node node_modules/playwright/cli.js install --with-deps chromium
         working-directory: frontend
       - run: createdb -h 127.0.0.1 -U hms_test hms_test_browser && createdb -h 127.0.0.1 -U hms_test hms_test_stock && createdb -h 127.0.0.1 -U hms_test hms_test_workflows && createdb -h 127.0.0.1 -U hms_test hms_test_appointments && createdb -h 127.0.0.1 -U hms_test hms_test_billing && createdb -h 127.0.0.1 -U hms_test hms_test_users
@@ -93,6 +96,13 @@ jobs:
         working-directory: frontend
         env:
           HMS_BROWSER_DATABASE_URL: postgresql://hms_test:isolated-ci-only@127.0.0.1:5432/hms_test_users?schema=public&connection_limit=8&options=-c%20hms.workspace_id%3D00000000-0000-4000-a000-000000000001
+      - run: createdb -h 127.0.0.1 -U hms_test hms_test_isolation
+        env:
+          PGPASSWORD: isolated-ci-only
+      - run: node test-real-browser/isolation.mjs
+        working-directory: frontend
+        env:
+          HMS_ISOLATION_DATABASE_URL: postgresql://hms_test:isolated-ci-only@127.0.0.1:5432/hms_test_isolation?connection_limit=2
       - run: npm ci --ignore-scripts --no-fund && npm test && npm run build && npm audit
         working-directory: functions
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4 verified tag

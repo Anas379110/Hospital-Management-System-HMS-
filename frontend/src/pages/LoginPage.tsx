@@ -1,4 +1,6 @@
 import { useState, type FormEvent } from 'react';
+import LocaleButton from '../components/LocaleButton';
+import RetentionNotice from '../components/RetentionNotice';
 import { landingPath } from '../auth/permissions';
 import type { CurrentUser } from '../types/api';
 import { useNavigate } from 'react-router-dom';
@@ -33,12 +35,13 @@ export default function LoginPage() {
   }
 
   return (
-    <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh" bgcolor="#f5f7fa">
-      <Paper elevation={3} sx={{ p: 4, width: 360 }}>
-        <Typography variant="h5" mb={3} textAlign="center" fontWeight={700}>
+    <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh" bgcolor="#f5f7fa" sx={{p:2}}>
+      <Paper elevation={3} component="main" id="entry-content" sx={{p:{xs:2,sm:4},width:'100%',maxWidth:420,minWidth:0}}>
+        <Box sx={{display:'flex',justifyContent:'flex-end',mb:2}}><LocaleButton /></Box>
+        <Typography component="h1" variant="h5" mb={3} textAlign="center" fontWeight={700}>
           {t('app.title')}
         </Typography>
-        <Alert severity="info" sx={{mb:2}}>{t('demo.notice')}</Alert>
+        <RetentionNotice />
         <Button fullWidth variant="contained" disabled={loading} onClick={async()=>{setLoading(true);setError(null);try{await startDemo();navigate('/patients');}catch(err){setError(getApiErrorMessage(err,t('errors.generic')));}finally{setLoading(false);}}}>{t('demo.start')}</Button>
         {error && <Alert severity="error">{error}</Alert>}
         {import.meta.env.VITE_PUBLIC_DEMO !== 'true' && <form onSubmit={handleSubmit}>

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException, OnModuleDestroy } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaClient, Role } from '@prisma/client';
 import { randomUUID } from 'node:crypto';
@@ -6,16 +6,17 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { demoMode, workspaceContext } from '../../prisma/workspace-context';
 
 @Injectable()
-export class DemoService {
+export class DemoService implements OnModuleDestroy {
+  private bootstrap?: PrismaClient;
+  async onModuleDestroy() { await this.bootstrap?.$disconnect(); }
   constructor(private readonly prisma: PrismaService, private readonly jwt: JwtService) {}
   async create() {
     if (!demoMode()) throw new NotFoundException();
     // Same restricted runtime connection, no migration/owner credential. Only
     // this fixed function is exposed on an otherwise unscoped bootstrap client.
-    const bootstrap = new PrismaClient();
     const id = randomUUID();
-    try { await bootstrap.$executeRaw`SELECT hms_create_demo_workspace(${id})`; }
-    finally { await bootstrap.$disconnect(); }
+    if (!this.bootstrap) { const u=new URL(process.env.DATABASE_URL!);u.searchParams.set('connection_limit','2');this.bootstrap=new PrismaClient({datasources:{db:{url:u.toString()}}}); }
+    await this.bootstrap.$executeRaw`SELECT hms_create_demo_workspace(${id})`;
     return workspaceContext.run(id, async () => await this.token(id, Role.receptionist));
   }
   async audit() {

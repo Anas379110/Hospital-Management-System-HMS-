@@ -35,3 +35,11 @@ Sources checked27November2026: https://neon.com/docs/compute/functions/triggers/
 ## Review/CI scope
 
 Frozen source commit8270b0b passed GitHub Actions run45908226570 attempt2 on27November2026, independently of this isolation candidate. Candidate source is not adopted by that result. The separate candidate workflow targets PostgreSQL17and18 and six public-mode functional browser suites. Source publication is not merge, deployment or acceptance. Local production bootstrap/expiry/11axe evidence exists separately; candidate remote matrix must run and its exact commit/result be recorded.
+
+## Reviewer remediation checkpoint
+
+Runtime bootstrap reuses one lazy2connection pool, not a new client per request. Under advisory lock bootstrap reaps expired workspaces before enforcing100live workspace cap. This does not prevent a determined client retaining100active spaces; no new absolute lifetime is adopted. Hosted reverse-proxy/IP behavior must be measured before assuming per-IP throttling works on Render.
+
+Apply backend/prisma/demo/grants.sql after migrations on the dedicated empty project with separate securely created runtime/cleanup logins. This same file drives the portable isolation test; never copy its test passwords. Production startup refuses elevated/table-owner/schema-create/cleanup-enabled runtime. Actual Neon grants/pooler endpoint remain unverified until credentials available.
+
+Portable frontend/test-real-browser/isolation.mjs takes HMS_ISOLATION_DATABASE_URL for an isolated disposable database whose name contains hms_test. It installs migrations and exact grant/ownership SQL; requires built backend and frontend (VITE_PUBLIC_DEMO=true). It runs23check groups including2workspace HTTP/Prisma concurrency, token claims/tampering/deletion/expiry, capacity/reaping/throttle, strict SQLSTATE42501/23503, unsafe-startup negative checks and touch-cleanup concurrency; it writes timestamps, PostgreSQL version, source/build hashes, raw11axe scans and an explicit view coverage matrix.23groups are not23individualassertions. Role navigation is deliberate fictional exploration. No claim of all-route/all-role axe certification.

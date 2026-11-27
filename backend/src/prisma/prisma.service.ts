@@ -49,6 +49,20 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     };
     this.$transaction = scopedTransaction as typeof this.$transaction;
   }
-  async onModuleInit() { await this.$connect(); }
+  async onModuleInit() {
+    await this.$connect();
+    if (demoMode()) {
+      // Query the session role, not application-configured role names. Fail before HTTP listen.
+      const check = new PrismaClient();
+      let rows: {unsafe:boolean}[];
+      try { rows = await check.$queryRawUnsafe<{unsafe:boolean}[]>(`SELECT (
+        (SELECT rolsuper OR rolbypassrls OR rolcreaterole OR rolcreatedb FROM pg_roles WHERE rolname=current_user)
+        OR EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relkind='r' AND pg_has_role(c.relowner,'USAGE'))
+        OR has_schema_privilege(current_user,'public','CREATE')
+        OR has_function_privilege(current_user,'hms_cleanup_expired_workspaces()','EXECUTE')
+      ) AS unsafe`); } finally { await check.$disconnect(); }
+      if (rows[0]?.unsafe !== false) throw new Error('Public demo requires restricted nonowner runtime grants');
+    }
+  }
   async onModuleDestroy() { await this.$disconnect(); }
 }

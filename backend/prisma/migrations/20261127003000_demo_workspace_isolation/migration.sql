@@ -277,6 +277,7 @@ BEGIN
  IF w !~ '^[a-f0-9-]{36}$' THEN RAISE EXCEPTION 'Invalid workspace'; END IF;
  -- Bound anonymous allocation and serialize cap checks.
  PERFORM pg_advisory_xact_lock(18472932);
+ DELETE FROM demo_workspaces WHERE expires_at <= clock_timestamp();
  IF (SELECT count(*) FROM demo_workspaces) >= 100 THEN RAISE EXCEPTION 'Demo capacity reached'; END IF;
  INSERT INTO demo_workspaces(id) VALUES(w);
  PERFORM set_config('hms.workspace_id',w,true);

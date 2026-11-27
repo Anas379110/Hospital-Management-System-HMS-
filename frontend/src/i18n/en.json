@@ -269,7 +269,15 @@
     "start": "Start a private demo workspace",
     "role": "Demo role",
     "auditNotice": "Last 100 redacted events in your workspace only. No patient details or passwords are shown.",
-    "noEvents": "No events recorded yet."
+    "noEvents": "No events recorded yet.",
+    "shortNotice": "Fictional data only. Do not enter real information. Access expires after 24 hours idle.",
+    "retentionDetails": "Retention and deletion details",
+    "loadingAudit": "Loading workspace audit",
+    "auditError": "Audit could not be loaded. Try again.",
+    "retry": "Try again",
+    "actor": "Actor",
+    "entity": "Record type",
+    "time": "Time"
   },
   "audit": {
     "unknownAction": "Recorded action",

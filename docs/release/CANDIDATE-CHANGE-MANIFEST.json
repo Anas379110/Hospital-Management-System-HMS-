@@ -1,6 +1,6 @@
 {
   "status": "local candidate only; hosted gates open; not published",
-  "capturedAt": "2026-11-27T00:08:53.230870+00:00",
+  "capturedAt": "2026-11-27T00:29:56.886495+00:00",
   "comparedWith": "frozen118source-transfer baseline; no source changes to frozen tree",
   "changedFiles": [
     {
@@ -10,13 +10,18 @@
     },
     {
       "path": ".github/workflows/ci.yml",
-      "sha256": "8b7e36b132ffbaeaa77d25853d42a21cbfa37ae2071eb2da281e0bf7a8f04f6d",
-      "bytes": 5198
+      "sha256": "9caa38f3cefa993026d716a4971afce54ef4473b2367c44cd0fed6bc3370b3ee",
+      "bytes": 5614
+    },
+    {
+      "path": "backend/prisma/demo/grants.sql",
+      "sha256": "a4a9226195ce7485355e58c8a57b9b01ad219614890dbfbf7d28827fca25cf7d",
+      "bytes": 1488
     },
     {
       "path": "backend/prisma/migrations/20261127003000_demo_workspace_isolation/migration.sql",
-      "sha256": "46f57c704377dd8f98a9750c52938ed02e26c7a1048e5710fa5cc71f721e9cc9",
-      "bytes": 24470
+      "sha256": "40a134d838fbb0d58222e188d2232ba694bb112207e6f3a47280bdbe8f4a590d",
+      "bytes": 24538
     },
     {
       "path": "backend/prisma/schema.prisma",
@@ -65,8 +70,8 @@
     },
     {
       "path": "backend/src/modules/auth/demo.service.ts",
-      "sha256": "78c479d5ec4599839a79100bca3add2e4f42838e7b164c0fb6759ad312b5e81c",
-      "bytes": 1806
+      "sha256": "1003f22fedf9a37314331a2befb425866810218baa31387f6108e2bd164c294b",
+      "bytes": 2048
     },
     {
       "path": "backend/src/modules/auth/strategies/jwt.strategy.ts",
@@ -90,8 +95,8 @@
     },
     {
       "path": "backend/src/prisma/prisma.service.ts",
-      "sha256": "af2ce4aecc58f5eb52ace27e44f5c62514ca00f30c30b41aca838f0a5279a229",
-      "bytes": 2968
+      "sha256": "872fd76f9e48fc8af3c6026d3105a9f09fb11d77bc34152bf0f2d040edb0a073",
+      "bytes": 3867
     },
     {
       "path": "backend/src/prisma/workspace-context.ts",
@@ -120,13 +125,13 @@
     },
     {
       "path": "backend/test-real-postgres/concurrency.mjs",
-      "sha256": "f47e05685c843dc17bd641fb3e5de5cb85191e6f115ef8efcf26f26d939fbddf",
-      "bytes": 86985
+      "sha256": "61ec9e82c611ae63e44adb352e9771f17ac9d0f6b25336a728e0c1267542ac39",
+      "bytes": 87104
     },
     {
       "path": "docs/release/ISOLATED-DEMO-OPERATIONS.md",
-      "sha256": "2aa6239a8b2e9158a2554585123991965a89f5df2ecb0174b87c615166ec71b1",
-      "bytes": 5207
+      "sha256": "8219b9d2ba5888ade8017c5f61fb9d45b32f9bb2989c480c4f4668b2120ac5fc",
+      "bytes": 6765
     },
     {
       "path": "docs/release/ISOLATION-IMPLEMENTATION-PLAN.md",
@@ -135,13 +140,13 @@
     },
     {
       "path": "frontend/package-lock.json",
-      "sha256": "02b88e1071ef6393deca14fcb6dd04a7aec576da2491b509c34d854fd86320cb",
-      "bytes": 180002
+      "sha256": "186c7afea38a060695f616545bf411241133466c7d82122c0eb98e51870cfe9c",
+      "bytes": 186555
     },
     {
       "path": "frontend/package.json",
-      "sha256": "ea24612c6491970ff5aa46f5d85ae0fad507ff7db9228e84b0e709c699c4e53d",
-      "bytes": 1203
+      "sha256": "32966df30bc73a465a5a46bb4b69fcbfb8f816ce0b1f164aa5d9c10496cac36c",
+      "bytes": 1261
     },
     {
       "path": "frontend/src/App.tsx",
@@ -155,8 +160,18 @@
     },
     {
       "path": "frontend/src/components/AppLayout.tsx",
-      "sha256": "a4dbe4cbf231562c9769ae75d405d574bf8c4e5dc1e00ef69157afb7de17faa0",
-      "bytes": 5888
+      "sha256": "79d39e16877087dc3dfef526f95a5f72966085ca8cbbe20aae07da3127538b65",
+      "bytes": 5851
+    },
+    {
+      "path": "frontend/src/components/LocaleButton.tsx",
+      "sha256": "a70cd8e10279391ad994664b306e6b3a970a77d82eff2b8e40ecb841bf5211f4",
+      "bytes": 418
+    },
+    {
+      "path": "frontend/src/components/RetentionNotice.tsx",
+      "sha256": "bc3389da097969d6399360da4f8f3fc44206c574a5e541169e3afdd7cf2937ac",
+      "bytes": 583
     },
     {
       "path": "frontend/src/hooks/useAuth.tsx",
@@ -165,18 +180,18 @@
     },
     {
       "path": "frontend/src/i18n/ar.json",
-      "sha256": "bcbff42bb694a80f7d2370f5e08fe4a816eb76713e939cf8a142c691a10646b7",
-      "bytes": 15696
+      "sha256": "f165f3d3b79e50278d8ea2cd467b677e41168f6de244cd126750fb98cf3908f6",
+      "bytes": 16205
     },
     {
       "path": "frontend/src/i18n/en.json",
-      "sha256": "3c5fb1ab503259701d9fec504094cc614449fe7cdc012f56360fc3b307666db8",
-      "bytes": 12229
+      "sha256": "7fc74e8081dd747ad434536509e627830d299e0f213fac502b610aa1cb027573",
+      "bytes": 12600
     },
     {
       "path": "frontend/src/pages/AuditPage.tsx",
-      "sha256": "857a919df730686a4634b9772fc0d34fb79653aee203c79e65cd21e6e8951ab2",
-      "bytes": 1365
+      "sha256": "3a71a5910d51ccfe559f9553bb7b2d85485aafe2f3354d3cf712a6807969ea53",
+      "bytes": 1987
     },
     {
       "path": "frontend/src/pages/BillingPage.tsx",
@@ -185,8 +200,8 @@
     },
     {
       "path": "frontend/src/pages/LoginPage.tsx",
-      "sha256": "e94484bfc8b48512cf9a6fc1531a32d758218818a6333b9bf47b4b5e93293433",
-      "bytes": 2973
+      "sha256": "c62e349c2f3344112ed23285a9511e32c6e929d1e59c85fd0434097865b5efce",
+      "bytes": 3230
     },
     {
       "path": "frontend/src/vite-env.d.ts",
@@ -214,34 +229,39 @@
       "bytes": 11062
     },
     {
+      "path": "frontend/test-real-browser/isolation.mjs",
+      "sha256": "9bca5043be96fcb0119398e280091d9f1cdb111a6f3cd2d1a321064471a9bb36",
+      "bytes": 26524
+    },
+    {
       "path": "frontend/test-real-browser/public-appointments.mjs",
-      "sha256": "167aeb34ddf5b84130d38b2eb86f7218f5c607ea9470504f275080b3caef57dd",
-      "bytes": 14786
+      "sha256": "0620a71df811b494556ae2d5708fb4151efc6df926335139782e197dab38f57b",
+      "bytes": 14831
     },
     {
       "path": "frontend/test-real-browser/public-billing.mjs",
-      "sha256": "9e17f3bfbcf88adbae3aecd7d4fef11b73ac21cb7275cd12958ee8dd765802e7",
-      "bytes": 18009
+      "sha256": "07530beeb62940c727e170b54f86a6a53a897bbfa3e0fb9b1d5baa2f999f12fd",
+      "bytes": 18054
     },
     {
       "path": "frontend/test-real-browser/public-clinical.mjs",
-      "sha256": "d1fe9e708a41f6d371df65d1e4604d469197b179885f12e3c4a613515be374d0",
-      "bytes": 12387
+      "sha256": "0e441ab61341f6c32b1b04fd313a55bb8bd795ad6048a0a4cc63f024e4b38879",
+      "bytes": 12432
     },
     {
       "path": "frontend/test-real-browser/public-stock.mjs",
-      "sha256": "e40b15282b56b23f00add8ca72d707c46b50e94beaa864f6c72a68e84f50f061",
-      "bytes": 7640
+      "sha256": "2bc11fb4c93ce0dacd0a948b000dd5705f3fe3cf538addfaa78c727d1a443730",
+      "bytes": 7685
     },
     {
       "path": "frontend/test-real-browser/public-users.mjs",
-      "sha256": "df7e41a6f8c51679396a53c6109ebf035e2438009d12e2484ba344f74455949a",
-      "bytes": 17298
+      "sha256": "0cc76fdd9b8f39516d4db1f56c380e7c9270ad52e82860d630125bf4d3e6cb5f",
+      "bytes": 17343
     },
     {
       "path": "frontend/test-real-browser/public-workflows.mjs",
-      "sha256": "e6611d67beb59d5835a50cd44a08ba4bc7402ec6902e6725d88cfd8fc2f99aaa",
-      "bytes": 9951
+      "sha256": "be7a1ae52fa6218e7dbddbb11a20abd0218c30b5ea90ce1d38e4e4a27ee0902c",
+      "bytes": 9996
     },
     {
       "path": "frontend/test-real-browser/stock.mjs",
