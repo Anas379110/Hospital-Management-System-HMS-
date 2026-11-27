@@ -1,6 +1,6 @@
 # HMS verification and open requirements
 
-Reconciled27 November2026. Fictional-data demonstration, not hospital readiness or compliance certification. Exact public release source2ad6bb273529260a1fb22456c14965c0568d2618.
+Reconciled28 November2026 02:43 Istanbul. Fictional-data demonstration, not hospital readiness or compliance certification. Latest verified public release fdee7ece38c73431758f6ef9e0bf40aa749fe8d5. Earlier evidence remains historical and does not establish newer source execution.
 
 ## Executed release evidence
 
@@ -11,17 +11,21 @@ Reconciled27 November2026. Fictional-data demonstration, not hospital readiness 
 
 ## Current engineering evidence
 
-The later documentation/tooling/local-benchmark commits have NOT run exact-head hosted CI and have NOT been deployed. Only public source2ad6bb2and its linked exact-source CI above have that release evidence.
+Latest exact source CI PostgreSQL17/18 passed https://github.com/Anas379110/Hospital-Management-System-HMS-/actions/runs/46082348667 including actual320/390/1280Swagger model browser checks. Render Free/manual exactfdee7ec Live November28 02:34:56 in1m44, actual public hosted same six model checks, unchanged42schema55operation snapshot and keyboard nested controls passed. Actual pixels inspected. This is scoped model-layout proof, not blanket Swagger/WCAG acceptance.
+
+Prior clinical contracts8dbf28f CI46080158788 and actual hosted22response checks passed02:16; patient/waitlist contracts8d7abab CI46078195061 and17hosted checks passed01:56. Response schemas cover selected routes only. Prescription dispensed/unavailable and test cancelled enums had schema-only coverage, not those22clinical probes. No new serializer/audience semantics.
+
+Approved attendance, Admin department/bed setup, active-view15s freshness and persistent manual clinical waitlist shipped with named reconciliation in traceability. Waitlist48f3438 used separate approved live table/minimal grants/ledger after protected backup and actual disposable restore. Historical candidate preparation claims are superseded by those named results, not erased.
 
 [Local10kqualification](docs/testing/PERFORMANCE-QUALIFICATION.md) contains exact runner, workload, raw samples and limits. Actual compiled app/nonownerRLS/PostgreSQL, not a mocked service. A local result does not prove Free hosted latency, representative medium-server load,10kcomplete longitudinal records or power-loss durability.
 
-[API reference](docs/api/API.md) and [traceability](docs/requirements/TRACEABILITY.md) distinguish current implementation from original target requirements. The generated repository OpenAPI has actual route/role/DTO validation metadata. The live Swagger DTO schemas remain incomplete until an explicitly tested source/runtime documentation fix is selected and released.
+[API reference](docs/api/API.md) and [traceability](docs/requirements/TRACEABILITY.md) distinguish current implementation from original target requirements. The generated repository OpenAPI has actual route/role/DTO validation metadata. Native shared Swagger request metadata and selected success shapes are now released and tested; universal response coverage remains unproven.
 
 ## Open requirements
 
-Concrete functional gaps include national-ID duplicate matching, DOB/gender correction scope, appointment completed/no-show transitions, department/bed setup/maintenance mutations, cross-client bed freshness, persistent waitlist and zero-responsibility invoice status semantics. See traceability for exact partial/missing labels. Eight roles/eleven capability groups do not establish all requirements complete.
+Concrete functional gaps include national-ID duplicate matching, DOB/gender correction scope and zero-responsibility invoice status semantics. Existing exact name+DOB warning concurrency fix is locally qualified only, not released at this snapshot. See traceability for exact partial/missing labels. Eight roles/eleven capability groups do not establish all requirements complete.
 
-Offline/intranet deployment, daily backup and tested restore, physical power-loss guarantees, complete accessibility, legal compliance and future interoperability are not certified. Two-real-client-network rate separation and actual provider pause/resume persistence remain unmeasured. Hidden provider resume with preserved DB start and fresh heartbeat remains undetectable within the agreed90minute boundary. Daily prune's first actual scheduled observation is separate support work, not yet claimed here.
+Offline/intranet deployment, scheduled daily backup and independent-host disaster restore, physical power-loss guarantees, complete accessibility, legal compliance and future interoperability are not certified. Two-real-client-network rate separation and actual provider pause/resume persistence remain unmeasured. Hidden provider resume with preserved DB start and fresh heartbeat remains undetectable within the agreed90minute boundary. Daily prune's first actual scheduled observation is separate support work, not yet claimed here.
 
 [Local process-crash evidence](docs/testing/CRASH-RECOVERY.md): actual disposable PostgreSQL18immediate-stop/restart preserved10,040committedfictionalpatientsand40audits, discarded an open uncommitted transaction. This is not a physical power-cut, hosted restart or backup/restore certification.
 

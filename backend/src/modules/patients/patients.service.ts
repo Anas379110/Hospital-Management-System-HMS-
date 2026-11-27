@@ -13,9 +13,8 @@ export class PatientsService {
 
   /** FR-2.2: MRN فريد بصيغة HMS-000001 يُولَّد تلقائياً */
   private async generateMrn(tx: Prisma.TransactionClient): Promise<string> {
-    // Serialize the human-readable MRN allocation in this transaction. Count is
-    // insufficient after deletions/imports; use the highest conforming suffix.
-    await tx.$executeRaw`SELECT pg_advisory_xact_lock(18472931)`;
+    // Caller holds the registration lock through duplicate check and allocation.
+    // Count is insufficient after deletions/imports; use the highest conforming suffix.
     const rows = await tx.$queryRaw<{ next: bigint }[]>`SELECT COALESCE(MAX(SUBSTRING(mrn FROM 5)::bigint), 0) + 1 AS next FROM patients WHERE mrn ~ '^HMS-[0-9]{1,15}$'`;
     const next = rows[0].next.toString();
     return `HMS-${next.padStart(6, '0')}`;
@@ -38,6 +37,9 @@ export class PatientsService {
     for (let attempt = 0; attempt < MAX_MRN_RETRIES; attempt++) {
       try { return await this.prisma.$transaction(async tx => {
     await requireActor(tx, createdBy, PATIENT_WRITE_ROLES);
+    // At READ COMMITTED, the following lookup sees the preceding holder commit.
+    // Keep the existing allocation lock until registration and audit both commit.
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(18472931)`;
     if (!force) {
       const duplicate = await tx.patient.findFirst({ where: { fullName: dto.fullName, dateOfBirth: new Date(dto.dateOfBirth) } });
       if (duplicate) {

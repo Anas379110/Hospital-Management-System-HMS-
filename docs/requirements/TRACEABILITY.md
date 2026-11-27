@@ -1,6 +1,6 @@
 # Current requirements traceability
 
-Reconciled27 November2026 against deployed37424a3 and the local qualification evidence named below. This file supersedes the historical57/57all-covered claim, not the original requirements. Original SRS targets stay intact. Implemented means code exists, not complete acceptance, clinical readiness or legal certification. Tests below name actual suites, without asserting each suite proves every stated requirement.
+Reconciled28 November2026 against deployedfdee7ec and the local qualification evidence named below. This file supersedes the historical57/57all-covered claim, not the original requirements. Original SRS targets stay intact. Implemented means code exists, not complete acceptance, clinical readiness or legal certification. Tests below name actual suites, without asserting each suite proves every stated requirement.
 
 ## Evidence key
 
@@ -26,7 +26,7 @@ Reconciled27 November2026 against deployed37424a3 and the local qualification ev
 | FR2.2 unique automatic MRN | transactional advisory lock/max suffix, per-workspace unique index; real concurrency;10k+40unique | Implemented/tested for recorded scenarios |
 | FR2.3 name/MRN/phone search | patients service, take20; browser and local10k search | Implemented first20only, no full pagination |
 | FR2.4 update plus audit | UpdatePatientDto excludes DOB/gender; transaction-audit; clinical browser/service tests | Partial interpretation: ordinary demographic edits supported, DOB/gender correction not supported; original text did not explicitly exclude those fields |
-| FR2.5 duplicate name+DOB OR nationalID warning | exact name+DOB409+force=true; public clinical browser | Partial. NationalID not checked and concurrent duplicate-name races not prevented. MRN uniqueness is a different guarantee |
+| FR2.5 duplicate name+DOB OR nationalID warning | exact name+DOB409+force=true; public clinical browser | Partial. NationalID not checked. Exact-name+DOB concurrent warning local fix under qualification, not released. MRN uniqueness is a different guarantee |
 | FR3.1 appointment booking patient/doctor/department | appointment service active-doctor and relation checks; public-appointments | Implemented scoped workflow |
 | FR3.2 same-doctor same-time conflict | DBpartialuniqueindex and service409; actual DB races | Implemented exact instant collision, not duration-overlap scheduling |
 | FR3.3 update/cancel optional reason | time/department update and cancel service, linked/non-scheduled lock; public browser | Implemented scoped workflow, doctor/patient reassignment not supported |
@@ -76,7 +76,7 @@ Reconciled27 November2026 against deployed37424a3 and the local qualification ev
 | intranet without internet + daily local backup | proposed deployment files, local source/dependencies | Partial local evidence: actual logical dump/restorePG17/18matched all public rows/catalogs and restricted RLS/audit protections; measured production browser paths made no external requests with external routing denied. Full network-disconnected deployment, clean offline install, independent storage and scheduled daily backup remain unqualified |
 | no loss on sudden power failure | DBtransactions, recorded rollback/contention checks and localPG18process-crash recovery preservingcommits/rejectinguncommittedsentinel | Physical power-loss target not established. Transactions do not prove physical power-loss durability; backup/restore/crash matrix required |
 | RTL/LTR and clear contrast | scoped Arabic/English pixel/axe checks | Scoped passed views, no full route/state/browser/WCAG certification |
-| i18n and OpenAPI | existing translations; native shared runtime Swagger and independent offline metadata contract; exactCI and actual hosted docsJSON/UI verified | Native runtime23requestschemas/44operations populated, actual hosted desktop/mobile inspected. fullName/phone nullPATCH400/readback verified. Full success-response schemas and all strings not certified |
+| i18n and OpenAPI | existing translations; native shared runtime Swagger and independent offline metadata contract; exactCI and actual hosted docsJSON/UI verified | Native42schemas/55operations and selected17successresponse routes released; patient/waitlist17HTTP and clinical22HTTP hosted checks.320/390/1280tested model wrapping shippedfdee7ec. fullName/phone nullPATCH400/readback verified. Universal responses/strings/WCAG not certified |
 | cited legal compliance | historical SRS names a statute | Unverified legal target, no assertion that citation or compliance is correct; needs current legal/source review for any actual deployment |
 | modular monolith / future FHIR | module layout and domain entities | Architecture shape exists; extraction/FHIR interoperability not demonstrated |
 
@@ -128,3 +128,11 @@ Exact48f34389f2892120c047febdcce7837c7a81c4d0 passed both PostgreSQL17/18 CI job
 
 ### Response contract follow-up, preparation only
 Native success-response DTOs for patient scalar rows, minimal billing identity projection and waitlist list/write shapes are under local qualification. This does not change serialization, data selection, roles or database. Live48f3438 has no such success schemas yet. Current full response-schema certification remains open outside this narrow slice.
+
+### Response and model-layout release reconciliation November28 02:43 Istanbul
+
+Earlier response preparation entry is historical. Patient/waitlist response8d7abab exactCI46078195061 and17fresh hosted response checks passed01:56. Clinical8dbf28f exactCI46080158788 and22fresh hosted clinical/lab/imaging checks passed02:16. Native42schemas55operations; selected17successroutes only. Prescription dispensed/unavailable and test cancelled enum assertions are schema-only in those22probes. No serialization/roles/DB/business changes. Model-wrapfdee7ec exactCI46082348667 passed bothPG17/18including new actual browser probe, RenderLive02:34:56; actual hosted six320/390/1280model cases, exactsnapshot/keyboard controls/pixels passed02:36. This resolves discovered nested-model overflow only, not blanket Swagger/mobile/WCAG. Whole HMS incomplete.
+
+### Exact name+DOB warning concurrency candidate
+
+Existing registration advisory lock moved before unchanged exact name+DOB lookup, retained through MRN/create/audit. Local synchronized PG17/18 unforced pair one201/one409 and one audit, explicitforce pair both201uniqueMRN, distinctname/DOBallowed, foreignworkspaceindependent, sixforbiddenroles403,401,auditfailure503rollbackandretry pass. No national-ID matching, normalization, patient-update race guarantee or DB unique-patient constraint. ExactCI/review/publication/hosted proof pending.

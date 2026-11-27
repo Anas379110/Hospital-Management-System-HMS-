@@ -81,6 +81,25 @@ describe('PatientsService', () => {
     expect(prisma.patient.create).toHaveBeenCalledTimes(1);
   });
 
+  it('locks before duplicate lookup and MRN allocation, with one shared lock', async () => {
+    prisma.patient.count.mockResolvedValue(0);
+    prisma.patient.findFirst.mockResolvedValue(null);
+    prisma.patient.create.mockImplementation(({ data }) => Promise.resolve({ id: 'p1', ...data }));
+    await service.create(baseDto, 'user-1');
+    expect(prisma.$executeRaw).toHaveBeenCalledTimes(1);
+    expect(prisma.user.findUnique.mock.invocationCallOrder[0]).toBeLessThan(prisma.$executeRaw.mock.invocationCallOrder[0]);
+    expect(prisma.$executeRaw.mock.invocationCallOrder[0]).toBeLessThan(prisma.patient.findFirst.mock.invocationCallOrder[0]);
+    expect(prisma.patient.findFirst.mock.invocationCallOrder[0]).toBeLessThan(prisma.$queryRaw.mock.invocationCallOrder[0]);
+  });
+
+  it('explicit override still acquires the same lock without checking duplicates', async () => {
+    prisma.patient.count.mockResolvedValue(0);
+    prisma.patient.create.mockImplementation(({ data }) => Promise.resolve({ id: 'p1', ...data }));
+    await service.create(baseDto, 'user-1', true);
+    expect(prisma.$executeRaw).toHaveBeenCalledTimes(1);
+    expect(prisma.patient.findFirst).not.toHaveBeenCalled();
+  });
+
   it('يرمي NotFoundException عند البحث عن مريض غير موجود', async () => {
     prisma.patient.findUnique.mockResolvedValue(null);
 
