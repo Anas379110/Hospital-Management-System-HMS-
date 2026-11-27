@@ -1,3 +1,4 @@
+import { validationOptions } from './validation-options';
 import { validateRateLimitIdentityConfiguration } from './common/rate-limit-tracker';
 import { qualificationIdentity } from './common/qualification-identity';
 import { qualificationGate } from './common/qualification-gate';
@@ -20,7 +21,7 @@ export async function createApplication(options: { logger?: false; appFactory?: 
   app.use(qualificationGate());
   app.use(qualificationIdentity());
   app.use((_req: unknown, _res: unknown, next: () => void) => workspaceContext.run('', next));
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
+  app.useGlobalPipes(new ValidationPipe(validationOptions));
   app.useGlobalFilters(new AllExceptionsFilter());
   app.enableCors({ origin: process.env.FRONTEND_URL ?? 'http://localhost:5173', credentials: true });
   app.setGlobalPrefix('api/v1');

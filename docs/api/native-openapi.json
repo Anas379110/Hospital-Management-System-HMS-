@@ -519,7 +519,6 @@
           },
           "fullName": {
             "minLength": 3,
-            "nullable": true,
             "type": "string"
           },
           "nationalId": {
@@ -527,7 +526,6 @@
             "type": "string"
           },
           "phone": {
-            "nullable": true,
             "type": "string"
           }
         },

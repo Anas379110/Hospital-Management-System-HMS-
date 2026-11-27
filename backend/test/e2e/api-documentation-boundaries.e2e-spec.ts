@@ -1,3 +1,4 @@
+import { validationOptions } from '../../src/validation-options';
 import { ValidationPipe } from '@nestjs/common';
 import { CreatePatientDto } from '../../src/modules/patients/dto/create-patient.dto';
 import { UpdatePatientDto } from '../../src/modules/patients/dto/update-patient.dto';
@@ -10,7 +11,7 @@ import { PrismaService } from '../../src/prisma/prisma.service';
 import { Test } from '@nestjs/testing';
 
 describe('Documentation validator boundaries, no DB',()=>{
- const pipe=new ValidationPipe({whitelist:true,forbidNonWhitelisted:true,transform:true});
+ const pipe=new ValidationPipe(validationOptions);
  const uuid='123e4567-e89b-42d3-a456-426614174000';
  const patient={fullName:'Test',dateOfBirth:'2000-01-01',gender:'male',phone:'123'};
  const item={description:'Test',quantity:1,unitPrice:0};
@@ -39,9 +40,11 @@ describe('Documentation validator boundaries, no DB',()=>{
   const action=pipe.transform(row.value,{type:row.schema==='FindAppointmentsDto'||row.schema==='SearchUsersDto'?'query':'body',metatype:row.dto});
   if(accepts)await expect(action).resolves.toBeDefined();else await expect(action).rejects.toMatchObject({status:400});
  });
- it('updates retain six optional fields, null remains accepted at validation boundary',async()=>{
+ it('updates retain six optional fields and reject non-nullable field nulls',async()=>{
   const s=schemas!.schemas!.UpdatePatientDto as {required?:string[];properties:Record<string,unknown>};expect(s.required).toBeUndefined();expect(Object.keys(s.properties).sort()).toEqual(['fullName','phone','nationalId','address','emergencyContactName','emergencyContactPhone'].sort());
-  await expect(pipe.transform({fullName:null,phone:null},{type:'body',metatype:UpdatePatientDto})).resolves.toMatchObject({fullName:null,phone:null});
+  await expect(pipe.transform({fullName:null,phone:null},{type:'body',metatype:UpdatePatientDto})).rejects.toMatchObject({status:400});
+  await expect(pipe.transform({},{type:'body',metatype:UpdatePatientDto})).resolves.toEqual({});
+  await expect(pipe.transform({address:null,nationalId:null,emergencyContactName:null,emergencyContactPhone:null},{type:'body',metatype:UpdatePatientDto})).resolves.toMatchObject({address:null,nationalId:null,emergencyContactName:null,emergencyContactPhone:null});
  });
  it.each(['dateOfBirth','gender'])('protected %s patch rejects400 instead of silently stripping',async field=>{await expect(pipe.transform({[field]:field==='gender'?'male':'2000-01-01'},{type:'body',metatype:UpdatePatientDto})).rejects.toMatchObject({status:400});});
 });

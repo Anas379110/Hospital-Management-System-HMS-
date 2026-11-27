@@ -116,13 +116,14 @@ operations; `x-roles: []` alone must not be read as public access.
 `UpdatePatientDto` has exactly six optional properties and excludes dateOfBirth
 and gender. The shared ValidationPipe rejects either excluded field with400
 because forbidNonWhitelisted is enabled, rather than silently stripping it.
-The existing PartialType/IsOptional behavior accepts null fullName or phone at
-the DTO boundary. `PatientsService.update` forwards that DTO directly to Prisma,
-while both database columns are non-nullable. This is a pre-existing validator/
-service mismatch that can become a database error (normally surfaced as500);
-it has not been fixed or silently narrowed by documentation changes. Native
-nullable annotations truthfully describe validation only, not update success.
-A future behavior fix needs an explicit decision and regression test.
+The earlier PartialType/IsOptional behavior accepted null fullName or phone,
+although both database columns are non-nullable. The follow-up remediation now
+uses explicit update-field validation: omitted fullName/phone remain optional,
+explicit null is rejected with400 before the patient write. The other four
+nullable fields still allow null clearing. The six-field patch scope and
+DOB/gender exclusion are unchanged. Regression tests cover both DTO boundaries
+and authenticated HTTP rejection before patient.update. No live DB migration
+or workflow-policy change is required.
 
 No-DB ValidationPipe tests compare accepted/rejected boundary values against the
 actual native schemas/query parameters: patient name2/3, invoice item count

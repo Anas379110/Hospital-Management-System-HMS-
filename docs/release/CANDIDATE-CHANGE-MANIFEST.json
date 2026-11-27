@@ -1,5 +1,5 @@
 {
-  "status": "separate candidate, local tested; exact new CI and hosted gates pending",
+  "status": "historical isolation-candidate manifest captured at the timestamp below, not current readiness; native docs head1d9e146 exact CI46051142614 passed PG17/18, no deployment; later null-update remediation has separate source/tests/CI evidence",
   "capturedAt": "2026-11-27T01:17:22.297064+00:00",
   "comparedWith": "frozen118source-transfer baseline; no source changes to frozen tree",
   "changedFiles": [
@@ -366,5 +366,6 @@
   ],
   "excludedGeneratedEvidence": [
     "backend/postgres-regression.json"
-  ]
+  ],
+  "scopeNote": "Listed hashes are historical captured bytes and are not a current-tree checksum manifest. Use per-delta export manifests for current changes."
 }

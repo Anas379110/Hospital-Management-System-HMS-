@@ -1,3 +1,4 @@
+import { validationOptions } from '../../src/validation-options';
 import { withCurrentSessions } from '../helpers/current-session-fixture';
 import { Test } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
@@ -49,7 +50,7 @@ describe('Patients (e2e)', () => {
       .compile();
 
     app = moduleRef.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+    app.useGlobalPipes(new ValidationPipe(validationOptions));
     app.useGlobalFilters(new AllExceptionsFilter());
     app.setGlobalPrefix('api/v1');
     await app.init();
@@ -123,5 +124,24 @@ describe('Patients (e2e)', () => {
 
     expect(res.status).toBe(409);
     expect(res.body.error.code).toBe('POSSIBLE_DUPLICATE_PATIENT');
+  });
+
+  it.each([{fullName:null},{phone:null},{fullName:null,phone:null}])('PATCH invalid null %j rejects400 before transaction/actor/patient work',async body=>{
+    jest.clearAllMocks();
+    const token=await jwtService.signAsync({sub:'u2',username:'rec1',role:'receptionist'});
+    const res=await request(app.getHttpServer()).patch('/api/v1/patients/123e4567-e89b-42d3-a456-426614174000').set('Authorization',`Bearer ${token}`).send(body);
+    expect(res.status).toBe(400);expect(res.body.error.code).toBe('BAD_REQUEST');
+    for(const mock of [prismaMock.$transaction,prismaMock.$queryRaw,prismaMock.user.findUnique,prismaMock.patient.findUnique,prismaMock.patient.update,prismaMock.auditLog.create])expect(mock).not.toHaveBeenCalled();
+  });
+  it('PATCH omitted fullName/phone keeps them absent from write DTO while nullable address clears',async()=>{
+    jest.clearAllMocks();
+    const before={id:'123e4567-e89b-42d3-a456-426614174000',fullName:'Existing Name',phone:'123',address:'Old'};
+    prismaMock.patient.findUnique.mockResolvedValueOnce(before);
+    prismaMock.patient.update.mockResolvedValueOnce({...before,address:null});
+    const token=await jwtService.signAsync({sub:'u2',username:'rec1',role:'receptionist'});
+    const res=await request(app.getHttpServer()).patch('/api/v1/patients/'+before.id).set('Authorization',`Bearer ${token}`).send({address:null});
+    expect(res.status).toBe(200);expect(prismaMock.$transaction).toHaveBeenCalledTimes(1);expect(prismaMock.user.findUnique).toHaveBeenCalledTimes(1);
+    expect(prismaMock.patient.update).toHaveBeenCalledWith({where:{id:before.id},data:{address:null}});
+    expect(res.body.fullName).toBe(before.fullName);expect(res.body.phone).toBe(before.phone);
   });
 });
