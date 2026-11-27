@@ -1,3 +1,4 @@
+import { EncounterWithPrescriptionsResponseDto } from '../encounters/dto/clinical-response.dto';
 import { ApiErrorResponseDto } from '../../common/dto/api-error-response.dto';
 import { PatientIdentityResponseDto, PatientResponseDto } from './dto/patient-response.dto';
 import { ApiOperation, ApiResponse, ApiQuery, ApiExtension } from '@nestjs/swagger';
@@ -115,7 +116,7 @@ export class PatientsController {
   @ApiOperation({"summary": "PatientsController.getMedicalRecords", "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization."})
   @ApiExtension('x-roles', ["doctor", "nurse", "admin"])
   @ApiExtension('x-auth', 'roles')
-  @ApiResponse({"status": 200, "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."})
+  @ApiResponse({ status: 200, type: [EncounterWithPrescriptionsResponseDto], description: 'Current non-deleted encounters, newest encounterDate first, each with existing prescriptions. Not a paginated or combined activity timeline.' })
   @ApiResponse({ status: 400, type: ApiErrorResponseDto, "description": "Invalid request"})
   @ApiResponse({ status: 401, type: ApiErrorResponseDto, "description": "Missing/expired token, inactive current user, or invalid/expired workspace"})
   @ApiResponse({ status: 403, type: ApiErrorResponseDto, "description": "Current persisted role is not permitted"})

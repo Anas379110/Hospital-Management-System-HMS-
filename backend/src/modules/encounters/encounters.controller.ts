@@ -1,3 +1,4 @@
+import { EncounterResponseDto, EncounterWithPrescriptionsResponseDto, PrescriptionResponseDto } from './dto/clinical-response.dto';
 import { ApiOperation, ApiResponse, ApiExtension } from '@nestjs/swagger';
 import { Body, Controller, Delete, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -29,7 +30,7 @@ export class EncountersController {
   @ApiOperation({"summary": "EncountersController.create", "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization."})
   @ApiExtension('x-roles', ["doctor"])
   @ApiExtension('x-auth', 'roles')
-  @ApiResponse({"status": 201, "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."})
+  @ApiResponse({ status: 201, type: EncounterResponseDto, description: 'Existing service payload. No serialization, role or data selection change.' })
   @ApiResponse({"status": 400, "description": "Invalid request"})
   @ApiResponse({"status": 401, "description": "Missing/expired token, inactive current user, or invalid/expired workspace"})
   @ApiResponse({"status": 403, "description": "Current persisted role is not permitted"})
@@ -43,7 +44,7 @@ export class EncountersController {
   @ApiOperation({"summary": "EncountersController.findOne", "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization."})
   @ApiExtension('x-roles', ["doctor", "nurse", "admin"])
   @ApiExtension('x-auth', 'roles')
-  @ApiResponse({"status": 200, "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."})
+  @ApiResponse({ status: 200, type: EncounterWithPrescriptionsResponseDto, description: 'Existing service payload. No serialization, role or data selection change.' })
   @ApiResponse({"status": 400, "description": "Invalid request"})
   @ApiResponse({"status": 401, "description": "Missing/expired token, inactive current user, or invalid/expired workspace"})
   @ApiResponse({"status": 403, "description": "Current persisted role is not permitted"})
@@ -59,7 +60,7 @@ export class EncountersController {
   @ApiOperation({"summary": "EncountersController.addPrescription", "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization."})
   @ApiExtension('x-roles', ["doctor"])
   @ApiExtension('x-auth', 'roles')
-  @ApiResponse({"status": 201, "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."})
+  @ApiResponse({ status: 201, type: PrescriptionResponseDto, description: 'Existing service payload. No serialization, role or data selection change.' })
   @ApiResponse({"status": 400, "description": "Invalid request"})
   @ApiResponse({"status": 401, "description": "Missing/expired token, inactive current user, or invalid/expired workspace"})
   @ApiResponse({"status": 403, "description": "Current persisted role is not permitted"})
@@ -75,7 +76,7 @@ export class EncountersController {
   @ApiOperation({"summary": "EncountersController.softDelete", "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization."})
   @ApiExtension('x-roles', ["doctor", "admin"])
   @ApiExtension('x-auth', 'roles')
-  @ApiResponse({"status": 200, "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."})
+  @ApiResponse({ status: 200, type: EncounterResponseDto, description: 'Existing service payload. No serialization, role or data selection change.' })
   @ApiResponse({"status": 400, "description": "Invalid request"})
   @ApiResponse({"status": 401, "description": "Missing/expired token, inactive current user, or invalid/expired workspace"})
   @ApiResponse({"status": 403, "description": "Current persisted role is not permitted"})

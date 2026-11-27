@@ -473,6 +473,145 @@
         ],
         "type": "object"
       },
+      "EncounterResponseDto": {
+        "properties": {
+          "appointmentId": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "chiefComplaint": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "deleteReason": {
+            "nullable": true,
+            "type": "string"
+          },
+          "deletedAt": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "diagnosis": {
+            "type": "string"
+          },
+          "doctorId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "encounterDate": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "notes": {
+            "nullable": true,
+            "type": "string"
+          },
+          "patientId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "workspaceId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "workspaceId",
+          "id",
+          "patientId",
+          "doctorId",
+          "appointmentId",
+          "chiefComplaint",
+          "diagnosis",
+          "notes",
+          "encounterDate",
+          "deletedAt",
+          "deleteReason",
+          "createdAt"
+        ],
+        "type": "object"
+      },
+      "EncounterWithPrescriptionsResponseDto": {
+        "properties": {
+          "appointmentId": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "chiefComplaint": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "deleteReason": {
+            "nullable": true,
+            "type": "string"
+          },
+          "deletedAt": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "diagnosis": {
+            "type": "string"
+          },
+          "doctorId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "encounterDate": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "notes": {
+            "nullable": true,
+            "type": "string"
+          },
+          "patientId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "prescriptions": {
+            "items": {
+              "$ref": "#/components/schemas/PrescriptionResponseDto"
+            },
+            "type": "array"
+          },
+          "workspaceId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "workspaceId",
+          "id",
+          "patientId",
+          "doctorId",
+          "appointmentId",
+          "chiefComplaint",
+          "diagnosis",
+          "notes",
+          "encounterDate",
+          "deletedAt",
+          "deleteReason",
+          "createdAt",
+          "prescriptions"
+        ],
+        "type": "object"
+      },
       "InvoiceItemInputDto": {
         "properties": {
           "description": {
@@ -510,6 +649,17 @@
         "required": [
           "username",
           "password"
+        ],
+        "type": "object"
+      },
+      "OrderingUserIdentityResponseDto": {
+        "properties": {
+          "fullName": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "fullName"
         ],
         "type": "object"
       },
@@ -610,6 +760,168 @@
         ],
         "type": "object"
       },
+      "PendingTestOrderResponseDto": {
+        "properties": {
+          "completedAt": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "completedBy": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "encounterId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "orderedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "orderedBy": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "orderedByUser": {
+            "$ref": "#/components/schemas/OrderingUserIdentityResponseDto"
+          },
+          "patient": {
+            "$ref": "#/components/schemas/TestPatientIdentityResponseDto"
+          },
+          "patientId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "result": {
+            "nullable": true,
+            "type": "string"
+          },
+          "resultNotes": {
+            "nullable": true,
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "completed",
+              "cancelled"
+            ],
+            "type": "string"
+          },
+          "testName": {
+            "type": "string"
+          },
+          "testType": {
+            "enum": [
+              "lab",
+              "radiology"
+            ],
+            "type": "string"
+          },
+          "workspaceId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "workspaceId",
+          "id",
+          "patientId",
+          "encounterId",
+          "orderedBy",
+          "testType",
+          "testName",
+          "status",
+          "orderedAt",
+          "result",
+          "resultNotes",
+          "completedBy",
+          "completedAt",
+          "patient",
+          "orderedByUser"
+        ],
+        "type": "object"
+      },
+      "PrescriptionResponseDto": {
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "dispensedAt": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "dispensedBy": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "dosage": {
+            "type": "string"
+          },
+          "duration": {
+            "type": "string"
+          },
+          "encounterId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "medicationId": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "medicationName": {
+            "type": "string"
+          },
+          "notes": {
+            "nullable": true,
+            "type": "string"
+          },
+          "quantityDispensed": {
+            "nullable": true,
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "dispensed",
+              "unavailable"
+            ],
+            "type": "string"
+          },
+          "workspaceId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "workspaceId",
+          "id",
+          "encounterId",
+          "medicationName",
+          "dosage",
+          "duration",
+          "notes",
+          "createdAt",
+          "status",
+          "medicationId",
+          "quantityDispensed",
+          "dispensedAt",
+          "dispensedBy"
+        ],
+        "type": "object"
+      },
       "RecordAttendanceDto": {
         "properties": {
           "status": {
@@ -693,6 +1005,100 @@
         },
         "required": [
           "role"
+        ],
+        "type": "object"
+      },
+      "TestOrderResponseDto": {
+        "properties": {
+          "completedAt": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "completedBy": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "encounterId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "orderedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "orderedBy": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "patientId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "result": {
+            "nullable": true,
+            "type": "string"
+          },
+          "resultNotes": {
+            "nullable": true,
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "completed",
+              "cancelled"
+            ],
+            "type": "string"
+          },
+          "testName": {
+            "type": "string"
+          },
+          "testType": {
+            "enum": [
+              "lab",
+              "radiology"
+            ],
+            "type": "string"
+          },
+          "workspaceId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "workspaceId",
+          "id",
+          "patientId",
+          "encounterId",
+          "orderedBy",
+          "testType",
+          "testName",
+          "status",
+          "orderedAt",
+          "result",
+          "resultNotes",
+          "completedBy",
+          "completedAt"
+        ],
+        "type": "object"
+      },
+      "TestPatientIdentityResponseDto": {
+        "properties": {
+          "fullName": {
+            "type": "string"
+          },
+          "mrn": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "fullName",
+          "mrn"
         ],
         "type": "object"
       },
@@ -2521,7 +2927,14 @@
         },
         "responses": {
           "201": {
-            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EncounterResponseDto"
+                }
+              }
+            },
+            "description": "Existing service payload. No serialization, role or data selection change."
           },
           "400": {
             "description": "Invalid request"
@@ -2577,7 +2990,14 @@
         },
         "responses": {
           "200": {
-            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EncounterResponseDto"
+                }
+              }
+            },
+            "description": "Existing service payload. No serialization, role or data selection change."
           },
           "400": {
             "description": "Invalid request"
@@ -2622,7 +3042,14 @@
         ],
         "responses": {
           "200": {
-            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EncounterWithPrescriptionsResponseDto"
+                }
+              }
+            },
+            "description": "Existing service payload. No serialization, role or data selection change."
           },
           "400": {
             "description": "Invalid request"
@@ -2680,7 +3107,14 @@
         },
         "responses": {
           "201": {
-            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrescriptionResponseDto"
+                }
+              }
+            },
+            "description": "Existing service payload. No serialization, role or data selection change."
           },
           "400": {
             "description": "Invalid request"
@@ -3603,7 +4037,17 @@
         ],
         "responses": {
           "200": {
-            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/EncounterWithPrescriptionsResponseDto"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Current non-deleted encounters, newest encounterDate first, each with existing prescriptions. Not a paginated or combined activity timeline."
           },
           "400": {
             "content": {
@@ -3679,7 +4123,17 @@
         ],
         "responses": {
           "200": {
-            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/TestOrderResponseDto"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Existing service payload. No serialization, role or data selection change."
           },
           "400": {
             "description": "Invalid request"
@@ -3824,7 +4278,14 @@
         },
         "responses": {
           "201": {
-            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TestOrderResponseDto"
+                }
+              }
+            },
+            "description": "Existing service payload. No serialization, role or data selection change."
           },
           "400": {
             "description": "Invalid request"
@@ -3861,7 +4322,17 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PendingTestOrderResponseDto"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Existing service payload. No serialization, role or data selection change."
           },
           "400": {
             "description": "Invalid request"
@@ -3918,7 +4389,14 @@
         },
         "responses": {
           "201": {
-            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TestOrderResponseDto"
+                }
+              }
+            },
+            "description": "Existing service payload. No serialization, role or data selection change."
           },
           "400": {
             "description": "Invalid request"

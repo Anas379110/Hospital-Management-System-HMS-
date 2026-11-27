@@ -1,3 +1,4 @@
+import { TestOrderResponseDto, PendingTestOrderResponseDto } from './dto/test-order-response.dto';
 import { ApiOperation, ApiResponse, ApiExtension } from '@nestjs/swagger';
 import { Body, Controller, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -27,7 +28,7 @@ export class LabController {
   @ApiOperation({"summary": "LabController.create", "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization."})
   @ApiExtension('x-roles', ["doctor"])
   @ApiExtension('x-auth', 'roles')
-  @ApiResponse({"status": 201, "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."})
+  @ApiResponse({ status: 201, type: TestOrderResponseDto, description: 'Existing service payload. No serialization, role or data selection change.' })
   @ApiResponse({"status": 400, "description": "Invalid request"})
   @ApiResponse({"status": 401, "description": "Missing/expired token, inactive current user, or invalid/expired workspace"})
   @ApiResponse({"status": 403, "description": "Current persisted role is not permitted"})
@@ -41,7 +42,7 @@ export class LabController {
   @ApiOperation({"summary": "LabController.pending", "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization."})
   @ApiExtension('x-roles', ["lab_tech", "admin"])
   @ApiExtension('x-auth', 'roles')
-  @ApiResponse({"status": 200, "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."})
+  @ApiResponse({ status: 200, type: [PendingTestOrderResponseDto], description: 'Existing service payload. No serialization, role or data selection change.' })
   @ApiResponse({"status": 400, "description": "Invalid request"})
   @ApiResponse({"status": 401, "description": "Missing/expired token, inactive current user, or invalid/expired workspace"})
   @ApiResponse({"status": 403, "description": "Current persisted role is not permitted"})
@@ -56,7 +57,7 @@ export class LabController {
   @ApiOperation({"summary": "LabController.recordResult", "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization."})
   @ApiExtension('x-roles', ["lab_tech", "admin"])
   @ApiExtension('x-auth', 'roles')
-  @ApiResponse({"status": 201, "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."})
+  @ApiResponse({ status: 201, type: TestOrderResponseDto, description: 'Existing service payload. No serialization, role or data selection change.' })
   @ApiResponse({"status": 400, "description": "Invalid request"})
   @ApiResponse({"status": 401, "description": "Missing/expired token, inactive current user, or invalid/expired workspace"})
   @ApiResponse({"status": 403, "description": "Current persisted role is not permitted"})
@@ -70,7 +71,7 @@ export class LabController {
   @ApiOperation({"summary": "LabController.getPatientResults", "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization."})
   @ApiExtension('x-roles', ["doctor", "nurse", "admin", "lab_tech"])
   @ApiExtension('x-auth', 'roles')
-  @ApiResponse({"status": 200, "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."})
+  @ApiResponse({ status: 200, type: [TestOrderResponseDto], description: 'Existing service payload. No serialization, role or data selection change.' })
   @ApiResponse({"status": 400, "description": "Invalid request"})
   @ApiResponse({"status": 401, "description": "Missing/expired token, inactive current user, or invalid/expired workspace"})
   @ApiResponse({"status": 403, "description": "Current persisted role is not permitted"})

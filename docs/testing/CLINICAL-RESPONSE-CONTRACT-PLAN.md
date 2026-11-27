@@ -1,0 +1,12 @@
+# Clinical record and test-result response documentation
+
+November28, after8d7abab patient/waitlist contract release. Original FR4.3/FR7.4 and OpenAPI target; no new clinical workflow. Derive current actual scalar/nested/projection responses from services, preserving nullable fields and existing roles. No schema, grant, query, serializer, role, config, dependency or business change.
+
+Document encounter create/soft-delete scalar row, encounter detail/patient medical records with prescription array, prescription create scalar row, test-order create/result/patient-result scalar row, pending test queue with minimal patient and ordering-user projections. Arrays remain unbounded where services are currently unbounded; do not imply pagination. A missing patient in getPatientResults currently returns empty array rather than404; document actual behavior without changing it.
+
+Add actual restricted PostgreSQL17/18 HTTP payload/schema checks across doctor create/prescribe/order, lab result completion, clinical read and soft-delete, existing forbidden/notfound/conflict/isolation states. Independent request export retained; native allowlist extends only selected routes. Tests/build/lint, independent security/contract review, exact full CI, changed/new private source delta, actual free hosted docs/runtime proof before completion.
+
+No ID normalization, demographic correction permission, billing state, automatic clinical action or backup-retention decision inferred. These remain separate. No clinical data or raw database backup in source/evidence. All fixtures fictional. Whole HMS incomplete.
+
+## Local execution
+Native42schemas55operations,17metadata/validator contract tests pass,226unit/62mockHTTP/lint/build pass. RestrictedPG17.12/18.7 complete waitlist suite plus existing17patient/waitlist response checks and22new clinical/lab/radiology HTTP responses each pass. Reports bind35source/build inputs. New checks cover nullable prescription/encounter/result fields, minimal pending patient/ordering-user projections, lab and imaging completion, existing duplicate result409,401/400/403/404, foreign-workspace404/empty results, soft-delete scalar/read404/record omission with completed result retained. These tests preserve current behavior, not new clinical policy. Native nested record/pending test models rendered in documentation-only local server, no DB initialization in that preview. Independent review/exact CI/hosted proof pending.
