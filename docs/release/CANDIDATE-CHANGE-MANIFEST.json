@@ -1,6 +1,6 @@
 {
-  "status": "separate PR4 candidate; local qualification only, exact new CI and hosted gates pending",
-  "capturedAt": "2026-11-27T01:09:03.239019+00:00",
+  "status": "separate candidate, local tested; exact new CI and hosted gates pending",
+  "capturedAt": "2026-11-27T01:17:22.297064+00:00",
   "comparedWith": "frozen118source-transfer baseline; no source changes to frozen tree",
   "changedFiles": [
     {
@@ -155,8 +155,8 @@
     },
     {
       "path": "docs/quality/MANAGER-SCHEDULE-ACCEPTANCE-PLAN.md",
-      "sha256": "f89720b5988472e0d0fe0fecf7357872838118a7390988fbb11110a9e70d51f3",
-      "bytes": 3165
+      "sha256": "45738a6268ab8d7be74f67db51827d444ef22e79ca34c0bf84daac97dc556065",
+      "bytes": 5493
     },
     {
       "path": "docs/release/ISOLATED-DEMO-OPERATIONS.md",
@@ -230,18 +230,18 @@
     },
     {
       "path": "frontend/src/i18n/ar.json",
-      "sha256": "ddc17fa865b2fd58448f1d1912a4fa067cd6fa0958a2c2418ed13dc8403dd398",
-      "bytes": 17238
+      "sha256": "c2bbd9d4251fe966beecd817748430d59d36f94fa2e439a1e9750524e728b6c0",
+      "bytes": 17319
     },
     {
       "path": "frontend/src/i18n/en.json",
-      "sha256": "7d43c8174ebc6fd62c10f562c9b94e33e09a0fde5ca696e267352f54099cbcee",
-      "bytes": 13412
+      "sha256": "5d19e8b667dc76d832a7bc29f1600e5ec13275b3d2453d5d3ec4185209cc1eaa",
+      "bytes": 13483
     },
     {
       "path": "frontend/src/pages/AppointmentsPage.tsx",
-      "sha256": "74a673c16f688f5b6de22ebfce193a9cdb5c0c8b12849255c63a2ce9eb80f494",
-      "bytes": 13311
+      "sha256": "f588c4a8576615f07f4a335fc19a9f559ee850fba2d6b6415b4034eb264baf38",
+      "bytes": 14251
     },
     {
       "path": "frontend/src/pages/AuditPage.tsx",
@@ -260,8 +260,8 @@
     },
     {
       "path": "frontend/src/pages/OverviewPage.tsx",
-      "sha256": "624809a0214103b041012616691c2a341a1fcf0e81d754c80a1d75c8a9ad4a95",
-      "bytes": 3691
+      "sha256": "ca62fb2de6efa1add0af3dd72b92fea554ba5c65f952b83bfda20a0aa9a2d9ae",
+      "bytes": 3876
     },
     {
       "path": "frontend/src/vite-env.d.ts",
@@ -290,8 +290,8 @@
     },
     {
       "path": "frontend/test-real-browser/isolation.mjs",
-      "sha256": "5fc03e89c5217e7a56bc10aa73ead98fd553006582aee566b50f2babff6a4f46",
-      "bytes": 37165
+      "sha256": "1a0c8db529901220eab35ffadcdbcc3006d13f8179b547fe9b75c9d9ef6f7364",
+      "bytes": 40633
     },
     {
       "path": "frontend/test-real-browser/public-appointments.mjs",

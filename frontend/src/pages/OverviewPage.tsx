@@ -18,10 +18,10 @@ export default function OverviewPage() {
       <Button variant="outlined" disabled={!date || overview.isFetching} onClick={() => void overview.refetch()} sx={{ minHeight: 44 }}>{t('overview.refresh')}</Button>
     </Stack>
     <Typography variant="body2" color="text.secondary" mb={2}>{t('appointments.timezone', { zone: Intl.DateTimeFormat().resolvedOptions().timeZone })}</Typography>
-    {overview.isLoading && <CircularProgress aria-label={t('patients.loading')} />}
-    {overview.isError && <Alert severity="error" action={<Button onClick={() => void overview.refetch()}>{t('patients.retry')}</Button>}>{t('errors.generic')}</Alert>}
+    {overview.isFetching && <Box role="status" sx={{ mb: 2 }}><CircularProgress size={20} aria-label={t('patients.loading')} /><Typography component="span" sx={{ mx: 1 }}>{t('patients.loading')}</Typography></Box>}
+    {overview.isError && <Alert severity="error" action={<Button onClick={() => void overview.refetch()}>{t('patients.retry')}</Button>}>{t('errors.generic')}{overview.data && ' ' + t('overview.stale')}</Alert>}
     {overview.data && <>
-      <Typography role="status" variant="body2" mb={2}>{t('overview.updated', { time: new Date(overview.dataUpdatedAt).toLocaleTimeString(i18n.language === 'ar' ? 'ar-SY' : 'en-US') })}</Typography>
+      <Typography role="status" variant="body2" mb={2}>{t('overview.updated', { time: new Date(overview.dataUpdatedAt).toLocaleTimeString(i18n.language === 'ar' ? 'ar-SY-u-nu-latn' : 'en-US') })}</Typography>
       <Card variant="outlined" sx={{ mb: 3 }}><CardContent><Typography component="h2" variant="h6">{t('overview.appointments')}</Typography><Typography data-testid="appointment-count" variant="h4">{overview.data.appointmentCount}</Typography><Typography variant="body2">{t('overview.allStates')}</Typography></CardContent></Card>
       <Typography component="h2" variant="h6" mb={2}>{t('overview.beds')}</Typography>
       {overview.data.departments.length === 0 && <Alert severity="info">{t('departments.empty')}</Alert>}

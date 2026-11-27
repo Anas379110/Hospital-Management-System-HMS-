@@ -42,7 +42,11 @@ export default function AppointmentsPage() {
   const [editing, setEditing] = useState<Appointment | null>(null);
   const pendingSave = createAppointment.isPending || updateAppointment.isPending;
   const cancelAppointment = useCancelAppointment();
-  const locale = i18n.language === 'ar' ? 'ar-SY' : 'en-US';
+  const locale = i18n.language === 'ar' ? 'ar-SY-u-nu-latn' : 'en-US';
+  const formatDay = (value: string) => new Date(value).toLocaleDateString(locale, { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' });
+  const scheduleDate = new Date(date + 'T00:00:00');
+  const displayDate = Number.isFinite(scheduleDate.getTime()) ? formatDay(scheduleDate.toISOString()) : '';
+  const groups = Object.entries((appointments.data ?? []).reduce<Record<string, Appointment[]>>((acc, appointment) => { const key = formatDay(appointment.scheduledAt); (acc[key] ??= []).push(appointment); return acc; }, {}));
   const errorMessage = (error: unknown) => {
     const code = getApiErrorCode(error);
     if (code === 'AUDIT_PERSISTENCE_FAILED') return t('departments.auditFailure');
@@ -77,32 +81,32 @@ export default function AppointmentsPage() {
     <Stack direction={{ xs: 'column', sm: 'row' }} gap={2} mb={2}>
       <TextField id="schedule-range" SelectProps={{ inputProps: { 'aria-label': t('appointments.range') } }} select label={t('appointments.range')} value={days} onChange={e => { setDays(Number(e.target.value)); setPage(1); }}><MenuItem value={1}>{t('appointments.daily')}</MenuItem><MenuItem value={7}>{t('appointments.weekly')}</MenuItem></TextField>
       <TextField type="date" label={t('appointments.day')} value={date} onChange={e => { setDate(e.target.value); setPage(1); }} InputLabelProps={{ shrink: true }} />
-      <TextField select sx={{ minWidth: 220 }} label={t('appointments.filterDoctor')} value={doctorId} onChange={e => { setDoctorId(e.target.value); setPage(1); }}><MenuItem value="">{t('appointments.allDoctors')}</MenuItem>{options.data?.doctors.map(doctor => <MenuItem key={doctor.id} value={doctor.id}>{doctor.fullName}</MenuItem>)}</TextField>
+      <TextField id="schedule-doctor" SelectProps={{ displayEmpty: true }} InputLabelProps={{ shrink: true }} select sx={{ minWidth: 220 }} label={t('appointments.filterDoctor')} value={doctorId} onChange={e => { setDoctorId(e.target.value); setPage(1); }}><MenuItem value="">{t('appointments.allDoctors')}</MenuItem>{options.data?.doctors.map(doctor => <MenuItem key={doctor.id} value={doctor.id}>{doctor.fullName}</MenuItem>)}</TextField>
     </Stack>
-    <Typography sx={{ mb: 1 }}>{t(days === 7 ? 'appointments.sevenFrom' : 'appointments.dayFrom', { date })}</Typography>
+    <Typography sx={{ mb: 1 }}>{t(days === 7 ? 'appointments.sevenFrom' : 'appointments.dayFrom', { date: displayDate })}</Typography>
     <Typography variant="body2" color="text.secondary" mb={2}>{t('appointments.timezone', { zone: Intl.DateTimeFormat().resolvedOptions().timeZone })}</Typography>
     {success && <Alert severity="success" role="status" sx={{ mb: 2 }}>{success}</Alert>}
     {appointments.isLoading && <CircularProgress aria-label={t('appointments.loading')} />}
     {appointments.isError && <Alert severity="error" action={<Button onClick={() => void appointments.refetch()}>{t('appointments.retry')}</Button>}>{getApiErrorCode(appointments.error) === 'APPOINTMENT_RANGE_TOO_LARGE' ? t('appointments.tooMany') : t('appointments.loadError')}</Alert>}
     {!appointments.isLoading && !appointments.isError && appointments.data?.length === 0 && <Typography color="text.secondary">{t('appointments.empty')}</Typography>}
-    <Stack gap={2}>{appointments.data?.map(appt => <Card key={appt.id}><CardContent>
+    <Stack gap={3}>{groups.map(([day, items]) => <Box key={day}><Typography component="h2" variant="h6" mb={1}>{day} ({items.length})</Typography><Stack gap={2}>{items.map(appt => <Card key={appt.id}><CardContent>
       <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" gap={2}>
         <Box sx={{ minWidth: 0, overflowWrap: 'anywhere' }}>
           <Typography variant="h6">{appt.patient?.fullName ?? t('appointments.patientId')}</Typography>
           <Typography variant="body2">{appt.patient?.mrn}</Typography>
-          <Typography>{new Date(appt.scheduledAt).toLocaleString(locale, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</Typography>
+          <Typography>{new Date(appt.scheduledAt).toLocaleString(locale, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</Typography>
           <Typography variant="body2">{t('appointments.doctorId')}: {appt.doctor?.fullName}</Typography>
           <Typography variant="body2">{t('appointments.departmentId')}: {i18n.language === 'ar' ? appt.department?.nameAr : appt.department?.nameEn}</Typography>
         </Box>
         <Stack alignItems="flex-start" gap={1}>
-          {user && canAccessPage(user.role, 'patients') && <Button component={Link} to={`/patients/${appt.patientId}`} sx={{ minHeight: 44 }}>{t('appointments.openPatient')}</Button>}
+          {user && canAccessPage(user.role, 'patients') && <Button variant="outlined" component={Link} to={`/patients/${appt.patientId}`} sx={{ minHeight: 44, textTransform: 'none' }}>{t('appointments.openPatient')}</Button>}
           <Chip label={t(`appointments.states.${appt.status}`)} size="small" color={statusColor[appt.status]} />
           {appt.encounter && <Typography variant="caption">{t('appointments.linked')}</Typography>}
-          {writable && appt.status === 'scheduled' && !appt.encounter && <Button onClick={() => { setEditing(appt); setFormError(null); setDepartmentId(appt.departmentId); setFormDoctorId(appt.doctorId); const time = new Date(appt.scheduledAt); setScheduledAt(new Date(time.getTime() - time.getTimezoneOffset() * 60000).toISOString().slice(0,16)); setDialogOpen(true); }}>{t('appointments.edit')}</Button>}
-          {writable && appt.status === 'scheduled' && !appt.encounter && <Button size="small" color="error" onClick={() => { setCancelTarget(appt.id); setActionError(null); setReason(''); }}>{t('appointments.cancelAppointment')}</Button>}
+          {writable && appt.status === 'scheduled' && !appt.encounter && <Button sx={{ textTransform: 'none' }} onClick={() => { setEditing(appt); setFormError(null); setDepartmentId(appt.departmentId); setFormDoctorId(appt.doctorId); const time = new Date(appt.scheduledAt); setScheduledAt(new Date(time.getTime() - time.getTimezoneOffset() * 60000).toISOString().slice(0,16)); setDialogOpen(true); }}>{t('appointments.edit')}</Button>}
+          {writable && appt.status === 'scheduled' && !appt.encounter && <Button sx={{ textTransform: 'none' }} size="small" color="error" onClick={() => { setCancelTarget(appt.id); setActionError(null); setReason(''); }}>{t('appointments.cancelAppointment')}</Button>}
         </Stack>
       </Stack>
-    </CardContent></Card>)}</Stack>
+    </CardContent></Card>)}</Stack></Box>)}</Stack>
     <Stack direction="row" gap={2} alignItems="center" justifyContent="center" sx={{ my: 2 }}>
       <Button disabled={page === 1 || appointments.isFetching} onClick={() => setPage(value => value - 1)}>{t('appointments.previous')}</Button>
       <Typography>{t('appointments.page', { page })}</Typography>

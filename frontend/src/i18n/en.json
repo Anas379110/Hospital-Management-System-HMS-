@@ -339,6 +339,7 @@
     "appointments": "Appointments on selected day",
     "allStates": "All statuses, including cancelled appointments.",
     "beds": "Beds by department",
-    "total": "Total"
+    "total": "Total",
+    "stale": "Displayed figures are from the last successful update."
   }
 }
