@@ -1,6 +1,6 @@
 # Local process-crash recovery evidence
 
-27 November2026, compiled source2ad6bb2and the current local-only test runners. This is an actual disposable PostgreSQL18process restart, not a mock, physical power cut or hosted provider disruption.
+27 November2026, unchanged application source2ad6bb2and local-only test runner revision4d1f42d. This is an observed disposable PostgreSQL18process restart, not a mock, physical power cut or hosted provider disruption.
 
 ## What ran
 
@@ -23,6 +23,8 @@ First run the local performance runner in a disposable loopback-only `hms_test_p
 - HMS_TEST_PG_CTL, an executable matching the PostgreSQLmajor used by that cluster.
 - HMS_TEST_PG_DATA, actual cluster directory under `/tmp/hms_test_perf_*`.
 - HMS_CRASH_REPORT, a safe output JSONpath.
+
+An explicit port is mandatory, including on localhost. The report records sourceSHA, PostgreSQL/pg_ctlversions and stop/restarttimestamps. No recovery-log assertion is made, so no WAL recovery certification is inferred.
 
 Then from backend run `node test-real-postgres/crash-recovery.mjs`. It refuses unknown/remote DBnames and non-test directories, checks actual data_directory matches, and requires the expected fictional benchmark counts. The drill deliberately interrupts that test cluster only. Preserve the data for inspection. It does not grant permission to stop another cluster or deploy/change any live service.
 

@@ -1,0 +1,13 @@
+{
+  "complete": true,
+  "actualFreshLocalCluster": true,
+  "mismatchedActualDataDirectoryRejected": true,
+  "afterMismatch": {
+    "tables": 0,
+    "hms_roles": 0
+  },
+  "performanceMissingPortRejected": true,
+  "crashMissingPortRejected": true,
+  "noMigrationOrRoleEffects": true,
+  "finishedAt": "2026-11-27T17:51:29.886Z"
+}

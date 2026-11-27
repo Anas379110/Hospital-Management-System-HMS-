@@ -28,22 +28,22 @@ Actual database: PostgreSQL 18.7 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu
 
 |Operation|Concurrency|Timedcount|p50ms|p95ms|Maxms|Errors|
 |---|---|---|---|---|---|---|
-|patient-search|1|40|21.58|25.52|26.51|0|
-|patient-search|4|40|111.67|155.33|156.93|0|
-|patient-detail|1|40|7.14|11.16|13.66|0|
-|patient-detail|4|40|29.26|37.49|41.65|0|
-|patient-medical-records-empty|1|40|8.32|12.62|15.27|0|
-|patient-medical-records-empty|4|40|37.56|58.23|59.64|0|
-|appointment-options|1|40|7.62|12.15|13.19|0|
-|appointment-options|4|40|32.32|68.62|69.56|0|
-|appointments-current-day|1|40|6.66|10.01|13.02|0|
-|appointments-current-day|4|40|26.56|34.00|35.14|0|
-|departments|1|40|5.88|9.84|12.16|0|
-|departments|4|40|25.27|32.56|39.02|0|
-|bed-summary|1|40|7.16|10.75|18.84|0|
-|bed-summary|4|40|29.63|34.10|34.91|0|
-|patient-create-audited|1|20|42.07|51.22|80.34|0|
-|patient-create-audited|4|20|161.78|184.15|205.90|0|
+|patient-search|1|40|23.99|27.99|28.94|0|
+|patient-search|4|40|120.13|148.28|161.96|0|
+|patient-detail|1|40|7.03|14.05|18.03|0|
+|patient-detail|4|40|30.56|38.32|49.89|0|
+|patient-medical-records-empty|1|40|8.53|13.61|40.20|0|
+|patient-medical-records-empty|4|40|36.63|50.85|55.93|0|
+|appointment-options|1|40|6.59|9.19|11.36|0|
+|appointment-options|4|40|28.81|54.12|57.08|0|
+|appointments-current-day|1|40|6.01|9.21|13.26|0|
+|appointments-current-day|4|40|25.24|35.22|36.13|0|
+|departments|1|40|5.44|10.29|11.92|0|
+|departments|4|40|25.39|62.88|70.69|0|
+|bed-summary|1|40|6.42|9.70|16.53|0|
+|bed-summary|4|40|25.17|29.95|31.30|0|
+|patient-create-audited|1|20|39.23|47.01|50.41|0|
+|patient-create-audited|4|20|164.34|181.79|201.60|0|
 
 All600timedsampleswere<300msinthisrun.40create responses201yielded exactly40newpatientsand40audits,10,040uniqueMRNs. This is observed scope, not a capacity SLA.
 
@@ -61,23 +61,27 @@ PostgreSQL 17.12 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 7.5.0-3ubuntu1~
 
 |Operation|Concurrency|Timedcount|p50ms|p95ms|Maxms|Errors|
 |---|---|---|---|---|---|---|
-|patient-search|1|40|21.85|24.87|27.68|0|
-|patient-search|4|40|102.35|141.04|143.12|0|
-|patient-detail|1|40|6.36|9.69|11.89|0|
-|patient-detail|4|40|24.90|32.33|35.44|0|
-|patient-medical-records-empty|1|40|7.23|12.13|44.11|0|
-|patient-medical-records-empty|4|40|34.50|49.64|51.04|0|
-|appointment-options|1|40|6.61|9.52|11.71|0|
-|appointment-options|4|40|26.96|50.18|51.85|0|
-|appointments-current-day|1|40|6.01|11.24|12.60|0|
-|appointments-current-day|4|40|23.23|29.60|31.58|0|
-|departments|1|40|5.36|9.52|10.81|0|
-|departments|4|40|23.40|61.22|65.05|0|
-|bed-summary|1|40|6.24|9.51|10.61|0|
-|bed-summary|4|40|25.70|30.54|32.04|0|
-|patient-create-audited|1|20|37.48|46.54|47.80|0|
-|patient-create-audited|4|20|159.65|188.56|205.79|0|
+|patient-search|1|40|24.22|26.99|28.31|0|
+|patient-search|4|40|105.68|147.33|154.70|0|
+|patient-detail|1|40|6.17|9.97|12.55|0|
+|patient-detail|4|40|24.80|31.95|37.23|0|
+|patient-medical-records-empty|1|40|7.13|11.80|12.67|0|
+|patient-medical-records-empty|4|40|32.35|46.29|51.28|0|
+|appointment-options|1|40|6.66|10.36|39.83|0|
+|appointment-options|4|40|26.95|51.62|57.54|0|
+|appointments-current-day|1|40|5.98|10.14|12.26|0|
+|appointments-current-day|4|40|26.13|33.96|35.45|0|
+|departments|1|40|5.92|10.94|12.39|0|
+|departments|4|40|25.76|34.00|41.64|0|
+|bed-summary|1|40|7.04|10.54|10.99|0|
+|bed-summary|4|40|28.61|33.58|36.36|0|
+|patient-create-audited|1|20|40.28|51.29|91.50|0|
+|patient-create-audited|4|20|153.68|197.52|214.37|0|
 
 All600timedsamples<300msagain;40creates,40audits,10,040uniqueMRNs. [RawPG17evidence](evidence/performance-pg17-20261127.json). This confirms the recorded scenario on a second local PostgreSQL major, not the unmeasured deployment/workload assumptions above.
 
 Small-sample caveat:20write/40read samples per scenario make p95/p99close to the maximum and unstable estimates of tail behavior. These are sample summaries, not reliable population percentiles or a sustained-load claim.
+
+Reviewer remediation rerun:27November17:50UTC, runner source4d1f42d, actual SHOW data_directory/realpathmatchbeforeallmigration/role/granteffectsandexplicitportenforced. BothPG17.12and18.7reran600timedrequestssuccessfullywithallrecordedsamples<300ms. Earlier first-run numeric tables are superseded by the rerun tables/rawsamples above.
+
+Actual negative-gate test used another fresh local cluster: deliberately mismatched expected data_directory was rejected before migration or role changes, with actual zero public tables and zeroHMSrolesafterfailure. Missing explicit port was rejected clearly in both performance and crash runners. See evidence/disposable-runner-negative-gates-20261127.json. No remote/tunneled account was contacted for this test.
