@@ -18,11 +18,12 @@ function plaintext(url){return new Promise((resolve,reject)=>{
  const probes=[];for(const url of [owner,runtime,process.env.HMS_CLEANUP_DATABASE_URL]){const u=new URL(url);if(u.searchParams.get('sslmode')!=='verify-full'||!fs.existsSync(u.searchParams.get('sslcert')||''))fail();probes.push(await plaintext(url));}
  run('audit-demo-database.cjs',{DATABASE_URL:owner});
  run('cleanup-demo-database.cjs',{});
- const p=new PrismaClient({datasources:{db:{url:owner}}});try{
- await require('./resume-state.cjs')(p,process.env.HMS_RESUME_CONTROL_WORKSPACE);
+ let state,fresh;const p=new PrismaClient({datasources:{db:{url:owner}}});try{
+ fresh=await require('./resume-freshness.cjs')(p);
+ state=await require('./resume-state.cjs')(p,process.env.HMS_RESUME_CONTROL_WORKSPACE);
  }finally{await p.$disconnect()}
  process.env.DATABASE_URL=runtime;process.env.HMS_PUBLIC_DEMO='true';
- const {PrismaService}=require('../dist/src/prisma/prisma.service.js');const r=new PrismaService();try{await r.onModuleInit()}finally{await r.$disconnect()}
- console.log(JSON.stringify({at:new Date().toISOString(),resumeGate:'passed',probes,plaintextRefused:true,runtimeTls:true,expiredRemaining:0,liveControlSurvived:true,scheduledCleanupFresh:true}));
+ const {PrismaService}=require('../dist/src/prisma/prisma.service.js');const r=new PrismaService();let runtimeStartupPassed=false;try{await r.onModuleInit();runtimeStartupPassed=true}finally{await r.$disconnect()}
+ console.log(JSON.stringify({at:new Date().toISOString(),resumeGate:'passed',probes,plaintextRefused:probes.length===3&&probes.every(p=>p.passed),runtimeStartupPassed,...state,scheduledCleanupFresh:fresh.healthy,lastScheduledSuccess:fresh.last_success}));
  // Success is evidence for an operator, not an automatic public binding action.
 })().catch(()=>{console.error('Resume gate failed. Public traffic must stay disabled.');process.exitCode=1});
