@@ -161,8 +161,8 @@ try{
 
  const actorAuditBefore=await prisma.auditLog.findFirstOrThrow({where:{userId:user.id}});
  let actorRewriteDenied=false;
- try{await prisma.$executeRawUnsafe('UPDATE users SET id=$1 WHERE id=$2',require('node:crypto').randomUUID(),user.id)}catch(e){actorRewriteDenied=e.code==='P2010'&&e.meta?.code==='23503';results.actorRewriteRestriction={prismaCode:e.code,sqlstate:e.meta?.code};}
- if(!actorRewriteDenied||(await prisma.auditLog.findUniqueOrThrow({where:{id:actorAuditBefore.id}})).userId!==user.id)throw new Error('audit actor cascade rewrite allowed');
+ try{await prisma.$executeRawUnsafe('UPDATE users SET id=$1 WHERE id=$2',require('node:crypto').randomUUID(),user.id)}catch(e){actorRewriteDenied=e.code==='P2010'&&['23503','23001'].includes(e.meta?.code)&&e.meta?.message?.includes('workspace_fkey');results.actorRewriteRestriction={prismaCode:e.code,sqlstate:e.meta?.code,meta:e.meta};console.error('actor-rewrite-sqlstate',JSON.stringify(results.actorRewriteRestriction));}
+ if(!actorRewriteDenied||(await prisma.auditLog.findUniqueOrThrow({where:{id:actorAuditBefore.id}})).userId!==user.id)throw new Error('audit actor restriction assertion failed '+JSON.stringify({actorRewriteDenied,restriction:results.actorRewriteRestriction,actorUnchanged:(await prisma.auditLog.findUniqueOrThrow({where:{id:actorAuditBefore.id}})).userId===user.id}));
  results.checks.push({name:'runtime users primary-key update cannot cascade rewrite audit actor',foreignKeyRestriction:true,originalActorPreserved:true});
  const patientActor=await prisma.user.create({data:{username:'synthetic_receptionist',passwordHash:'not-a-login',fullName:'Fictional Receptionist',role:'receptionist'}});
  const patientService=new PatientsService(prisma);

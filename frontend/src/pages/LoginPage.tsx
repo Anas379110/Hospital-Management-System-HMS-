@@ -42,7 +42,7 @@ export default function LoginPage() {
           {t('app.title')}
         </Typography>
         <RetentionNotice />
-        <Button fullWidth variant="contained" disabled={loading} onClick={async()=>{setLoading(true);setError(null);try{await startDemo();navigate('/patients');}catch(err){setError(getApiErrorMessage(err,t('errors.generic')));}finally{setLoading(false);}}}>{t('demo.start')}</Button>
+        <Button fullWidth variant="contained" disabled={loading} onClick={async()=>{setLoading(true);setError(null);try{await startDemo();navigate('/patients');}catch(err){setError((err as {response?:{data?:{error?:{code?:string}}}}).response?.data?.error?.code==='DEMO_CAPACITY_REACHED'?t('demo.capacity'):getApiErrorMessage(err,t('errors.generic')));}finally{setLoading(false);}}}>{t('demo.start')}</Button>
         {error && <Alert severity="error">{error}</Alert>}
         {import.meta.env.VITE_PUBLIC_DEMO !== 'true' && <form onSubmit={handleSubmit}>
           <TextField

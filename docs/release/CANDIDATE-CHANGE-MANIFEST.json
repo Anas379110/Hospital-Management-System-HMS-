@@ -1,6 +1,6 @@
 {
   "status": "local candidate only; hosted gates open; not published",
-  "capturedAt": "2026-11-27T00:29:56.886495+00:00",
+  "capturedAt": "2026-11-27T00:37:17.339771+00:00",
   "comparedWith": "frozen118source-transfer baseline; no source changes to frozen tree",
   "changedFiles": [
     {
@@ -70,8 +70,8 @@
     },
     {
       "path": "backend/src/modules/auth/demo.service.ts",
-      "sha256": "1003f22fedf9a37314331a2befb425866810218baa31387f6108e2bd164c294b",
-      "bytes": 2048
+      "sha256": "35bc24226c8ba0d4f0499c7944bbbd085bb02c23d3710892adfbcfcbdcdd3553",
+      "bytes": 2459
     },
     {
       "path": "backend/src/modules/auth/strategies/jwt.strategy.ts",
@@ -125,8 +125,8 @@
     },
     {
       "path": "backend/test-real-postgres/concurrency.mjs",
-      "sha256": "61ec9e82c611ae63e44adb352e9771f17ac9d0f6b25336a728e0c1267542ac39",
-      "bytes": 87104
+      "sha256": "3cbd6ab874ca86b25d675bd2b68fdcde80449d231e7f88b3e8ec51133ce94649",
+      "bytes": 87462
     },
     {
       "path": "docs/release/ISOLATED-DEMO-OPERATIONS.md",
@@ -180,13 +180,13 @@
     },
     {
       "path": "frontend/src/i18n/ar.json",
-      "sha256": "f165f3d3b79e50278d8ea2cd467b677e41168f6de244cd126750fb98cf3908f6",
-      "bytes": 16205
+      "sha256": "c17ddd11ea4a6c4a25e671c27a89ae861e3d779971dea9a79cc50c0f73d0ca93",
+      "bytes": 16373
     },
     {
       "path": "frontend/src/i18n/en.json",
-      "sha256": "7fc74e8081dd747ad434536509e627830d299e0f213fac502b610aa1cb027573",
-      "bytes": 12600
+      "sha256": "5ed7ca512e9e10c872dea69605f0a21532e647c425e5951381746a71339f4433",
+      "bytes": 12723
     },
     {
       "path": "frontend/src/pages/AuditPage.tsx",
@@ -200,8 +200,8 @@
     },
     {
       "path": "frontend/src/pages/LoginPage.tsx",
-      "sha256": "c62e349c2f3344112ed23285a9511e32c6e929d1e59c85fd0434097865b5efce",
-      "bytes": 3230
+      "sha256": "933873e6ebcde6ae8736106706f38bd1045d34821716130cfc4fa1fcec070661",
+      "bytes": 3356
     },
     {
       "path": "frontend/src/vite-env.d.ts",
@@ -230,8 +230,8 @@
     },
     {
       "path": "frontend/test-real-browser/isolation.mjs",
-      "sha256": "9bca5043be96fcb0119398e280091d9f1cdb111a6f3cd2d1a321064471a9bb36",
-      "bytes": 26524
+      "sha256": "96e3fcf11241b3df92d0dfb56c9f67ce1c0ac6cef475e978892714852211d637",
+      "bytes": 27215
     },
     {
       "path": "frontend/test-real-browser/public-appointments.mjs",

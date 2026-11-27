@@ -277,7 +277,8 @@
     "retry": "Try again",
     "actor": "Actor",
     "entity": "Record type",
-    "time": "Time"
+    "time": "Time",
+    "capacity": "The demo is at capacity. Try again later. Existing visitor workspaces will not be deleted to make room."
   },
   "audit": {
     "unknownAction": "Recorded action",

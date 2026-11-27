@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, UnauthorizedException, OnModuleDestroy } from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException, OnModuleDestroy, ServiceUnavailableException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaClient, Role } from '@prisma/client';
 import { randomUUID } from 'node:crypto';
@@ -16,7 +16,12 @@ export class DemoService implements OnModuleDestroy {
     // this fixed function is exposed on an otherwise unscoped bootstrap client.
     const id = randomUUID();
     if (!this.bootstrap) { const u=new URL(process.env.DATABASE_URL!);u.searchParams.set('connection_limit','2');this.bootstrap=new PrismaClient({datasources:{db:{url:u.toString()}}}); }
-    await this.bootstrap.$executeRaw`SELECT hms_create_demo_workspace(${id})`;
+    try { await this.bootstrap.$executeRaw`SELECT hms_create_demo_workspace(${id})`; }
+    catch (error: unknown) {
+      const e = error as {code?:string;meta?:{code?:string;message?:string}};
+      if(e.code==='P2010'&&e.meta?.code==='P0001'&&e.meta.message?.includes('Demo capacity reached')) throw new ServiceUnavailableException({error:{code:'DEMO_CAPACITY_REACHED',message:'Demo capacity reached. Try again later.',details:[]}});
+      throw error;
+    }
     return workspaceContext.run(id, async () => await this.token(id, Role.receptionist));
   }
   async audit() {
