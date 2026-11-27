@@ -91,8 +91,10 @@ try{
   if((await prisma.appointment.findUniqueOrThrow({where:{id:target.id}})).status!=='cancelled'||await prisma.auditLog.count()!==cancelAudits+1)throw new Error('cancel retry mismatch');
   const pagingDay=lang==='ar'?'2026-12-29':'2026-12-28';
   await prisma.appointment.createMany({data:Array.from({length:100},(_,index)=>({patientId:patient.id,doctorId:nurse.id,departmentId:department.id,scheduledAt:new Date(pagingDay+'T12:'+String(Math.floor(index/60)).padStart(2,'0')+':'+String(index%60).padStart(2,'0')+'Z')}))});
+  const fullPageRead=page.waitForResponse(response=>{const u=new URL(response.url());return u.pathname==='/api/v1/appointments'&&u.searchParams.get('start')===new Date(pagingDay+'T00:00:00+03:00').toISOString()&&u.searchParams.get('page')==='1'&&response.request().method()==='GET';});
   await page.locator('input[type=date]').fill(pagingDay);
-  const next=page.getByRole('button',{name:lang==='ar'?'التالي':'Next',exact:true});await next.waitFor();await page.waitForTimeout(300);if(await next.isDisabled())throw new Error('exact full page next incorrectly disabled');
+  const fullPageResponse=await fullPageRead;if(fullPageResponse.status()!==200||(await fullPageResponse.json()).length!==100)throw new Error('exact full page API did not return100');
+  const next=page.getByRole('button',{name:lang==='ar'?'التالي':'Next',exact:true});await next.waitFor();await page.waitForFunction(label=>Array.from(document.querySelectorAll('button')).some(button=>button.textContent?.trim()===label&&!button.disabled),lang==='ar'?'التالي':'Next',{timeout:5000});if(await next.isDisabled())throw new Error('exact full page next incorrectly disabled');
   await next.click();await page.getByText(lang==='ar'?'لا توجد مواعيد في هذه الصفحة. غيّر اليوم أو عُد للصفحة السابقة.':'No appointments on this page. Change the day or return to the previous page.',{exact:true}).waitFor();
   if(!await next.isDisabled())throw new Error('empty final page next enabled');
   await page.getByRole('button',{name:lang==='ar'?'السابق':'Previous',exact:true}).click();await page.getByText('DEMO-0001',{exact:true}).first().waitFor();

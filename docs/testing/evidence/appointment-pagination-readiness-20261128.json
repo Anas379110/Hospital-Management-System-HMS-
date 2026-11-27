@@ -1,0 +1,38 @@
+{
+  "scope": "PUBLIC-DEMO restricted runtime with explicit signed fixture workspace; bootstrap/role UI separately covered; real browser to Vite proxy to actual Nest AppModule/Prisma/PostgreSQL, isolated fictional data",
+  "checks": [
+    {
+      "lang": "en",
+      "editAuditFailureRollback": true,
+      "editRetry": true,
+      "departmentEditRollbackAndRetry": true,
+      "timezoneId": "Europe/Istanbul",
+      "fixedFixtureDay": "2026-12-26",
+      "exactFullThenEmptyPageNavigation": true,
+      "createAuditFailureRollback": true,
+      "createRetry": true,
+      "cancelAuditFailureRollback": true,
+      "cancelRetry": true,
+      "doctorWriteControlsHidden": true,
+      "runtimeErrors": 0,
+      "overflow": false
+    },
+    {
+      "lang": "ar",
+      "editAuditFailureRollback": true,
+      "editRetry": true,
+      "departmentEditRollbackAndRetry": true,
+      "timezoneId": "Europe/Istanbul",
+      "fixedFixtureDay": "2026-12-26",
+      "exactFullThenEmptyPageNavigation": true,
+      "createAuditFailureRollback": true,
+      "createRetry": true,
+      "cancelAuditFailureRollback": true,
+      "cancelRetry": true,
+      "doctorWriteControlsHidden": true,
+      "runtimeErrors": 0,
+      "overflow": false
+    }
+  ],
+  "assertionsPassed": true
+}
