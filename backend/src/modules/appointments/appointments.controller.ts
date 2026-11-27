@@ -1,4 +1,5 @@
 import { ApiOperation, ApiResponse, ApiQuery, ApiExtension } from '@nestjs/swagger';
+import { RecordAttendanceDto } from './dto/record-attendance.dto';
 import { FindAppointmentsDto } from './dto/find-appointments.dto';
 import { Body, Controller, Get, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -97,4 +98,19 @@ export class AppointmentsController {
   cancel(@Param('id') id: string, @Body() dto: CancelAppointmentDto, @Req() req: { user: { userId: string } }) {
     return this.appointmentsService.cancel(id, dto.reason, req.user.userId);
   }
+  @Post(':id/attendance')
+  @Roles(Role.receptionist, Role.admin)
+  @Audit('APPOINTMENT_ATTENDANCE_RECORDED', 'Appointment', true)
+  @ApiOperation({ summary: 'AppointmentsController.recordAttendance', description: 'Manual attendance by Admin/receptionist. Scheduled only, final states cannot reopen. No-show is rejected when an encounter is linked.' })
+  @ApiExtension('x-roles', ['receptionist', 'admin'])
+  @ApiExtension('x-auth', 'roles')
+  @ApiResponse({ status: 201, description: 'Attendance recorded. Response shape is service-defined.' })
+  @ApiResponse({ status: 400, description: 'Invalid attendance status' })
+  @ApiResponse({ status: 401, description: 'Authentication required' })
+  @ApiResponse({ status: 403, description: 'Role forbidden' })
+  @ApiResponse({ status: 429, description: 'Rate limit exceeded' })
+  recordAttendance(@Param('id') id: string, @Body() dto: RecordAttendanceDto, @Req() req: { user: { userId: string } }) {
+    return this.appointmentsService.recordAttendance(id, dto, req.user.userId);
+  }
+
 }

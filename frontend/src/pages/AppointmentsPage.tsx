@@ -4,7 +4,7 @@ import type { Appointment } from '../types/appointments';
 import { useState } from 'react';
 import { Card, CardContent, Autocomplete, MenuItem, Alert, Box, Button, Chip, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import { useAppointments, useCreateAppointment, useCancelAppointment, useAppointmentOptions, useUpdateAppointment } from '../hooks/useAppointments';
+import { useAppointments, useCreateAppointment, useCancelAppointment, useAppointmentOptions, useUpdateAppointment, useRecordAttendance } from '../hooks/useAppointments';
 import { getApiErrorCode, getApiErrorMessage } from '../api/client';
 import { usePatientsSearch } from '../hooks/usePatients';
 import type { Patient } from '../types/api';
@@ -42,6 +42,8 @@ export default function AppointmentsPage() {
   const [editing, setEditing] = useState<Appointment | null>(null);
   const pendingSave = createAppointment.isPending || updateAppointment.isPending;
   const cancelAppointment = useCancelAppointment();
+  const attendance = useRecordAttendance();
+  const [attendanceTarget, setAttendanceTarget] = useState<{id:string;status:'completed'|'no_show'}|null>(null);
   const locale = i18n.language === 'ar' ? 'ar-SY-u-nu-latn' : 'en-US';
   const formatDay = (value: string) => new Date(value).toLocaleDateString(locale, { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' });
   const scheduleDate = new Date(date + 'T00:00:00');
@@ -51,6 +53,7 @@ export default function AppointmentsPage() {
     const code = getApiErrorCode(error);
     if (code === 'AUDIT_PERSISTENCE_FAILED') return t('departments.auditFailure');
     if (code === 'APPOINTMENT_RANGE_TOO_LARGE') return t('appointments.tooMany');
+    if (code === 'APPOINTMENT_FINAL' || code === 'APPOINTMENT_HAS_ENCOUNTER') return t('appointments.attendanceConflict');
     if (code === 'APPOINTMENT_LOCKED') return t('appointments.locked');
     if (code === 'APPOINTMENT_CONFLICT') return t('appointments.conflict');
     return getApiErrorMessage(error, t('errors.generic'));
@@ -103,6 +106,8 @@ export default function AppointmentsPage() {
           <Chip label={t(`appointments.states.${appt.status}`)} size="small" color={statusColor[appt.status]} />
           {appt.encounter && <Typography variant="caption">{t('appointments.linked')}</Typography>}
           {writable && appt.status === 'scheduled' && !appt.encounter && <Button sx={{ textTransform: 'none' }} onClick={() => { setEditing(appt); setFormError(null); setDepartmentId(appt.departmentId); setFormDoctorId(appt.doctorId); const time = new Date(appt.scheduledAt); setScheduledAt(new Date(time.getTime() - time.getTimezoneOffset() * 60000).toISOString().slice(0,16)); setDialogOpen(true); }}>{t('appointments.edit')}</Button>}
+          {writable && appt.status === 'scheduled' && <Button onClick={() => {setAttendanceTarget({id:appt.id,status:'completed'});setActionError(null);}}>{t('appointments.markAttended')}</Button>}
+          {writable && appt.status === 'scheduled' && !appt.encounter && <Button onClick={() => {setAttendanceTarget({id:appt.id,status:'no_show'});setActionError(null);}}>{t('appointments.markNoShow')}</Button>}
           {writable && appt.status === 'scheduled' && !appt.encounter && <Button sx={{ textTransform: 'none' }} size="small" color="error" onClick={() => { setCancelTarget(appt.id); setActionError(null); setReason(''); }}>{t('appointments.cancelAppointment')}</Button>}
         </Stack>
       </Stack>
@@ -112,6 +117,11 @@ export default function AppointmentsPage() {
       <Typography>{t('appointments.page', { page })}</Typography>
       <Button disabled={appointments.isFetching || (appointments.data?.length ?? 0) < 100} onClick={() => setPage(value => value + 1)}>{t('appointments.next')}</Button>
     </Stack>
+    <Dialog open={!!attendanceTarget} onClose={() => {if(!attendance.isPending)setAttendanceTarget(null);}} aria-labelledby="attendance-title">
+      <DialogTitle id="attendance-title">{t('appointments.attendanceTitle')}</DialogTitle>
+      <DialogContent><Typography>{t(attendanceTarget?.status==='completed'?'appointments.markAttended':'appointments.markNoShow')}</Typography><Typography>{t('appointments.attendanceFinal')}</Typography>{actionError && <Alert severity="error">{actionError}</Alert>}</DialogContent>
+      <DialogActions><Button disabled={attendance.isPending} onClick={()=>setAttendanceTarget(null)}>{t('appointments.cancelAction')}</Button><Button disabled={attendance.isPending} onClick={async()=>{if(!attendanceTarget)return;setActionError(null);try{await attendance.mutateAsync(attendanceTarget);setAttendanceTarget(null);setSuccess(t('appointments.attendanceSaved'));}catch(error){setActionError(errorMessage(error));}}}>{t('appointments.confirmAttendance')}</Button></DialogActions>
+    </Dialog>
     <Dialog open={dialogOpen} onClose={() => { if (!pendingSave) setDialogOpen(false); }} fullWidth maxWidth="sm">
       <DialogTitle>{t(editing ? 'appointments.edit' : 'appointments.new')}</DialogTitle><DialogContent>
         {options.isError && <Alert severity="error" action={<Button onClick={() => void options.refetch()}>{t('appointments.retry')}</Button>}>{t('appointments.optionsError')}</Alert>}

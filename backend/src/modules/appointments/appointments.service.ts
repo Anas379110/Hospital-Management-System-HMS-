@@ -3,6 +3,7 @@ import { requireActor, writeEntityAudit } from '../../common/transaction-audit';
 import { Prisma, Role } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
+import { RecordAttendanceDto } from './dto/record-attendance.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
 
 @Injectable()
@@ -157,4 +158,19 @@ export class AppointmentsService {
     return updated;
     });
   }
+  async recordAttendance(id: string, dto: RecordAttendanceDto, actor: string) {
+    if (!['completed', 'no_show'].includes(dto.status)) throw new BadRequestException({ error: { code: 'INVALID_ATTENDANCE_STATUS', message: 'Attendance must be completed or no_show.', details: [] } });
+    return this.prisma.$transaction(async tx => {
+      await requireActor(tx, actor, [Role.receptionist, Role.admin]);
+      // Same row lock as encounter creation prevents concurrent no-show/visit contradiction.
+      await tx.$queryRaw(Prisma.sql`SELECT id FROM appointments WHERE id = ${id} FOR UPDATE`);
+      const existing = await this.findOneOrThrow(id, tx);
+      if (existing.status !== 'scheduled') throw new ConflictException({ error: { code: 'APPOINTMENT_FINAL', message: 'Final appointment attendance cannot be reopened or replaced.', details: [] } });
+      if (dto.status === 'no_show' && await tx.encounter.findUnique({ where: { appointmentId: id }, select: { id: true } })) throw new ConflictException({ error: { code: 'APPOINTMENT_HAS_ENCOUNTER', message: 'An appointment with a linked encounter cannot be marked no-show.', details: [] } });
+      const updated = await tx.appointment.update({ where: { id }, data: { status: dto.status } });
+      await writeEntityAudit(tx, actor, 'APPOINTMENT_ATTENDANCE_RECORDED', 'Appointment', existing, updated);
+      return updated;
+    });
+  }
+
 }

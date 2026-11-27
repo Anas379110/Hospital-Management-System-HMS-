@@ -24,11 +24,11 @@ function compareProperties(actual,expected,label){
 test('all native request DTO fields/required/constraints match independent validators',()=>{
  assert.deepEqual(Object.keys(reference.components.schemas).filter(k=>!native.components.schemas[k]).sort(),['FindAppointmentsDto','OverviewRangeDto','SearchUsersDto']);
  assert.deepEqual(Object.keys(native.components.schemas).filter(k=>!reference.components.schemas[k]),[]);
- assert.equal(Object.keys(native.components.schemas).length,23);
+ assert.equal(Object.keys(native.components.schemas).length,24);
  for(const [name,actual]of Object.entries(native.components.schemas)){assert.ok(Object.keys(actual.properties).length,name+' not empty');compareProperties(actual,reference.components.schemas[name],name);}
 });
-test('all44native controller operations have correct roles, security and codes',()=>{
- assert.equal(Object.values(native.paths).reduce((n,x)=>n+Object.keys(x).length,0),44);
+test('all45native controller operations have correct roles, security and codes',()=>{
+ assert.equal(Object.values(native.paths).reduce((n,x)=>n+Object.keys(x).length,0),45);
  for(const row of inventory){const op=native.paths['/api/v1'+row.path][row.method.toLowerCase()],ref=reference.paths[row.path][row.method.toLowerCase()];assert.ok(op,row.path);assert.deepEqual(op['x-roles'],row.roles);const jwt=row.guards.includes('JwtAuthGuard');assert.deepEqual(op.security??[],jwt?[{bearer:[]}]:[]);assert.equal(op['x-auth'],row.roles.length?'roles':jwt?'any-authenticated-user':'public');assert.deepEqual(Object.keys(op.responses).sort(),Object.keys(ref.responses).sort(),row.path+' response codes');assert.equal(Boolean(op.requestBody),Boolean(ref.requestBody),row.path+' body');if(ref.requestBody)assert.deepEqual(op.requestBody,ref.requestBody,row.path+' body schema');assert.deepEqual(op.parameters.filter(p=>p.in==='path'),(ref.parameters??[]).filter(p=>p.in==='path'),row.path+' path parameters');}
 });
 test('explicit query bounds, optional force and current default semantics are not lost',()=>{

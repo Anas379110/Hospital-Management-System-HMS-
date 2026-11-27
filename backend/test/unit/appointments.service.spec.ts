@@ -145,4 +145,44 @@ describe('AppointmentsService', () => {
     expect(prisma.appointment.findMany).toHaveBeenCalledWith(expect.objectContaining({ take: 501, where: { scheduledAt: { gte: expect.any(Date), lt: expect.any(Date) } } }));
   });
 
+  describe('approved manual attendance', () => {
+    const existing = { id: 'attendance-1', status: 'scheduled', patientId: 'p', doctorId: 'd' };
+    beforeEach(() => {
+      prisma.appointment.findUnique.mockResolvedValue(existing);
+      prisma.appointment.update.mockImplementation(({ data }) => Promise.resolve({ ...existing, ...data }));
+    });
+    it.each(['completed', 'no_show'] as const)('records %s exactly once with actor, lock and audit', async status => {
+      const result = await service.recordAttendance(existing.id, { status }, 'actor');
+      expect(result.status).toBe(status);
+      expect(prisma.$queryRaw).toHaveBeenCalledTimes(1);
+      expect(prisma.appointment.update).toHaveBeenCalledWith({ where: { id: existing.id }, data: { status } });
+      expect(prisma.auditLog.create).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ userId: 'actor', action: 'APPOINTMENT_ATTENDANCE_RECORDED' }) }));
+    });
+    it.each(['completed', 'cancelled', 'no_show'])('rejects final %s without update/audit', async status => {
+      prisma.appointment.findUnique.mockResolvedValue({ ...existing, status });
+      await expect(service.recordAttendance(existing.id, { status: 'completed' }, 'actor')).rejects.toThrow(ConflictException);
+      expect(prisma.appointment.update).not.toHaveBeenCalled();expect(prisma.auditLog.create).not.toHaveBeenCalled();
+    });
+    it('rejects no-show with linked encounter, but permits manual attendance', async () => {
+      prisma.encounter.findUnique.mockResolvedValue({ id: 'visit' });
+      await expect(service.recordAttendance(existing.id, { status: 'no_show' }, 'actor')).rejects.toThrow(ConflictException);
+      expect(prisma.appointment.update).not.toHaveBeenCalled();expect(prisma.auditLog.create).not.toHaveBeenCalled();
+      await expect(service.recordAttendance(existing.id, { status: 'completed' }, 'actor')).resolves.toMatchObject({ status: 'completed' });
+    });
+    it('rejects inactive or Manager actor before locking or writing', async () => {
+      prisma.user.findUnique.mockResolvedValue({ role: 'manager', isActive: true });
+      await expect(service.recordAttendance(existing.id, { status: 'completed' }, 'actor')).rejects.toThrow();
+      expect(prisma.$queryRaw).not.toHaveBeenCalled();expect(prisma.appointment.update).not.toHaveBeenCalled();expect(prisma.auditLog.create).not.toHaveBeenCalled();
+    });
+    it('rejects absent appointment without update/audit', async () => {
+      prisma.appointment.findUnique.mockResolvedValue(null);
+      await expect(service.recordAttendance(existing.id, { status: 'completed' }, 'actor')).rejects.toThrow(NotFoundException);
+      expect(prisma.appointment.update).not.toHaveBeenCalled();expect(prisma.auditLog.create).not.toHaveBeenCalled();
+    });
+    it('does not report success when audit persistence fails (real rollback tested separately)', async () => {
+      prisma.auditLog.create.mockRejectedValue(new Error('synthetic audit failure'));
+      await expect(service.recordAttendance(existing.id, { status: 'completed' }, 'actor')).rejects.toThrow();
+    });
+  });
+
 });

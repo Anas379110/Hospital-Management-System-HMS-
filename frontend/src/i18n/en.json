@@ -198,7 +198,15 @@
     "weekly": "Seven days",
     "sevenFrom": "Seven days starting {{date}}",
     "dayFrom": "Day {{date}}",
-    "openPatient": "Open patient workspace"
+    "openPatient": "Open patient workspace",
+    "markAttended": "Mark attended",
+    "markNoShow": "Mark no-show",
+    "attendanceTitle": "Record attendance",
+    "attendanceFinal": "This decision is final and cannot be reopened.",
+    "attendanceSaved": "Attendance recorded.",
+    "attendanceConflict": "This appointment is final or has a linked encounter. Refresh before trying another action.",
+    "confirmAttendance": "Confirm attendance",
+    "cancelAction": "Back"
   },
   "billing": {
     "title": "Simulated billing and insurance",

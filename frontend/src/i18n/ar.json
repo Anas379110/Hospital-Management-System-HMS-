@@ -198,7 +198,15 @@
     "weekly": "سبعة أيام",
     "sevenFrom": "سبعة أيام تبدأ في {{date}}",
     "dayFrom": "يوم {{date}}",
-    "openPatient": "فتح مساحة المريض"
+    "openPatient": "فتح مساحة المريض",
+    "markAttended": "تسجيل الحضور",
+    "markNoShow": "تسجيل عدم الحضور",
+    "attendanceTitle": "تسجيل حالة الحضور",
+    "attendanceFinal": "هذا القرار نهائي ولا يمكن إعادة فتح الحالة.",
+    "attendanceSaved": "سُجلت حالة الحضور.",
+    "attendanceConflict": "حالة الموعد نهائية أو مرتبطة بزيارة. حدّث العرض قبل إجراء آخر.",
+    "confirmAttendance": "تأكيد حالة الحضور",
+    "cancelAction": "رجوع"
   },
   "billing": {
     "title": "الفوترة والتأمين التجريبي",

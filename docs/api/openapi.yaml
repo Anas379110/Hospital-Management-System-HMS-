@@ -492,6 +492,22 @@
         ],
         "type": "object"
       },
+      "RecordAttendanceDto": {
+        "additionalProperties": false,
+        "properties": {
+          "status": {
+            "enum": [
+              "completed",
+              "no_show"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "type": "object"
+      },
       "RecordPaymentDto": {
         "additionalProperties": false,
         "properties": {
@@ -981,6 +997,66 @@
           }
         ],
         "summary": "AppointmentsController.update",
+        "tags": [
+          "appointments"
+        ],
+        "x-controller": "modules/appointments/appointments.controller.ts",
+        "x-guards": [
+          "JwtAuthGuard",
+          "RolesGuard"
+        ],
+        "x-roles": [
+          "receptionist",
+          "admin"
+        ]
+      }
+    },
+    "/appointments/{id}/attendance": {
+      "post": {
+        "operationId": "AppointmentsController_recordAttendance",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordAttendanceDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
+          },
+          "403": {
+            "description": "Current persisted role is not permitted"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "AppointmentsController.recordAttendance",
         "tags": [
           "appointments"
         ],

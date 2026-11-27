@@ -418,6 +418,22 @@
         ],
         "type": "object"
       },
+      "RecordAttendanceDto": {
+        "properties": {
+          "status": {
+            "description": "Manual attended or no-show decision. Final states cannot be reopened.",
+            "enum": [
+              "completed",
+              "no_show"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "type": "object"
+      },
       "RecordPaymentDto": {
         "properties": {
           "amount": {
@@ -877,6 +893,63 @@
           }
         ],
         "summary": "AppointmentsController.update",
+        "tags": [
+          "appointments"
+        ],
+        "x-auth": "roles",
+        "x-roles": [
+          "receptionist",
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/appointments/{id}/attendance": {
+      "post": {
+        "description": "Manual attendance by Admin/receptionist. Scheduled only, final states cannot reopen. No-show is rejected when an encounter is linked.",
+        "operationId": "AppointmentsController_recordAttendance",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordAttendanceDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Attendance recorded. Response shape is service-defined."
+          },
+          "400": {
+            "description": "Invalid attendance status"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Role forbidden"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "AppointmentsController.recordAttendance",
         "tags": [
           "appointments"
         ],

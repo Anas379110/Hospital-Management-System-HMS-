@@ -27,6 +27,19 @@
   },
   {
     "method": "POST",
+    "path": "/appointments/{id}/attendance",
+    "controller": "modules/appointments/appointments.controller.ts",
+    "roles": [
+      "receptionist",
+      "admin"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "POST",
     "path": "/appointments/{id}/cancel",
     "controller": "modules/appointments/appointments.controller.ts",
     "roles": [

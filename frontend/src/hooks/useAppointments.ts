@@ -60,3 +60,11 @@ export function useUpdateAppointment() {
     onSuccess: () => { void queryClient.invalidateQueries({ queryKey: ['appointments'] }); },
   });
 }
+
+export function useRecordAttendance() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: 'completed' | 'no_show' }) => (await apiClient.post<Appointment>(`/appointments/${id}/attendance`, { status })).data,
+    onSuccess: () => { void queryClient.invalidateQueries({ queryKey: ['appointments'] }); },
+  });
+}
