@@ -141,3 +141,7 @@ Continue the already selected native Nest annotation approach for existing succe
 
 ## Existing clinical and lab response contracts, November28 local candidate
 Continue native annotations for actual existing scalar and nested response projections, with separate DTOs for complete encounter versus encounter-with-prescriptions and test scalar versus pending minimal identities. Do not change serializers, clinical permission, query or business semantics to make a DTO convenient. Explicitly preserve unbounded lists, null completion fields, current missing-patient empty results and completed results surviving encounter soft-delete. Actual restrictedPG17/18 HTTP compare all keys/types/enums/dates against the same native document and assert existing negative access/state behavior. Independent review and release gates remain.
+
+### November28 Swagger nested-model narrow viewport layout
+
+Actual hosted390px proof showed model name overflow. Keep existing Nest Swagger API/dependencies/schema. A documentation-only600px-and-below CSS override stacks complete model property/value rows and wraps names. This preserves readable nested fields instead of shrinking/truncating/hiding overflow. Native desktop table layout and native JSON snapshot unchanged. Local320/390/1280 pixels and six geometry/snapshot cases pass, keyboard nested-control expansion works. Removing override reproduces28 overflowing nodes. Scoped model-layout proof only, not universal Swagger accessibility/mobile acceptance. No business/DB/account/provider choice.

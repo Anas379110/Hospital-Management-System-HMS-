@@ -71,6 +71,10 @@ jobs:
           VITE_PUBLIC_DEMO: true
       - run: node node_modules/playwright/cli.js install --with-deps chromium
         working-directory: frontend
+      - run: node test-real-browser/swagger-model-wrap.cjs
+        working-directory: frontend
+        env:
+          HMS_SWAGGER_PROOF_DIR: browser-artifacts/swagger-model-wrap
       - run: createdb -h 127.0.0.1 -U hms_test hms_test_browser && createdb -h 127.0.0.1 -U hms_test hms_test_stock && createdb -h 127.0.0.1 -U hms_test hms_test_workflows && createdb -h 127.0.0.1 -U hms_test hms_test_appointments && createdb -h 127.0.0.1 -U hms_test hms_test_billing && createdb -h 127.0.0.1 -U hms_test hms_test_users
         env:
           PGPASSWORD: isolated-ci-only
