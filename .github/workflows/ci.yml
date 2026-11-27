@@ -46,7 +46,7 @@ jobs:
         working-directory: backend
       - run: npm run build
         working-directory: backend
-      - run: node test-real-postgres/export-openapi.mjs --check && node --test test-real-postgres/openapi-contract.test.mjs test-real-postgres/native-openapi.test.mjs test-real-postgres/dependency-security.test.mjs
+      - run: node test-real-postgres/export-openapi.mjs --check && node --test test-real-postgres/openapi-contract.test.mjs test-real-postgres/native-openapi.test.mjs test-real-postgres/response-contract-check.test.mjs test-real-postgres/dependency-security.test.mjs
         working-directory: backend
       - run: npm test -- --runInBand
         working-directory: backend

@@ -58,6 +58,39 @@
         ],
         "type": "object"
       },
+      "ApiErrorDetailResponseDto": {
+        "properties": {
+          "code": {
+            "description": "Machine-readable error code. Exact values depend on the operation.",
+            "type": "string"
+          },
+          "details": {
+            "description": "Operation-specific validation strings or redacted detail objects. Empty when no details are supplied.",
+            "items": {},
+            "type": "array"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message",
+          "details"
+        ],
+        "type": "object"
+      },
+      "ApiErrorResponseDto": {
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/ApiErrorDetailResponseDto"
+          }
+        },
+        "required": [
+          "error"
+        ],
+        "type": "object"
+      },
       "BedMaintenanceDto": {
         "properties": {
           "status": {
@@ -480,6 +513,103 @@
         ],
         "type": "object"
       },
+      "PatientIdentityResponseDto": {
+        "properties": {
+          "fullName": {
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "mrn": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "mrn",
+          "fullName"
+        ],
+        "type": "object"
+      },
+      "PatientResponseDto": {
+        "properties": {
+          "address": {
+            "nullable": true,
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "createdBy": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "dateOfBirth": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "emergencyContactName": {
+            "nullable": true,
+            "type": "string"
+          },
+          "emergencyContactPhone": {
+            "nullable": true,
+            "type": "string"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "gender": {
+            "enum": [
+              "male",
+              "female"
+            ],
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "mrn": {
+            "type": "string"
+          },
+          "nationalId": {
+            "nullable": true,
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "workspaceId": {
+            "description": "Current fictional workspace identifier, already present in this response.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "mrn",
+          "fullName",
+          "workspaceId",
+          "dateOfBirth",
+          "gender",
+          "nationalId",
+          "phone",
+          "address",
+          "emergencyContactName",
+          "emergencyContactPhone",
+          "createdBy",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
       "RecordAttendanceDto": {
         "properties": {
           "status": {
@@ -607,6 +737,130 @@
             "type": "string"
           }
         },
+        "type": "object"
+      },
+      "WaitlistItemResponseDto": {
+        "properties": {
+          "departmentId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "patient": {
+            "$ref": "#/components/schemas/PatientIdentityResponseDto"
+          },
+          "requestedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "pending"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "departmentId",
+          "requestedAt",
+          "status",
+          "patient"
+        ],
+        "type": "object"
+      },
+      "WaitlistPageResponseDto": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/WaitlistItemResponseDto"
+            },
+            "maxItems": 100,
+            "type": "array"
+          },
+          "page": {
+            "maximum": 10000,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "total": {
+            "description": "Total currently pending requests in this department and workspace in the same read snapshot.",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "total"
+        ],
+        "type": "object"
+      },
+      "WaitlistRequestResponseDto": {
+        "properties": {
+          "admissionId": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "closedAt": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "closedBy": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "departmentId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "patientId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "requestedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "requestedBy": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "status": {
+            "description": "Current stored request state. Create returns pending; cancel returns cancelled.",
+            "enum": [
+              "pending",
+              "admitted",
+              "cancelled"
+            ],
+            "type": "string"
+          },
+          "workspaceId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "workspaceId",
+          "patientId",
+          "departmentId",
+          "status",
+          "requestedBy",
+          "requestedAt",
+          "closedBy",
+          "closedAt",
+          "admissionId"
+        ],
         "type": "object"
       }
     },
@@ -1462,21 +1716,63 @@
         ],
         "responses": {
           "200": {
-            "description": "items, page and total, workspace scoped."
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WaitlistPageResponseDto"
+                }
+              }
+            },
+            "description": "Pending projection, page and total, workspace scoped."
           },
           "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            },
             "description": "Invalid request"
           },
           "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            },
             "description": "Invalid authentication or workspace"
           },
           "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            },
             "description": "Clinical role required"
           },
           "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            },
             "description": "Scoped record not found"
           },
           "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            },
             "description": "Rate limit exceeded"
           }
         },
@@ -1520,27 +1816,83 @@
         },
         "responses": {
           "201": {
-            "description": "Created request."
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WaitlistRequestResponseDto"
+                }
+              }
+            },
+            "description": "Created pending request, existing scalar row."
           },
           "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            },
             "description": "Invalid request"
           },
           "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            },
             "description": "Invalid authentication or workspace"
           },
           "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            },
             "description": "Clinical role required"
           },
           "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            },
             "description": "Scoped record not found"
           },
           "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            },
             "description": "Pending request conflict or already closed"
           },
           "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            },
             "description": "Rate limit exceeded"
           },
           "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            },
             "description": "Audit persistence failed, operation rolled back"
           }
         },
@@ -1584,27 +1936,83 @@
         ],
         "responses": {
           "201": {
-            "description": "Cancelled request."
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WaitlistRequestResponseDto"
+                }
+              }
+            },
+            "description": "Cancelled request, existing scalar row."
           },
           "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            },
             "description": "Invalid request"
           },
           "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            },
             "description": "Invalid authentication or workspace"
           },
           "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            },
             "description": "Clinical role required"
           },
           "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            },
             "description": "Scoped record not found"
           },
           "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            },
             "description": "Pending request conflict or already closed"
           },
           "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            },
             "description": "Rate limit exceeded"
           },
           "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            },
             "description": "Audit persistence failed, operation rolled back"
           }
         },
@@ -2707,18 +3115,56 @@
         ],
         "responses": {
           "200": {
-            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PatientResponseDto"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "At most20 matches, existing complete scalar rows. This is not a full paginated listing."
           },
           "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            },
             "description": "Invalid request"
           },
           "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            },
             "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
           },
           "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            },
             "description": "Current persisted role is not permitted"
           },
           "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            },
             "description": "Rate limit exceeded"
           }
         },
@@ -2765,19 +3211,74 @@
         },
         "responses": {
           "201": {
-            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientResponseDto"
+                }
+              }
+            },
+            "description": "Created patient, existing complete scalar row."
           },
           "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            },
             "description": "Invalid request"
           },
           "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            },
             "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
           },
           "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            },
             "description": "Current persisted role is not permitted"
           },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            },
+            "description": "Possible duplicate warning; authorized staff may explicitly confirm with force=true."
+          },
           "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            },
             "description": "Rate limit exceeded"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            },
+            "description": "Audit persistence failed and mutation rolled back, or demo unavailable."
           }
         },
         "security": [
@@ -2812,18 +3313,56 @@
         ],
         "responses": {
           "200": {
-            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PatientIdentityResponseDto"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "At most20 minimal billing matches, or empty below2 trimmed characters. No phone, birth date or clinical data."
           },
           "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            },
             "description": "Invalid request"
           },
           "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            },
             "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
           },
           "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            },
             "description": "Current persisted role is not permitted"
           },
           "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            },
             "description": "Rate limit exceeded"
           }
         },
@@ -2859,18 +3398,63 @@
         ],
         "responses": {
           "200": {
-            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientResponseDto"
+                }
+              }
+            },
+            "description": "Patient in the current workspace, existing complete scalar row."
           },
           "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            },
             "description": "Invalid request"
           },
           "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            },
             "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
           },
           "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            },
             "description": "Current persisted role is not permitted"
           },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            },
+            "description": "Patient not found in the current workspace."
+          },
           "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            },
             "description": "Rate limit exceeded"
           }
         },
@@ -2917,19 +3501,74 @@
         },
         "responses": {
           "200": {
-            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientResponseDto"
+                }
+              }
+            },
+            "description": "Updated patient, existing complete scalar row."
           },
           "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            },
             "description": "Invalid request"
           },
           "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            },
             "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
           },
           "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            },
             "description": "Current persisted role is not permitted"
           },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            },
+            "description": "Patient not found in the current workspace."
+          },
           "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            },
             "description": "Rate limit exceeded"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            },
+            "description": "Audit persistence failed and mutation rolled back, or demo unavailable."
           }
         },
         "security": [
@@ -2967,15 +3606,43 @@
             "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
           },
           "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            },
             "description": "Invalid request"
           },
           "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            },
             "description": "Missing/expired token, inactive current user, or invalid/expired workspace"
           },
           "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            },
             "description": "Current persisted role is not permitted"
           },
           "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            },
             "description": "Rate limit exceeded"
           }
         },

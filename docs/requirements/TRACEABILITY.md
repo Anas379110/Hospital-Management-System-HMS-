@@ -31,15 +31,15 @@ Reconciled27 November2026 against deployed37424a3 and the local qualification ev
 | FR3.2 same-doctor same-time conflict | DBpartialuniqueindex and service409; actual DB races | Implemented exact instant collision, not duration-overlap scheduling |
 | FR3.3 update/cancel optional reason | time/department update and cancel service, linked/non-scheduled lock; public browser | Implemented scoped workflow, doctor/patient reassignment not supported |
 | FR3.4 daily/weekly schedule per doctor | list filters/range/page, bounded31dayinterval; appointment browser | Implemented list/day-range views, not a separate calendar-grid UI |
-| FR3.5 scheduled/attended/no-show/cancelled lifecycle | schema has scheduled/completed/no_show/cancelled, UI labels, booking/cancel code | Partial. No staff route/UI to mark completed/attended or no-show. Encounter creation does not update appointment status |
+| FR3.5 scheduled/attended/no-show/cancelled lifecycle | schema has scheduled/completed/no_show/cancelled, UI labels, booking/cancel code | Shipped scoped explicit Admin/reception attendance transition in371841a, PG17/18 CI46058985102 and actual hosted verification. No automatic encounter-to-attendance transition or reopen inferred |
 | FR4.1 encounter with complaint/diagnosis/notes, optional appointment | encounters service ownership/relation guards; clinical/browser and real DB | Implemented scoped workflow |
 | FR4.2 prescription linked to encounter | encounters service+UI, pharmacy tests | Implemented fictional prescription. No clinical dosing/safety claim |
 | FR4.3 chronological medical records | patients records endpoint descencounterDatewithprescriptions; separate test-results route/UI | Implemented scoped records. No universal combined longitudinal activity timeline |
 | FR4.4 soft-delete with reason | encounter ownership+reason DTO, service tests and rollback coverage | Implemented domain soft-delete. Demo workspace expiry intentionally physically deletes fictional data, unlike real-record retention |
-| FR5.1 define departments/bed counts | existing schema plus seven Admin setup candidate writes and bilingual UI | Local candidate tested PG17/18; independent review/exact CI/hosted release pending, seeded fixtures alone do not count |
+| FR5.1 define departments/bed counts | existing schema plus seven Admin setup candidate writes and bilingual UI | Shipped approved Admin setup in fe787f5 with reviewed PG17/18 CI46065044976 and actual hosted EN/AR create/maintenance proof. See release reconciliation below; seeded fixtures alone do not count |
 | FR5.2 admit only available bed | admissions service+transactional bed state, DB contention, browser | Implemented scoped workflow |
 | FR5.3 discharge time/state | admissions service+audit/rollback; browser | Implemented scoped workflow |
-| FR5.4 bed states current to all clients | APIreadsstates, local mutation cache invalidation | Partial. Local Admin maintenance candidate tested; publication gates pending. Cross-client polling/stale indicator still open |
+| FR5.4 bed states current to all clients | APIreadsstates, local mutation cache invalidation | Shipped approved active-view15s polling/manual refresh in7eddacd, reviewed PG17/18 CI46070063934 and measured hosted cross-client update. Hidden/offline pause and stale warning. Not instant delivery or OS suspension guarantee |
 
 ## Extended FR6..8
 
@@ -62,8 +62,8 @@ Reconciled27 November2026 against deployed37424a3 and the local qualification ev
 
 ## Use-case alternatives and unresolved decisions
 
-- UC1no available bed: missing persistent waitlist and queue UI. User-approved manual FIFO doctor/nurse add/cancel and same-department closure on admission, no inferred medical priority or automatic admission. Implementation/tests remain open; separate liveDBgate applies.
-- UC1state update for every viewer/US5near-realtime: user-approved active-view15secondpolling/manualrefresh, pause hidden/offline and show stale state; implementation and measured cross-client evidence remain open. Do not assert immediate propagation.
+- UC1no available bed: shipped exact48f3438 clinical-only persistent queue, explicit add/cancel and atomic same-department admission closure. PG17/18 CI46074861109, protected backup/disposable restore and separately approved additive live operation; actual hosted add/cancel/role/isolation/closure verified November28 01:31. Other department unaffected, no automatic admission or medical priority. Timestamp ties use arbitrary stable ID, offset pages shift.
+- UC1state update for every viewer/US5near-realtime: approved active-view15secondpolling/manualrefresh shipped7eddacd with measured cross-client hosted evidence; pause hidden/offline and show stale state. Timestamp is last confirmed read, not server push. Do not assert immediate propagation.
 - UC2out-of-stock alternative: safe rejection exists. Alternative-drug suggestion and persistent unavailable/shortage workflow not implemented as an accepted clinical decision process. Optional original wording does not establish a clinical substitution requirement.
 - Eight roles and eleven capability groups are represented, not eleven completed requirement certificates.
 
@@ -122,3 +122,9 @@ upgrade/dump/emptyrestore evidence in docs/testing/evidence/waitlist*. No clinic
 autoadmission. Offsetpages shift under edits. Live exactschema/grants permission and target
 preflight/backup remain required. Not shipped, wholeHMS incomplete. Freshness7eddacd is
 actually hostedverified; historical prior freshnesspending entries reflect their prep time.
+
+### Waitlist release reconciliation November28 01:33 Istanbul
+Exact48f34389f2892120c047febdcce7837c7a81c4d0 passed both PostgreSQL17/18 CI jobs, including real old-install upgrade and waitlist checks: https://github.com/Anas379110/Hospital-Management-System-HMS-/actions/runs/46074861109 . After separate explicit approval and protected logical snapshot/actual disposable PostgreSQL17 restore with matching17-table rows/catalog, exact table/minimal grants/one ledger row committed atomically;18-table audit passed. Render Free/manual Live01:29:06, fresh hosted fictional EN/AR add/cancel,403/404/409, same-department admission closure/other-department unaffected/discharge no reopen,28schemas55operations and served asset hash match passed01:31:28. Desktop/mobile pixels inspected. Raw backup excluded from source. Local logical restore is not providerPITR, external retention or RPO/RTO. Historical preparation sections remain historical, not current blockers. Whole HMS incomplete.
+
+### Response contract follow-up, preparation only
+Native success-response DTOs for patient scalar rows, minimal billing identity projection and waitlist list/write shapes are under local qualification. This does not change serialization, data selection, roles or database. Live48f3438 has no such success schemas yet. Current full response-schema certification remains open outside this narrow slice.

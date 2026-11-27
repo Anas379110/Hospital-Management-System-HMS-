@@ -172,3 +172,6 @@ Timestampascending andIDtie order is deterministic but not strictarrivalpriority
 Crosspage reads may shift with concurrentchanges. Duplicatepending/closed/requestconflict409,
 scopedmissing404; auditfailure503 rollsback write. Uncertainwrite shouldbereadback, never
 blindlyretried. Histories retained inDB/audit, pending-only list not a newhistoryscreen.
+
+## Narrow native response schemas, local candidate November28
+Patient create/detail/update/search now describe their existing complete scalar row payload, including required-but-nullable optional columns and date-time serialization. Billing lookup remains a separate minimal identity projection (`id`, `mrn`, `fullName`), never the full patient row. Search remains capped at20, not silently paginated. Waitlist pending list uses a separate identity projection/page/count contract from full scalar create/cancel write results. Common error envelope is `{error:{code,message,details}}`; details can contain validation strings or redacted objects, so no false universal detail shape is promised. No query/serializer/permission/data-field changes. Medical-record nested and other response contracts remain service-defined. Actual restricted PostgreSQL response/schema tests must pass before publication; these annotations alone prove no new access.

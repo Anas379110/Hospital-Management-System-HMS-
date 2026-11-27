@@ -3014,8 +3014,14 @@
           "403": {
             "description": "Current persisted role is not permitted"
           },
+          "409": {
+            "description": "Possible duplicate warning"
+          },
           "429": {
             "description": "Rate limit exceeded"
+          },
+          "503": {
+            "description": "Audit persistence failed or demo unavailable"
           }
         },
         "security": [
@@ -3114,6 +3120,9 @@
           "403": {
             "description": "Current persisted role is not permitted"
           },
+          "404": {
+            "description": "Scoped patient not found"
+          },
           "429": {
             "description": "Rate limit exceeded"
           }
@@ -3175,8 +3184,14 @@
           "403": {
             "description": "Current persisted role is not permitted"
           },
+          "404": {
+            "description": "Scoped patient not found"
+          },
           "429": {
             "description": "Rate limit exceeded"
+          },
+          "503": {
+            "description": "Audit persistence failed or demo unavailable"
           }
         },
         "security": [

@@ -135,3 +135,6 @@ User approved workflow rules22:09 and clarified Admin rather than Manager22:10. 
 
 ## November28 active-view reads
 Keep existing React Query, no WebSocket/SSE or new dependency. Fifteen-second visible-online reads on overview/departmentbed views, manual refresh and last-confirmed/stale state, no mutation retries. Read failures retain old data honestly. Query staleTime0 only for live views supports immediate resume. Hidden/offline starts no new periodic reads, already-running server work not claimed cancelled. No schema or provider changes.
+
+## Native patient/waitlist response documentation, November28 local candidate
+Continue the already selected native Nest annotation approach for existing success payloads, not a new schema engine/serializer. Full patient row, minimal billing identity and pending waitlist projection remain distinct. Required-but-nullable fields describe the current complete JSON row. Only eight success responses receive explicit schemas; other services remain unqualified. Shared filter error-envelope details are intentionally unconstrained array items because actual validation strings and redacted objects differ. No new permission or output field is created by a schema. Actual restricted PG17/18 HTTP comparisons and negative validator tests supplement metadata tests. No DB migration/grant/provider change.
