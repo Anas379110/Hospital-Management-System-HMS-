@@ -1,3 +1,4 @@
+import { qualificationIdentity } from './common/qualification-identity';
 import { qualificationGate } from './common/qualification-gate';
 import { DemoCapacityInterceptor } from './common/demo-capacity.interceptor';
 import { trustedProxyAddresses } from './common/trusted-proxies';
@@ -15,6 +16,7 @@ export async function createApplication(options: { logger?: false } = {}) {
   const app = await NestFactory.create(AppModule, options);
   app.getHttpAdapter().getInstance().set('trust proxy', trustedProxyAddresses(process.env.HMS_TRUSTED_PROXY_ADDRESSES));
   app.use(qualificationGate());
+  app.use(qualificationIdentity());
   app.use((_req: unknown, _res: unknown, next: () => void) => workspaceContext.run('', next));
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
   app.useGlobalFilters(new AllExceptionsFilter());
