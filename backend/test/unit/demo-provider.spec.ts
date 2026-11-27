@@ -1,3 +1,4 @@
+import { qualificationGate } from '../../src/common/qualification-gate';
 import { DemoCapacityInterceptor } from '../../src/common/demo-capacity.interceptor';
 import { Subject } from 'rxjs';
 import { AllExceptionsFilter } from '../../src/common/filters/http-exception.filter';
@@ -23,4 +24,15 @@ it('keeps capacity after client unsubscribe until work settles',async()=>{
 
 it.each(['Transaction API error: Transaction already closed: A commit cannot be executed on an expired transaction.', 'Transaction API error: Transaction not found.', 'private uncertain commit failure'])('does not claim a possibly executed P2028 is safe to retry: %s',message=>{
  process.env.HMS_PUBLIC_DEMO='true';const response={setHeader:jest.fn(),status:jest.fn().mockReturnThis(),json:jest.fn()};new AllExceptionsFilter().catch(Object.assign(new Error(message),{code:'P2028'}),{switchToHttp:()=>({getResponse:()=>response})} as never);expect(response.status).toHaveBeenCalledWith(500);expect(response.json).toHaveBeenCalledWith(expect.objectContaining({error:expect.objectContaining({code:'INTERNAL_ERROR'})}));
+});
+
+it('qualification gate fails closed and protects bootstrap without interfering with bearer auth',()=>{
+ const old={...process.env};try{
+ process.env.HMS_QUALIFICATION_MODE='true';process.env.HMS_PUBLIC_DEMO='true';delete process.env.HMS_QUALIFICATION_SECRET;
+ expect(()=>qualificationGate()).toThrow('requires demo');process.env.HMS_QUALIFICATION_SECRET='a'.repeat(40);const gate=qualificationGate();
+ const response={status:jest.fn().mockReturnThis(),json:jest.fn()},next=jest.fn();
+ gate({path:'/api/v1/demo/start',method:'POST',get:()=>undefined} as never,response as never,next);expect(response.status).toHaveBeenCalledWith(401);expect(next).not.toHaveBeenCalled();
+ gate({path:'/api/v1/invoices',method:'POST',get:(h:string)=>h==='X-HMS-Qualification'?'a'.repeat(40):'Bearer session'} as never,response as never,next);expect(next).toHaveBeenCalledTimes(1);
+ gate({path:'/api/v1/health',method:'GET'} as never,response as never,next);expect(next).toHaveBeenCalledTimes(2);
+ }finally{process.env=old}
 });
