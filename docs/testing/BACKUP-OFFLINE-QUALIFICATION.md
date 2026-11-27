@@ -1,6 +1,6 @@
 # Local backup and disconnected-browser qualification
 
-27 November 2026. Runtime source baseline 37424a3. These are bounded engineering checks, not completion of the original intranet/daily-backup target.
+27 November 2026. Original restore/offline executions used runtime source baseline 37424a3 and retain that provenance in their reports. They were published with ecc4400, whose only runtime change was the frontend i18next security patch. The separate attendance candidate below does not relabel those earlier executions as current-head runs. These are bounded engineering checks, not completion of the original intranet/daily-backup target.
 
 ## Logical restore drill
 
