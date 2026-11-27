@@ -1,0 +1,24 @@
+{
+  "scope": "Disposable actual HTTP manual attendance, fictional data only",
+  "mode": "local cluster identity checked",
+  "complete": true,
+  "checks": [
+    "MalformedUUID400/missing404/extra-missingDTO400/crossworkspace404/cancelledfinal409/all6forbiddenroles403/doubleattendance201+409exactoneaudit",
+    "ActualUIcancelnowrite/staleconflictcloses+refetches/finalhidesactions/doctornoattendanceactions",
+    "ActualEnglishdesktop/Arabic390mobileattendanceconfirmationUIcommitpassed",
+    "Admin/receptionist accepted and audited exactly once; finals reject replacement",
+    "Doctor/nurse/manager403 and missingtoken401, invalidDTO400 with noattendanceaudit",
+    "Linkedencounter rejectsno_show, manualcompletedaccepted",
+    "Actual auditfailure503 rollsbackstatus and audit; triggerremoved",
+    "Actual no_show/encounterrace has one201/one409 and no contradictory state"
+  ],
+  "scriptSha256": "67cd61984731fad481ed6527f1f5c649a067d636e8673f4afdbc203bf63efb21",
+  "startedAt": "2026-11-27T20:03:58.442Z",
+  "runtime": {
+    "role": "hms_runtime",
+    "superuser": false,
+    "bypassRls": false,
+    "auditMutationsDenied": 3
+  },
+  "finishedAt": "2026-11-27T20:04:03.095Z"
+}
