@@ -12,10 +12,21 @@ export function validateRateLimitIdentityConfiguration(): void {
  * proxy trust. IPs identify a connection, not a person (NAT/Workers can share).
  * All uncertain identities share one conservative bucket, not an attacker key.
  */
-export function rateLimitTracker(req: Pick<Request, 'headers' | 'rawHeaders' | 'ip'>): Promise<string> {
+const assignments = { keyed: 0, fallback: 0 };
+export function rateLimitIdentityStatus() {
+  return { mode: process.env.HMS_PUBLIC_DEMO === 'true' && process.env.HMS_RATE_LIMIT_IDENTITY === 'render-cloudflare' ? 'render-cloudflare' : 'legacy-express', assignments: { ...assignments } };
+}
+
+export async function rateLimitTracker(req: Pick<Request, 'headers' | 'rawHeaders' | 'ip'>): Promise<string> {
   if (process.env.HMS_PUBLIC_DEMO !== 'true' || process.env.HMS_RATE_LIMIT_IDENTITY !== 'render-cloudflare') {
     return Promise.resolve(req.ip ?? 'shared:unknown');
   }
+  const key = await connectionKey(req);
+  assignments[key === 'shared:render-cloudflare' ? 'fallback' : 'keyed']++;
+  return key;
+}
+
+function connectionKey(req: Pick<Request, 'headers' | 'rawHeaders' | 'ip'>): Promise<string> {
   const fallback = 'shared:render-cloudflare';
   const values = req.rawHeaders.filter((_, i) => i % 2 === 0 && req.rawHeaders[i].toLowerCase() === 'cf-connecting-ip');
   const value = req.headers['cf-connecting-ip'];

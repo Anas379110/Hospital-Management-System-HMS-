@@ -1,4 +1,4 @@
-import { rateLimitTracker, validateRateLimitIdentityConfiguration } from '../../src/common/rate-limit-tracker';
+import { rateLimitTracker, validateRateLimitIdentityConfiguration, rateLimitIdentityStatus } from '../../src/common/rate-limit-tracker';
 const request = (value?: string, name = 'CF-Connecting-IP') => ({ ip: '127.0.0.1', headers: value === undefined ? {} : { 'cf-connecting-ip': value }, rawHeaders: value === undefined ? [] : [name, value] });
 describe('Render Cloudflare rate identity opt-in', () => {
   const env = { ...process.env };
@@ -24,6 +24,13 @@ describe('Render Cloudflare rate identity opt-in', () => {
   it('does not use forwarded headers or a socket-specific fallback', async () => {
     const req = request(); Object.assign(req.headers, { 'x-forwarded-for': '198.51.100.1', 'true-client-ip': '198.51.100.1' }); req.ip = '127.0.0.2';
     expect(await rateLimitTracker(req)).toBe('shared:render-cloudflare');
+  });
+  it('reports mode and aggregate assignments without identity values', async () => {
+    const before = rateLimitIdentityStatus().assignments;
+    await rateLimitTracker(request('198.51.100.1')); await rateLimitTracker(request());
+    expect(rateLimitIdentityStatus()).toEqual({mode:'render-cloudflare', assignments:{keyed:before.keyed+1,fallback:before.fallback+1}});
+    expect(JSON.stringify(rateLimitIdentityStatus())).not.toContain('198.51.100.1');
+    process.env.HMS_RATE_LIMIT_IDENTITY=''; expect(rateLimitIdentityStatus().mode).toBe('legacy-express');
   });
   it('rejects unknown modes at startup', () => {
     process.env.HMS_RATE_LIMIT_IDENTITY = 'render-cloudflar';
