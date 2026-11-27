@@ -7,7 +7,7 @@ import { Outlet, NavLink } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { canAccessPage } from '../auth/permissions';
 
-const pages = ['audit','patients', 'appointments', 'departments', 'pharmacy', 'lab', 'billing', 'users'];
+const pages = ['overview','audit','patients', 'appointments', 'departments', 'pharmacy', 'lab', 'billing', 'users'];
 
 export default function AppLayout() {
   const { t, i18n } = useTranslation();

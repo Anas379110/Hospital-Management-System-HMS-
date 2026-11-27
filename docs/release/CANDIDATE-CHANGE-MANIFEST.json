@@ -1,6 +1,6 @@
 {
-  "status": "local candidate only; hosted gates open; not published",
-  "capturedAt": "2026-11-27T00:52:54.186139+00:00",
+  "status": "separate PR4 candidate; local qualification only, exact new CI and hosted gates pending",
+  "capturedAt": "2026-11-27T01:09:03.239019+00:00",
   "comparedWith": "frozen118source-transfer baseline; no source changes to frozen tree",
   "changedFiles": [
     {
@@ -84,6 +84,16 @@
       "bytes": 1922
     },
     {
+      "path": "backend/src/modules/departments/departments.controller.ts",
+      "sha256": "3355920e77846ddf095ebf3efa34a641bfb35ac598f6d293c9aa338b007f504d",
+      "bytes": 1738
+    },
+    {
+      "path": "backend/src/modules/departments/departments.service.ts",
+      "sha256": "5242d2e518e1c6636ddc23297c731cb574d06f02f2e337784111b80a10cf6399",
+      "bytes": 2935
+    },
+    {
       "path": "backend/src/modules/patients/patients.controller.ts",
       "sha256": "4f810d262f683e627e698e706b484fd519f6c4a07d527d0d977779834521a166",
       "bytes": 2294
@@ -129,6 +139,11 @@
       "bytes": 3265
     },
     {
+      "path": "backend/test/unit/overview.spec.ts",
+      "sha256": "604ff5ec263795320335917d7de17f62834b308d2848192dbdbc191061a055b3",
+      "bytes": 1807
+    },
+    {
       "path": "backend/test/unit/trusted-proxies.spec.ts",
       "sha256": "e0c40e204192bc4f91e8aa2bd5169658f3b1a41282749943f79493a905422b20",
       "bytes": 575
@@ -137,6 +152,11 @@
       "path": "backend/test-real-postgres/concurrency.mjs",
       "sha256": "3cbd6ab874ca86b25d675bd2b68fdcde80449d231e7f88b3e8ec51133ce94649",
       "bytes": 87462
+    },
+    {
+      "path": "docs/quality/MANAGER-SCHEDULE-ACCEPTANCE-PLAN.md",
+      "sha256": "f89720b5988472e0d0fe0fecf7357872838118a7390988fbb11110a9e70d51f3",
+      "bytes": 3165
     },
     {
       "path": "docs/release/ISOLATED-DEMO-OPERATIONS.md",
@@ -160,18 +180,23 @@
     },
     {
       "path": "frontend/src/App.tsx",
-      "sha256": "45d7b26fa384ea2dd127fb59ae8a92492bc76021776abf8c877b050076d91193",
-      "bytes": 2348
+      "sha256": "10c52f258d93b9c25073b28eedb9f0d54440b7a9b77f22f5500875e904a3c7ea",
+      "bytes": 2523
+    },
+    {
+      "path": "frontend/src/auth/permissions.test.ts",
+      "sha256": "be9d980a8e2f62b98794ae8a4de479b823989411ad6f94aa3cb78a29fb35d448",
+      "bytes": 2438
     },
     {
       "path": "frontend/src/auth/permissions.ts",
-      "sha256": "b4a6524aa98c785a91de78dc3b6582f9f5a8e4c70ca911c19315144f644b63e7",
-      "bytes": 1580
+      "sha256": "b355fba7f29b5bac98d3746ff351597fcb94a51614509513b9d78f002b320be4",
+      "bytes": 1783
     },
     {
       "path": "frontend/src/components/AppLayout.tsx",
-      "sha256": "79d39e16877087dc3dfef526f95a5f72966085ca8cbbe20aae07da3127538b65",
-      "bytes": 5851
+      "sha256": "343ac735b024165e3c327ae442de9f701780a4b0401d0c6e6b853a0612d2a021",
+      "bytes": 5862
     },
     {
       "path": "frontend/src/components/LocaleButton.tsx",
@@ -184,19 +209,39 @@
       "bytes": 583
     },
     {
+      "path": "frontend/src/hooks/appointmentRange.test.ts",
+      "sha256": "e31495b5b4f988b69595dcfc668fa04364319687478fe69bd26b4bf9de9745a0",
+      "bytes": 1554
+    },
+    {
+      "path": "frontend/src/hooks/appointmentRange.ts",
+      "sha256": "8db73ca449536f1702f4f07c2aee3537577db2b0d9ea4bd4ccb61f957d26ce48",
+      "bytes": 246
+    },
+    {
+      "path": "frontend/src/hooks/useAppointments.ts",
+      "sha256": "32e9d14b2a0fec52aa7a99d4ba60dc390f1a7aad08c3d1c22ab0b9857ac17d29",
+      "bytes": 2336
+    },
+    {
       "path": "frontend/src/hooks/useAuth.tsx",
       "sha256": "7c1b1b107cbadacf5aaf78721ebbf47c114ba6e5961c09ae48dc7e1bfdd52398",
       "bytes": 2411
     },
     {
       "path": "frontend/src/i18n/ar.json",
-      "sha256": "c17ddd11ea4a6c4a25e671c27a89ae861e3d779971dea9a79cc50c0f73d0ca93",
-      "bytes": 16373
+      "sha256": "ddc17fa865b2fd58448f1d1912a4fa067cd6fa0958a2c2418ed13dc8403dd398",
+      "bytes": 17238
     },
     {
       "path": "frontend/src/i18n/en.json",
-      "sha256": "5ed7ca512e9e10c872dea69605f0a21532e647c425e5951381746a71339f4433",
-      "bytes": 12723
+      "sha256": "7d43c8174ebc6fd62c10f562c9b94e33e09a0fde5ca696e267352f54099cbcee",
+      "bytes": 13412
+    },
+    {
+      "path": "frontend/src/pages/AppointmentsPage.tsx",
+      "sha256": "74a673c16f688f5b6de22ebfce193a9cdb5c0c8b12849255c63a2ce9eb80f494",
+      "bytes": 13311
     },
     {
       "path": "frontend/src/pages/AuditPage.tsx",
@@ -210,8 +255,13 @@
     },
     {
       "path": "frontend/src/pages/LoginPage.tsx",
-      "sha256": "933873e6ebcde6ae8736106706f38bd1045d34821716130cfc4fa1fcec070661",
-      "bytes": 3356
+      "sha256": "bb4463f923ee9db38abd251800e9f2515195e736fa6859ce831dd3bb2ca7515d",
+      "bytes": 3348
+    },
+    {
+      "path": "frontend/src/pages/OverviewPage.tsx",
+      "sha256": "624809a0214103b041012616691c2a341a1fcf0e81d754c80a1d75c8a9ad4a95",
+      "bytes": 3691
     },
     {
       "path": "frontend/src/vite-env.d.ts",
@@ -240,8 +290,8 @@
     },
     {
       "path": "frontend/test-real-browser/isolation.mjs",
-      "sha256": "a37806760407650ecf679449b16e48f9b0ce21d903169386ab5914aae5e6cfc7",
-      "bytes": 29107
+      "sha256": "5fc03e89c5217e7a56bc10aa73ead98fd553006582aee566b50f2babff6a4f46",
+      "bytes": 37165
     },
     {
       "path": "frontend/test-real-browser/public-appointments.mjs",

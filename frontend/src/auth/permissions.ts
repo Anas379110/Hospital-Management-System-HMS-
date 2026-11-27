@@ -7,6 +7,7 @@ export const allRoles: readonly Role[] = [
 // Matches read permissions in the current backend controllers. This is UX only;
 // the API remains responsible for authorization of each operation.
 export const pageRoles: Record<string, readonly Role[]> = {
+  overview: ['admin', 'manager'],
   audit: ['admin'],
   users: ['admin'],
   registration: ['admin', 'receptionist'],
@@ -23,6 +24,9 @@ export function canAccessPage(role: Role, page: string): boolean {
 }
 
 export function landingPath(role: Role): string {
+  if (role === 'manager') return '/overview';
+  if (role === 'nurse') return '/departments';
+  if (role === 'doctor' || role === 'receptionist') return '/appointments';
   if (role === 'pharmacist') return '/pharmacy';
   if (role === 'lab_tech') return '/lab';
   if (role === 'billing_clerk') return '/billing';

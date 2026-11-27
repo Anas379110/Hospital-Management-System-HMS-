@@ -79,6 +79,30 @@ const {workspaceContext}=require(base+'/dist/src/prisma/workspace-context.js');
  if(foreignInvoice.status!==404)throw Error('foreign patient mutation allowed');
  const otherAdmin=await call('demo/role',b.data.accessToken,{role:'admin'});const otherAudit=await call('demo/audit',otherAdmin.data.accessToken);if(otherAudit.status!==200||otherAudit.data.length)throw Error('other visitor audit leaked');
  result.checks.push('billing lookup exactly3fields; invoice mutation with audit; billing audit403; other workspace audit empty; foreign patient mutation denied');
+ const manager=await call('demo/role',a.data.accessToken,{role:'manager'}), managerB=await call('demo/role',b.data.accessToken,{role:'manager'}), nurse=await call('demo/role',a.data.accessToken,{role:'nurse'});
+ const now=new Date(), dayStart=new Date(now.getFullYear(),now.getMonth(),now.getDate()), dayEnd=new Date(now.getFullYear(),now.getMonth(),now.getDate()+1);
+ const overviewPath='departments/overview?'+new URLSearchParams({start:dayStart.toISOString(),end:dayEnd.toISOString()});
+ const overviewA=await call(overviewPath,manager.data.accessToken),overviewB=await call(overviewPath,managerB.data.accessToken);
+ if(overviewA.status!==200||overviewB.status!==200||overviewA.data.departments[0].total!==2||overviewA.data.appointmentCount!==0)throw Error('initial aggregate contract '+JSON.stringify(overviewA));
+ if(Object.keys(overviewA.data).sort().join(',')!=='appointmentCount,departments,end,start'||Object.keys(overviewA.data.departments[0]).sort().join(',')!=='available,id,maintenance,nameAr,nameEn,occupied,total')throw Error('aggregate fields leak');
+ if((await call('departments/overview',manager.data.accessToken)).status!==400||(await call('departments/overview?start=2026-11-27T00:00:00&end=2026-11-28T00:00:00',manager.data.accessToken)).status!==400)throw Error('overview interval validation');
+ for(const role of ['receptionist','doctor','nurse','pharmacist','lab_tech','billing_clerk']){const session=await call('demo/role',a.data.accessToken,{role});if((await call(overviewPath,session.data.accessToken)).status!==403)throw Error('overview role leak '+role)}
+ const dept=overviewA.data.departments[0], beds=await call('departments/'+dept.id+'/beds',nurse.data.accessToken);
+ const admitted=await call('admissions',nurse.data.accessToken,{patientId:pa.data[0].id,bedId:beds.data[0].id});if(admitted.status!==201)throw Error('overview admission '+JSON.stringify(admitted));
+ const occupied=await call(overviewPath,manager.data.accessToken),unchanged=await call(overviewPath,managerB.data.accessToken);if(occupied.data.departments[0].occupied!==1||unchanged.data.departments[0].occupied!==0)throw Error('overview admission isolation');
+ if((await call('admissions/'+admitted.data.id+'/discharge',nurse.data.accessToken,{})).status!==201)throw Error('overview discharge');
+ if((await call(overviewPath,manager.data.accessToken)).data.departments[0].available!==2)throw Error('overview discharge count');
+ const options=await call('appointments/options',a.data.accessToken);
+ const scheduledAt=new Date(dayStart.getTime()+12*3600000).toISOString();
+ const appointment=await call('appointments',a.data.accessToken,{patientId:pa.data[0].id,doctorId:options.data.doctors[0].id,departmentId:dept.id,scheduledAt});if(appointment.status!==201)throw Error('overview appointment '+JSON.stringify(appointment));
+ if((await call(overviewPath,manager.data.accessToken)).data.appointmentCount!==1||(await call(overviewPath,managerB.data.accessToken)).data.appointmentCount!==0)throw Error('overview appointment isolation');
+ if((await call('appointments',manager.data.accessToken)).status!==403)throw Error('manager appointment detail expansion');
+ if((await call(overviewPath,admin.data.accessToken)).status!==200)throw Error('admin overview denied');
+ const inWeek=new Date(dayStart),outWeek=new Date(dayStart);inWeek.setDate(inWeek.getDate()+6);outWeek.setDate(outWeek.getDate()+7);
+ for(const time of [inWeek,outWeek]){const response=await call('appointments',a.data.accessToken,{patientId:pa.data[0].id,doctorId:options.data.doctors[0].id,departmentId:dept.id,scheduledAt:time.toISOString()});if(response.status!==201)throw Error('schedule range fixture')}
+ const daily=await call('appointments?'+new URLSearchParams({start:dayStart.toISOString(),end:dayEnd.toISOString()}),a.data.accessToken),weekly=await call('appointments?'+new URLSearchParams({start:dayStart.toISOString(),end:outWeek.toISOString()}),a.data.accessToken);
+ if(daily.data.length!==1||weekly.data.length!==2||weekly.data.some(x=>x.scheduledAt===outWeek.toISOString()))throw Error('daily/weekly exact inclusion boundaries');result.checks.push('actual HTTP daily1/week2, seventh-day-exclusive boundary omitted');
+ result.checks.push('manager/admin aggregate-only overview scoped2workspaces, six role403, bad ranges400, actual admission/discharge/appointment mutations update only own counts');
  const decoded=JSON.parse(Buffer.from(a.data.accessToken.split('.')[1],'base64url').toString());if(decoded.exp!==undefined)throw Error('fixed token deadline violates sliding idle policy');
  const activityBefore=(await owner.query('SELECT expires_at FROM demo_workspaces WHERE id=$1',[pa.data[0].workspaceId])).rows[0].expires_at;
  await owner.query("UPDATE demo_workspaces SET expires_at=now()+interval '5 minutes' WHERE id=$1",[pa.data[0].workspaceId]);
@@ -126,7 +150,7 @@ const {workspaceContext}=require(base+'/dist/src/prisma/workspace-context.js');
  }
  await entry.evaluate(()=>localStorage.setItem('hms_locale','en'));await entry.reload();
  const entryScan=await new AxeBuilder({page:entry}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();result.axe.push({lang:'en',route:'entry',violations:entryScan.violations,passes:entryScan.passes.map(x=>x.id),incomplete:entryScan.incomplete.map(x=>({id:x.id,nodes:x.nodes.map(n=>n.target)}))});if(entryScan.violations.length)throw Error('entry axe '+JSON.stringify(entryScan.violations));
- await entry.setViewportSize({width:320,height:740});if(await entry.evaluate(()=>document.documentElement.scrollWidth>innerWidth))throw Error('320entry overflow');await entry.screenshot({path:artifacts+'/isolation-entry-320.png',fullPage:true});await entry.getByRole('button',{name:'Start a private demo workspace',exact:true}).focus();await entry.keyboard.press('Enter');await entry.waitForURL('**/patients');if(!await entry.evaluate(()=>localStorage.getItem('hms_demo')==='true'))throw Error('production bootstrap did not persist demo flag');
+ await entry.setViewportSize({width:320,height:740});if(await entry.evaluate(()=>document.documentElement.scrollWidth>innerWidth))throw Error('320entry overflow');await entry.screenshot({path:artifacts+'/isolation-entry-320.png',fullPage:true});await entry.getByRole('button',{name:'Start a private demo workspace',exact:true}).focus();await entry.keyboard.press('Enter');await entry.waitForURL('**/appointments');if(!await entry.evaluate(()=>localStorage.getItem('hms_demo')==='true'))throw Error('production bootstrap did not persist demo flag');
  result.checks.push('same-origin production assets and keyboard anonymous bootstrap, no password form, entry axe zero');await entry.close();
  for(const lang of ['en','ar']){
   const context=await browser.newContext({viewport:{width:lang==='ar'?390:1440,height:1000}});const page=await context.newPage();
@@ -144,18 +168,33 @@ const {workspaceContext}=require(base+'/dist/src/prisma/workspace-context.js');
   }
 
   await page.setViewportSize({width:lang==='ar'?390:1440,height:1000});const picker=page.getByRole('combobox',{name:lang==='ar'?'الدور التجريبي':'Demo role',exact:true});await picker.click();await page.getByRole('option',{name:lang==='ar'?'مدير النظام':'Administrator',exact:true}).click();
-  await page.waitForFunction(()=>JSON.parse(localStorage.getItem('hms_user')||'{}').role==='admin');await page.waitForLoadState('networkidle');await page.goto(host+'/audit');await page.getByRole('heading').first().waitFor();await page.screenshot({path:artifacts+'/isolation-audit-'+lang+'.png',fullPage:true});
-  for(const route of ['patients','audit','users','billing']){
+  await page.waitForFunction(()=>JSON.parse(localStorage.getItem('hms_user')||'{}').role==='admin');await page.waitForURL('**/patients');await page.waitForLoadState('networkidle');await page.goto(host+'/audit');await page.getByRole('heading').first().waitFor();await page.screenshot({path:artifacts+'/isolation-audit-'+lang+'.png',fullPage:true});
+  for(const route of ['patients','audit','users','billing','overview','appointments']){
    await page.goto(host+'/'+route);await page.getByRole('heading').first().waitFor();await page.evaluate(()=>document.fonts.ready);const scan=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();result.axe.push({lang,route,violations:scan.violations,passes:scan.passes.map(x=>x.id),incomplete:scan.incomplete.map(x=>({id:x.id,nodes:x.nodes.map(n=>n.target)}))});if(scan.violations.length)throw Error(lang+' '+route+' axe '+JSON.stringify(scan.violations));
    if(route==='users'){
     await page.getByRole('textbox',{name:lang==='ar'?'البحث باسم المستخدم أو الاسم':'Find user by username or name',exact:true}).fill('fictional_doctor');const card=page.getByRole('region',{name:'fictional_doctor',exact:true});await card.waitFor();await card.getByRole('button',{name:lang==='ar'?'تعطيل الحساب':'Disable account',exact:true}).click();const dialog=page.getByRole('dialog');await dialog.waitFor();await page.evaluate(async()=>Promise.all(document.getAnimations().filter(a=>a.effect?.getTiming().iterations!==Infinity).map(a=>a.finished.catch(()=>{}))));
     const scan=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();result.axe.push({lang,route:'users-dialog',violations:scan.violations,passes:scan.passes.map(x=>x.id),incomplete:scan.incomplete.map(x=>({id:x.id,nodes:x.nodes.map(n=>n.target)}))});if(scan.violations.length)throw Error('dialog axe '+JSON.stringify(scan.violations));for(let i=0;i<7;i++){await page.keyboard.press('Tab');if(!await dialog.evaluate(e=>e.contains(document.activeElement)))throw Error('focus escaped dialog')}await page.keyboard.press('Escape');await dialog.waitFor({state:'hidden'});
    }
   }
+  await page.evaluate(data=>{localStorage.setItem('hms_token',data.accessToken);localStorage.setItem('hms_user',JSON.stringify({userId:data.user.id,username:data.user.username,role:data.user.role}))},manager.data);
+  await page.goto(host+'/overview');await page.getByTestId('appointment-count').getByText('1',{exact:true}).waitFor();
+  await page.getByRole('button',{name:lang==='ar'?'تحديث الإحصاءات':'Refresh overview',exact:true}).focus();await page.keyboard.press('Enter');await page.waitForLoadState('networkidle');
+  await page.route('**/api/v1/departments/overview?**',route=>route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:{code:'TEST_UNAVAILABLE',message:'Test unavailable'}})}));
+  await page.getByRole('button',{name:lang==='ar'?'تحديث الإحصاءات':'Refresh overview',exact:true}).click();await page.getByRole('alert').filter({has:page.getByRole('button',{name:lang==='ar'?'إعادة المحاولة':'Retry',exact:true})}).waitFor({timeout:15000});
+  await page.unroute('**/api/v1/departments/overview?**');await page.getByRole('button',{name:lang==='ar'?'إعادة المحاولة':'Retry',exact:true}).click();await page.getByRole('button',{name:lang==='ar'?'تحديث الإحصاءات':'Refresh overview',exact:true}).waitFor();await page.waitForLoadState('networkidle');
+  await page.screenshot({path:artifacts+'/manager-overview-'+lang+'.png',fullPage:true});
+  const managerScan=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();result.axe.push({lang,route:'manager-overview',violations:managerScan.violations,passes:managerScan.passes.map(x=>x.id),incomplete:managerScan.incomplete.map(x=>({id:x.id,nodes:x.nodes.map(n=>n.target)}))});if(managerScan.violations.length)throw Error('manager axe '+JSON.stringify(managerScan.violations));
+  await page.evaluate(data=>{localStorage.setItem('hms_token',data.accessToken);localStorage.setItem('hms_user',JSON.stringify({userId:data.user.id,username:data.user.username,role:data.user.role}))},a.data);
+  await page.goto(host+'/appointments');const range=page.locator('#schedule-range');await range.focus();await page.keyboard.press('Enter');await page.getByRole('option',{name:lang==='ar'?'سبعة أيام':'Seven days',exact:true}).click();
+  await page.getByRole('link',{name:lang==='ar'?'فتح مساحة المريض':'Open patient workspace',exact:true}).first().waitFor();
+  await page.getByRole('listbox').waitFor({state:'hidden'});await page.evaluate(async()=>Promise.all(document.getAnimations().filter(a=>a.effect?.getTiming().iterations!==Infinity).map(a=>a.finished.catch(()=>{}))));
+  await page.screenshot({path:artifacts+'/weekly-schedule-'+lang+'.png',fullPage:true});
+  const scheduleScan=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();result.axe.push({lang,route:'weekly-schedule',violations:scheduleScan.violations,passes:scheduleScan.passes.map(x=>x.id),incomplete:scheduleScan.incomplete.map(x=>({id:x.id,nodes:x.nodes.map(n=>n.target)}))});if(scheduleScan.violations.length)throw Error('schedule axe '+JSON.stringify(scheduleScan.violations));
+  const handoff=page.getByRole('link',{name:lang==='ar'?'فتح مساحة المريض':'Open patient workspace',exact:true}).first();await handoff.focus();await page.keyboard.press('Enter');await page.waitForURL('**/patients/'+pa.data[0].id);await page.getByText(/Fictional Demo Patient \(HMS-000001\)/).waitFor();result.views.push({lang,route:'manager-overview-and-weekly-handoff',keyboard:true,errorRetry:true});
   if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth))throw Error('Demo mobile overflow');
   await page.close();
  }
- const landings={admin:'patients',receptionist:'patients',doctor:'patients',nurse:'patients',manager:'patients',pharmacist:'pharmacy',lab_tech:'lab',billing_clerk:'billing'};
+ const landings={admin:'patients',receptionist:'appointments',doctor:'appointments',nurse:'departments',manager:'overview',pharmacist:'pharmacy',lab_tech:'lab',billing_clerk:'billing'};
  for(const lang of ['en','ar'])for(const [role,route] of Object.entries(landings)){
   const session=await call('demo/role',b.data.accessToken,{role});const context=await browser.newContext({viewport:{width:320,height:740}});const page=await context.newPage();
   await page.goto(host+'/login');await page.evaluate(data=>{localStorage.setItem('hms_token',data.accessToken);localStorage.setItem('hms_user',JSON.stringify({userId:data.user.id,username:data.user.username,role:data.user.role}));localStorage.setItem('hms_demo','true');localStorage.setItem('hms_locale',data.lang)}, {...session.data,lang});await page.goto(host+'/');await page.waitForURL('**/'+route);await page.getByRole('heading').first().waitFor();
@@ -164,7 +203,7 @@ const {workspaceContext}=require(base+'/dist/src/prisma/workspace-context.js');
  }
  result.checks.push('8role expected production landing routes at320px no overflow');
  result.checks.push('320px production entry no horizontal overflow, visible warning/locale/action');
- result.checks.push('11production axe scans zero violations and bilingual keyboard focus trap');
+ result.checks.push(result.axe.length+' scoped production axe scans zero violations and bilingual keyboard focus trap');
  result.checks.push('bilingual actual browser seeded-patient view, role selector and workspace audit page');
  await owner.query("UPDATE demo_workspaces SET expires_at=now()-interval '1 second' WHERE id=$1",[pa.data[0].workspaceId]);
 

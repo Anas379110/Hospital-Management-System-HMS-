@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+import { canAccessPage } from '../auth/permissions';
 import type { Appointment } from '../types/appointments';
 import { useState } from 'react';
 import { Card, CardContent, Autocomplete, MenuItem, Alert, Box, Button, Chip, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField, Typography } from '@mui/material';
@@ -19,7 +21,8 @@ export default function AppointmentsPage() {
   const [date, setDate] = useState(() => { const now = new Date(); return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`; });
   const [doctorId, setDoctorId] = useState('');
   const [page, setPage] = useState(1);
-  const appointments = useAppointments(doctorId || undefined, date, page);
+  const [days, setDays] = useState(1);
+  const appointments = useAppointments(doctorId || undefined, date, page, days);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -68,13 +71,15 @@ export default function AppointmentsPage() {
   const validDate = scheduledAt && Number.isFinite(new Date(scheduledAt).getTime());
   return <Box sx={{ p: { xs: 2, sm: 4 } }} maxWidth={1100} mx="auto">
     <Stack direction={{ xs: 'column', sm: 'row' }} gap={2} justifyContent="space-between" mb={3}>
-      <Typography variant="h5" fontWeight={700}>{t('appointments.title')}</Typography>
+      <Typography variant="h5" component="h1" fontWeight={700}>{t('appointments.title')}</Typography>
       {writable && <Button variant="contained" onClick={() => { setEditing(null); setDialogOpen(true); setFormError(null); setSelectedPatient(null); setPatientSearch(''); setFormDoctorId(''); setDepartmentId(''); setScheduledAt(''); }}>{t('appointments.new')}</Button>}
     </Stack>
     <Stack direction={{ xs: 'column', sm: 'row' }} gap={2} mb={2}>
+      <TextField id="schedule-range" SelectProps={{ inputProps: { 'aria-label': t('appointments.range') } }} select label={t('appointments.range')} value={days} onChange={e => { setDays(Number(e.target.value)); setPage(1); }}><MenuItem value={1}>{t('appointments.daily')}</MenuItem><MenuItem value={7}>{t('appointments.weekly')}</MenuItem></TextField>
       <TextField type="date" label={t('appointments.day')} value={date} onChange={e => { setDate(e.target.value); setPage(1); }} InputLabelProps={{ shrink: true }} />
       <TextField select sx={{ minWidth: 220 }} label={t('appointments.filterDoctor')} value={doctorId} onChange={e => { setDoctorId(e.target.value); setPage(1); }}><MenuItem value="">{t('appointments.allDoctors')}</MenuItem>{options.data?.doctors.map(doctor => <MenuItem key={doctor.id} value={doctor.id}>{doctor.fullName}</MenuItem>)}</TextField>
     </Stack>
+    <Typography sx={{ mb: 1 }}>{t(days === 7 ? 'appointments.sevenFrom' : 'appointments.dayFrom', { date })}</Typography>
     <Typography variant="body2" color="text.secondary" mb={2}>{t('appointments.timezone', { zone: Intl.DateTimeFormat().resolvedOptions().timeZone })}</Typography>
     {success && <Alert severity="success" role="status" sx={{ mb: 2 }}>{success}</Alert>}
     {appointments.isLoading && <CircularProgress aria-label={t('appointments.loading')} />}
@@ -90,6 +95,7 @@ export default function AppointmentsPage() {
           <Typography variant="body2">{t('appointments.departmentId')}: {i18n.language === 'ar' ? appt.department?.nameAr : appt.department?.nameEn}</Typography>
         </Box>
         <Stack alignItems="flex-start" gap={1}>
+          {user && canAccessPage(user.role, 'patients') && <Button component={Link} to={`/patients/${appt.patientId}`} sx={{ minHeight: 44 }}>{t('appointments.openPatient')}</Button>}
           <Chip label={t(`appointments.states.${appt.status}`)} size="small" color={statusColor[appt.status]} />
           {appt.encounter && <Typography variant="caption">{t('appointments.linked')}</Typography>}
           {writable && appt.status === 'scheduled' && !appt.encounter && <Button onClick={() => { setEditing(appt); setFormError(null); setDepartmentId(appt.departmentId); setFormDoctorId(appt.doctorId); const time = new Date(appt.scheduledAt); setScheduledAt(new Date(time.getTime() - time.getTimezoneOffset() * 60000).toISOString().slice(0,16)); setDialogOpen(true); }}>{t('appointments.edit')}</Button>}

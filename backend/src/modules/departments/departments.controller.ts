@@ -1,6 +1,14 @@
-import { Controller, Get, Param, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Query, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
+import { IsDateString, Matches } from 'class-validator';
+class OverviewRangeDto {
+  @Matches(/(Z|[+-]\d{2}:\d{2})$/)
+  @IsDateString({ strict: true }) start!: string;
+  @Matches(/(Z|[+-]\d{2}:\d{2})$/)
+  @IsDateString({ strict: true }) end!: string;
+}
+
 import { DepartmentsService } from './departments.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -19,6 +27,12 @@ export class DepartmentsController {
   @Roles(Role.receptionist, Role.doctor, Role.nurse, Role.admin, Role.manager)
   findAll() {
     return this.departmentsService.findAll();
+  }
+
+  @Get('overview')
+  @Roles(Role.manager, Role.admin)
+  overview(@Query() range: OverviewRangeDto) {
+    return this.departmentsService.overview(range.start, range.end);
   }
 
   @Get(':id/beds')

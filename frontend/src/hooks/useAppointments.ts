@@ -3,12 +3,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../api/client';
 import type { Appointment } from '../types/appointments';
 
-export function useAppointments(doctorId?: string, date?: string, page = 1) {
+export function useAppointments(doctorId?: string, date?: string, page = 1, days = 1) {
   return useQuery({
-    queryKey: ['appointments', doctorId, date, page],
+    queryKey: ['appointments', doctorId, date, page, days],
     queryFn: async () => {
       const res = await apiClient.get<Appointment[]>('/appointments', {
-        params: { page, doctor_id: doctorId, ...(date ? appointmentDayRange(date) : {}) },
+        params: { page, doctor_id: doctorId, ...(date ? appointmentDayRange(date, days) : {}) },
       });
       return res.data;
     },

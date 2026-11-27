@@ -1,9 +1,19 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 
 @Injectable()
 export class DepartmentsService {
   constructor(private readonly prisma: PrismaService) {}
+
+  async overview(start: string, end: string) {
+    const from = new Date(start), to = new Date(end);
+    if (!Number.isFinite(from.getTime()) || !Number.isFinite(to.getTime()) || to <= from || to.getTime() - from.getTime() > 26 * 60 * 60 * 1000) throw new BadRequestException({ error: { code: 'INVALID_OVERVIEW_RANGE', message: 'Provide a valid local-day interval, at most 26 hours.', details: [] } });
+    return this.prisma.$transaction(async tx => {
+      const departments = await tx.department.findMany({ select: { id: true, nameAr: true, nameEn: true, beds: { select: { status: true } } }, orderBy: { nameEn: 'asc' } });
+      const appointmentCount = await tx.appointment.count({ where: { scheduledAt: { gte: from, lt: to } } });
+      return { start: from.toISOString(), end: to.toISOString(), appointmentCount, departments: departments.map(({ beds, ...department }) => ({ ...department, total: beds.length, available: beds.filter(b => b.status === 'available').length, occupied: beds.filter(b => b.status === 'occupied').length, maintenance: beds.filter(b => b.status === 'maintenance').length })) };
+    }, { isolationLevel: 'RepeatableRead' });
+  }
 
   // FR-5.1
   async findAll() {

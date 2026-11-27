@@ -24,7 +24,8 @@
     "billing": "Simulated billing",
     "departmentDirectory": "Department directory",
     "users": "Fictional user management",
-    "audit": "Workspace audit"
+    "audit": "Workspace audit",
+    "overview": "Operational overview"
   },
   "patients": {
     "title": "Patients",
@@ -188,7 +189,13 @@
     "next": "Next",
     "page": "Page {{page}}",
     "edit": "Edit appointment",
-    "save": "Save changes"
+    "save": "Save changes",
+    "range": "Schedule range",
+    "daily": "One day",
+    "weekly": "Seven days",
+    "sevenFrom": "Seven days starting {{date}}",
+    "dayFrom": "Day {{date}}",
+    "openPatient": "Open patient workspace"
   },
   "billing": {
     "title": "Simulated billing and insurance",
@@ -322,5 +329,16 @@
       "Bed": "Bed",
       "Admission": "Admission"
     }
+  },
+  "overview": {
+    "title": "Operational overview",
+    "description": "Workspace totals only. Refreshes every minute while visible. No patient details.",
+    "day": "Appointment day",
+    "refresh": "Refresh overview",
+    "updated": "Last updated {{time}}",
+    "appointments": "Appointments on selected day",
+    "allStates": "All statuses, including cancelled appointments.",
+    "beds": "Beds by department",
+    "total": "Total"
   }
 }

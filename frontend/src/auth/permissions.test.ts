@@ -35,3 +35,8 @@ it('appointment management matches admin/receptionist only', () => {
 it('billing writes are admin or billing clerk, manager reads only', () => { expect(allRoles.filter(canManageBilling)).toEqual(['admin', 'billing_clerk']); });
 
 it('user management is admin-only', () => { expect(allRoles.filter(role => canAccessPage(role, 'users'))).toEqual(['admin']); });
+
+it('manager aggregate overview is admin/manager only and landings match real tasks', () => {
+  expect(allRoles.filter(role=>canAccessPage(role,'overview'))).toEqual(['admin','manager']);
+  expect(landingPath('manager')).toBe('/overview');expect(landingPath('nurse')).toBe('/departments');expect(landingPath('doctor')).toBe('/appointments');expect(landingPath('receptionist')).toBe('/appointments');
+});

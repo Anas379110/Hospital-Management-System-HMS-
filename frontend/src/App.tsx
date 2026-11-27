@@ -1,3 +1,4 @@
+import OverviewPage from './pages/OverviewPage';
 import AuditPage from './pages/AuditPage';
 import UsersPage from './pages/UsersPage';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
@@ -20,6 +21,7 @@ export default function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route element={<AppLayout />}>
           <Route element={<ProtectedRoute />}>
+            <Route element={<ProtectedRoute page="overview" />}><Route path="/overview" element={<OverviewPage />} /></Route>
             <Route element={<ProtectedRoute page="patients" />}><Route path="/patients" element={<PatientsPage />} /></Route>
             <Route element={<ProtectedRoute page="registration" />}><Route path="/patients/new" element={<NewPatientPage />} /></Route>
             <Route element={<ProtectedRoute page="patients" />}><Route path="/patients/:id" element={<PatientDetailPage />} /></Route>

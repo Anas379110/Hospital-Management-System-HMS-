@@ -1,4 +1,4 @@
-export function appointmentDayRange(date: string) {
+export function appointmentDayRange(date: string, days = 1) {
   const [year, month, day] = date.split('-').map(Number);
-  return { start: new Date(year, month - 1, day).toISOString(), end: new Date(year, month - 1, day + 1).toISOString() };
+  return { start: new Date(year, month - 1, day).toISOString(), end: new Date(year, month - 1, day + days).toISOString() };
 }
