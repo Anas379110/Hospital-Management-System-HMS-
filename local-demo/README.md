@@ -27,6 +27,25 @@ node local-demo/check-ready.mjs --pg-bin /absolute/postgresql/bin --dir /absolut
 
 This standalone Node22checker runs even without installed app dependencies. It reports each missing tool/build/dependency, matching PostgreSQLmajor, native dependency loading, futuretarget and loopbackport availability. It does not install/build, initialize/connect to a database or create the target. Port checks briefly bind127.0.0.1andclose, no guarantee against another process taking the port later. Installed PostgreSQLtools and Prisma/bcrypt code execute in bounded subprocesses, not a sandbox; use trusted installations. Timeouts kill only the directchild, not a processgroup or descendants. Checker-controlled actions do not write the inspected project or target; this is not a universal no-side-effects guarantee for third-party code. Buildprovenance and actualDB/nativeenginecompatibility remain unverified. The pinnedbcrypt6package includes prebuiltaddons, loaded at runtime via node-gyp-build; the testedLinuxx64buildrecipe works with npm ci --ignore-scripts. OtherOS/architectures may require a trusted native rebuild, and the checker will report loadfailure. Prisma generate may download a matchingengine and npm ci needs registry/cache access, so preparation is not offline. Use the build commands above to prepare dependencies, then run the checker again. A ready result is prerequisite diagnostics, not proof of offline installation or hospital suitability. Linux/macOS paths only, macOSnativeexecution not qualified by currentLinuxruns. Tests: `node --test local-demo/check-ready.test.mjs`.
 
+## Record an optional unsigned build snapshot
+
+After deliberately building both apps with the exact recipe above, run:
+
+```sh
+node local-demo/build-manifest.mjs create
+node local-demo/build-manifest.mjs verify
+```
+
+The fixed ignored file is `local-demo/build-manifest.json`. Creation never overwrites, creates parent directories, installs, builds, starts processes or connects to a database. To regenerate after an intended rebuild, explicitly remove that fixed file yourself, then run create again. Missing snapshot is a readiness warning; a present malformed, unsafe or changed snapshot fails readiness. Matching means only that selected current bytes match the recorded unsigned local snapshot. Build provenance and causality remain unverified even when the snapshot matches. Explicit CLI verify exits nonzero for an absent snapshot; the readiness checker retains its warning-only behavior. It does not prove those outputs were built from those inputs, reproducibility, authenticity or supply-chain trust. A snapshot made after a stale build can bind wrong outputs to current inputs. Anyone with write access can regenerate it. Do not export environment/secrets or treat it as a hospital guarantee.
+
+Inputs are the two package/lockfiles, actual tsconfig/build configs, backend src/test/seed/schema/migrations, frontend src/index.html and optional public directory. Backend compiler currently consumes its test files and seed; frontend src includes co-located tests. Migration hashes identify schema-preparation state, not compiler execution. Both complete dist roots are recorded, including backend incremental buildinfo. Frontend tsconfig.tsbuildinfo outside dist is excluded. A rebuild can stale the snapshot even when application behavior is unchanged. Test-real-postgres, test-real-browser, docs and local-demo are not build inputs here. Unlisted files are ignored; an environment-prefixed name inside a selected root fails before content is read. New files in selected roots or appearance/disappearance of frontend/public are detected.
+
+Installed node_modules contents, generated Prisma client/engine and bcrypt addon bytes remain unverified. Existing presence/native-load checks do not attest those contents. Recorded Node/platform/architecture, recipe strings and VITE_PUBLIC_DEMO=true describe the snapshot context, not proof of execution or complete environment capture.
+
+Linux/macOS only. Fixed limits:25MiB/file,256MiB combined,4096entries,1MiBmanifest,1024byte/32component relative paths. Canonical JSON required; manual edits/reformatting fail. Selected symlinks and nonregular files are refused. Inputs/outputs are enumerated and hashed twice with identity/stat checks to catch accidental concurrent drift, not malicious local filesystem attacks. Tempwx0600/fsync/hardlink publishes complete bytes without overwriting; unsupported hardlinks fail cleanly, no rename fallback. Directory-fsync failure reports published but durability unverified. No power-loss promise.
+
+Snapshot verification itself is filesystem-read-only with no child/network/DB actions. The broader readiness checker still performs its separately documented bounded installed-code probes and loopback binds. Tests: `node --test local-demo/check-ready.test.mjs local-demo/build-manifest.test.mjs`.
+
 ## Start a new private local demo
 
 Choose directories that do not exist and unused unprivileged ports. Examples below are placeholders, not existing user folders.
