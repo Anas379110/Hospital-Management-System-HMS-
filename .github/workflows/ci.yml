@@ -37,7 +37,7 @@ jobs:
             backend/package-lock.json
             frontend/package-lock.json
       - name: Standalone local readiness diagnostics
-        run: node --test local-demo/check-ready.test.mjs
+        run: node --test local-demo/check-ready.test.mjs local-demo/build-manifest.test.mjs
       - run: npm ci --ignore-scripts --no-fund
         working-directory: backend
       - run: node node_modules/prisma/build/index.js generate
@@ -71,6 +71,10 @@ jobs:
         working-directory: frontend
         env:
           VITE_PUBLIC_DEMO: true
+      - name: Unsigned local build snapshot create and read-only verify
+        run: |
+          node local-demo/build-manifest.mjs create
+          node local-demo/build-manifest.mjs verify
       - run: node node_modules/playwright/cli.js install --with-deps chromium
         working-directory: frontend
       - name: Install matching local recovery server and clients
