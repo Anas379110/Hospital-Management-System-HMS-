@@ -1,3 +1,4 @@
+import { lowStockQueryKey, readLowStock } from './lowStockQuery';
 import { sendMedicationCreate } from '../api/medicationCreateWrite';
 import { type CreateMedicationInput } from '../components/medicationCreate';
 import { responseIsCurrent } from '../api/sessionIsolation';
@@ -60,4 +61,8 @@ export function useCreateMedication() {
     mutationFn: (request: { input: CreateMedicationInput; userId: string; epoch: number }) => sendMedicationCreate(request),
     onSuccess: medication => { if (responseIsCurrent(medication)) void queryClient.invalidateQueries({ queryKey: ['medications'] }); },
   });
+}
+
+export function useLowStock() {
+  return useQuery({ queryKey: lowStockQueryKey, queryFn: ({ signal }) => readLowStock(signal) });
 }

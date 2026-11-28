@@ -1,3 +1,4 @@
+import LowStock from '../components/LowStock';
 import MedicationCreate from '../components/MedicationCreate';
 import { useState } from 'react';
 import {
@@ -72,6 +73,7 @@ export default function PharmacyPage() {
         {t('pharmacy.title')}
       </Typography>
 
+      <LowStock />
       <MedicationCreate onCreated={medication => setStockId(medication.id)} />
       <Card sx={{ mb: 3 }}><CardContent>
         <Typography variant="h6">{t('stock.title')}</Typography>

@@ -451,5 +451,17 @@
     "saved": "Medication created and selected for stock adjustment",
     "unknown": "The medication creation outcome is unknown. Do not submit again. Review the inventory and audit log. Readback cannot prove a delayed request has finished. This hold applies only to this tab. Acknowledging discards the draft.",
     "checked": "I checked, reload inventory and discard draft"
+  },
+  "lowStock": {
+    "title": "Medications to reorder",
+    "description": "Inventory at or below its reorder threshold",
+    "refresh": "Refresh low stock",
+    "loading": "Loading low stock",
+    "empty": "No medications need reordering",
+    "name": "Medication",
+    "unit": "Unit",
+    "stock": "Current stock",
+    "threshold": "Reorder threshold",
+    "error": "Could not load low stock. Refresh to try again."
   }
 }

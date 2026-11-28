@@ -49,7 +49,7 @@ Reconciled28 November2026 against deployedfdee7ec and the local qualification ev
 | FR6.2 pending prescriptions | pharmacy pendingroute/UI; stock browser | Implemented scoped workflow, not universal pagination |
 | FR6.3 atomic dispense/decrement | service transaction/locks/audit; actual DB concurrency+public-stock | Implemented fictional workflow |
 | FR6.4 insufficient stock no partial deduction |409androllbacktests | Implemented/tested scoped contention |
-| FR6.5 reorder list stock<=threshold | lowStockservice+unit/mock/browser | Implemented scoped workflow |
+| FR6.5 reorder list stock<=threshold | Existing lowStock service/API; no frontend hook/view at2eb936f | Historical implemented-UI claim corrected. Read-only bilingual UI candidate under qualification, not yet released |
 | FR7.1 order lab/radiology against encounter | doctor-owned encounter/patient match, service and clinical tests | Implemented shared typed test-order workflow, no separate imaging subsystem |
 | FR7.2 pending test queue | lab.pendingOrders+UI | Implemented first-party queue, unbounded list |
 | FR7.3 result text/notes complete | lab.recordResultlock/transition/audit, service/DB/browser | Implemented one-time pending-to-completed fictional result; no clinical approval/amendment workflow |
@@ -136,3 +136,7 @@ Earlier response preparation entry is historical. Patient/waitlist response8d7ab
 ### Exact name+DOB warning concurrency candidate
 
 Existing registration advisory lock moved before unchanged exact name+DOB lookup, retained through MRN/create/audit. Local synchronized PG17/18 unforced pair one201/one409 and one audit, explicitforce pair both201uniqueMRN, distinctname/DOBallowed, foreignworkspaceindependent, sixforbiddenroles403,401,auditfailure503rollbackandretry pass. No national-ID matching, normalization, patient-update race guarantee or DB unique-patient constraint. ExactCI/review/publication/hosted proof pending.
+
+### FR6.5 low-stock UI candidate November28
+
+At base2eb936f, GET /medications/low-stock and server stock<=reorderThreshold existed but PharmacyPage had no low-stock view or hook. Earlier row overstated UI coverage. Current candidate reads existing endpoint for pharmacist/Admin, preserves server rows/order, refreshes after local create/adjust/dispense and manual refresh, displays loading/empty/error states without new stock policy or writes. Actual local PG17/18/browser evidence and exact CI/hosted release remain qualification gates; no full-module completion inferred. Lists remain unbounded; no timed polling or cross-client freshness guarantee.
