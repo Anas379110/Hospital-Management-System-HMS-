@@ -1,9 +1,9 @@
 # Remaining demo completion map
-As of notes1d9a94b release, appointment-linked encounter UI under qualification, not released. WholeHMS incomplete.
+As of appointment-link1e87e90 deployment, exact CI5ea5229 tree-equivalent, final review accepted. WholeHMS incomplete.
 
 Functional remaining work:
-- FR4.1 appointment-linked visit UI, current candidate. Backend policy retained.
-- FR4.4 soft-delete UI with explicit reason/ownership/confirmation and existing history behavior. No permanent clinical deletion or retention changes assumed.
+- FR4.1 appointment-linked visit UI released, backend policy retained.
+- FR4.4 soft-delete UI now in development with explicit reason/ownership/confirmation and existing history behavior. No permanent clinical deletion or retention changes assumed.
 - Reconcile traceability historical rows with exact released artifacts for nationalID duplicate warning, clinical notes, patient edits, medication creation, lowstock, encounter/prescription safety and prescription notes. Historical candidate notes are not current acceptance claims.
 - Whole-demo coherent multi-role journey, error/permissions/recovery map and source/recovery delivery. Use current tests as evidence, not automatic whole-project acceptance.
 

@@ -1,3 +1,4 @@
+import EncounterDelete from '../components/EncounterDelete';
 import { appointmentSelection, loadEncounterAppointment } from '../api/encounterAppointment';
 import { useQuery } from '@tanstack/react-query';
 import { prescriptionInput } from './prescriptionDraft';
@@ -227,6 +228,7 @@ function PatientDetailWorkspace() {
         <Typography color="text.secondary">{t('emr.empty')}</Typography>
       )}
 
+      {canReadClinical && user && patient.data && records && <EncounterDelete userId={user.userId} patientId={id!} role={user.role} patientName={patient.data.fullName} records={records} onDeleted={deletedId=>{if(activeEncounterId===deletedId){setActiveEncounterId(null);setMedicationName('');setDosage('');setDuration('');setPrescriptionNotes('');}if(testEncounterId===deletedId){setTestEncounterId(null);sessionStorage.removeItem(testTargetKey)}}} />}
       <Stack gap={2}>
         {canReadClinical && records?.map((encounter) => (
           <Card key={encounter.id} variant="outlined">

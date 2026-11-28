@@ -16,5 +16,7 @@ export interface Encounter {
   diagnosis: string;
   notes?: string | null;
   encounterDate: string;
+  deletedAt?: string | null;
+  deleteReason?: string | null;
   prescriptions: Prescription[];
 }
