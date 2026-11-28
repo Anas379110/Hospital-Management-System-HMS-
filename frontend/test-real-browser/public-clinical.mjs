@@ -49,6 +49,7 @@ try{
   await page.getByRole('textbox',{name:lang==='ar'?'التشخيص':'Diagnosis',exact:true}).fill('Fictional browser diagnosis');
   await prisma.$executeRawUnsafe(`CREATE OR REPLACE FUNCTION hms_test_browser_audit_reject() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'synthetic audit failure'; END $$`);
   await prisma.$executeRawUnsafe('CREATE TRIGGER hms_test_browser_audit_failure BEFORE INSERT ON audit_logs FOR EACH ROW EXECUTE FUNCTION hms_test_browser_audit_reject()');
+  let encounterRequests=0;page.on('request',request=>{if(request.method()==='POST'&&new URL(request.url()).pathname.endsWith('/encounters'))encounterRequests++});
   const before=await prisma.encounter.count();
   await page.getByRole('button',{name:lang==='ar'?'حفظ الزيارة':'Save encounter',exact:true}).click();
   await page.getByText(lang==='ar'?'لم تُنفذ العملية لتعذر حفظ سجلها. يمكنك إعادة المحاولة.':'Operation was not performed because its audit record could not be saved. You can retry.',{exact:true}).waitFor();
@@ -57,8 +58,17 @@ try{
   await page.waitForTimeout(300);
   await page.screenshot({path:`${artifacts}/hms-clinical-failure-${lang}.png`,fullPage:true});
   await prisma.$executeRawUnsafe('DROP TRIGGER hms_test_browser_audit_failure ON audit_logs');
+  const acknowledge=page.getByRole('button',{name:lang==='ar'?'تحققت وأريد تحديث السجل وتجاهل المسودة':'I checked, reload records and discard draft',exact:true});
+  if(await page.getByRole('button',{name:lang==='ar'?'حفظ الزيارة':'Save encounter',exact:true}).isEnabled())throw new Error('Uncertain audit503 must hold encounter creation');
+  const recordsRead=page.waitForResponse(response=>response.request().method()==='GET'&&new URL(response.url()).pathname.endsWith('/patients/'+patient.id+'/records')&&response.status()===200);
+  await acknowledge.click();await recordsRead;await acknowledge.waitFor({state:'hidden'});
+  if(encounterRequests!==1||await prisma.encounter.count()!==before)throw new Error('Acknowledgment must read back without resending or creating a phantom encounter');
+  for(const name of (lang==='ar'?['الشكوى الرئيسية','التشخيص']:['Chief complaint','Diagnosis']))if(await page.getByRole('textbox',{name,exact:true}).inputValue()!=='')throw new Error('Acknowledgment must discard encounter draft');
+  await page.getByRole('textbox',{name:lang==='ar'?'الشكوى الرئيسية':'Chief complaint',exact:true}).fill('Fictional browser complaint');
+  await page.getByRole('textbox',{name:lang==='ar'?'التشخيص':'Diagnosis',exact:true}).fill('Fictional browser diagnosis');
   await page.getByRole('button',{name:lang==='ar'?'حفظ الزيارة':'Save encounter',exact:true}).click();
   await page.getByText(lang==='ar'?'حُفظت الزيارة.':'Encounter saved.',{exact:true}).waitFor();
+  if(encounterRequests!==2||await prisma.encounter.count()!==before+1)throw new Error('Explicit retry must send exactly once and create exactly one encounter');
   await page.getByRole('textbox',{name:lang==='ar'?'اسم الدواء':'Medication name',exact:true}).fill('Fictional medication');
   await page.getByRole('textbox',{name:lang==='ar'?'الجرعة':'Dose',exact:true}).fill('Test dose');
   await page.getByRole('textbox',{name:lang==='ar'?'المدة':'Duration',exact:true}).fill('Test duration');
@@ -93,7 +103,7 @@ try{
   await page.getByRole('textbox',{name:lang==='ar'?'ابحث عن مريض':'Find a patient',exact:true}).fill('Fictional Registration '+lang);
   await page.getByRole('cell',{name:'Fictional Registration '+lang,exact:true}).waitFor();
   await page.screenshot({path:artifacts+'/hms-registration-success-'+lang+'.png',fullPage:true});
-  results.checks.push({lang,realUILogin:true,clinicalAuditFailureNoMutation:true,translatedError:true,retrySucceeded:true,prescriptionSaved:true,registrationAuditFailureNoMutation:true,registrationRetrySucceeded:true,invalidRegistrationLocalizedNoRequest:true,runtimeErrors:0,overflow:false});await page.close();
+  results.checks.push({lang,realUILogin:true,clinicalAuditFailureNoMutation:true,audit503HoldDisabledResend:true,acknowledgmentReadbackNoRepost:true,acknowledgmentDiscardedDraft:true,explicitRetrySinglePostSingleRow:true,translatedError:true,retrySucceeded:true,prescriptionSaved:true,registrationAuditFailureNoMutation:true,registrationRetrySucceeded:true,invalidRegistrationLocalizedNoRequest:true,runtimeErrors:0,overflow:false});await page.close();
  }
  results.assertionsPassed=true;console.log(JSON.stringify(results,null,2));
 }catch(e){if(currentPage)await currentPage.screenshot({path:artifacts+'/unexpected-failure.png',fullPage:true}).catch(()=>{});results.error=String(e?.stack??e).replaceAll(password,'[REDACTED]');console.error(results.error);process.exitCode=1}
