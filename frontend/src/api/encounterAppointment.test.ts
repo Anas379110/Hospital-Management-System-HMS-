@@ -1,0 +1,10 @@
+vi.mock('../i18n/i18n',()=>({default:{t:(key:string)=>key}}));
+import { expect,it,vi } from 'vitest';
+import { appointmentSelection,validAppointmentSelection,eligibleEncounterAppointment,loadEncounterAppointment } from './encounterAppointment';
+import {apiClient}from './client';
+Object.defineProperty(globalThis,'localStorage',{configurable:true,value:{getItem:()=>null}});
+const selection={id:'00000000-0000-4000-a000-000000000001',scheduledAt:'2026-11-28T09:00:00Z'};
+const row={...selection,patientId:'p',doctorId:'d',departmentId:'dep',status:'scheduled' as const,encounter:null};
+it('no query keeps standalone, partial/malformed selection remains invalid rather than standalone',()=>{expect(appointmentSelection('')).toBe(null);expect(validAppointmentSelection(appointmentSelection('?appointment=x')!)).toBe(false);expect(validAppointmentSelection(selection)).toBe(true)});
+it('allows only exact unlinked current patient/doctor/time and scheduled or attended',()=>{expect(eligibleEncounterAppointment(row,selection,'p','d')).toBe(true);expect(eligibleEncounterAppointment({...row,status:'completed'},selection,'p','d')).toBe(true);for(const changed of [{patientId:'other'},{doctorId:'other'},{scheduledAt:'2026-11-28T10:00:00Z'},{encounter:{id:'e'}},{status:'cancelled' as const},{status:'no_show' as const}])expect(eligibleEncounterAppointment({...row,...changed},selection,'p','d')).toBe(false)});
+it('fresh200 list requires exactly one verified match and fails closed otherwise',async()=>{for(const data of [[],[row,row],{},[{...row,encounter:{id:'e'}}]]){apiClient.defaults.adapter=async config=>({status:200,data,statusText:'OK',headers:{},config});await expect(loadEncounterAppointment(selection,'p','d')).rejects.toThrow()}apiClient.defaults.adapter=async config=>({status:200,data:[row],statusText:'OK',headers:{},config});expect(await loadEncounterAppointment(selection,'p','d')).toEqual(row)});
