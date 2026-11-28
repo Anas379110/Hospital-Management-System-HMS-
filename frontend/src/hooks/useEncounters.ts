@@ -1,3 +1,4 @@
+import type { EncounterAppointmentSelection } from '../api/encounterAppointment';
 import { sendPrescriptionCreate, type PrescriptionRequest } from '../api/prescriptionCreateWrite';
 import { sendEncounterCreate, type EncounterIdentity } from '../api/encounterCreateWrite';
 import { responseIsCurrent } from '../api/sessionIsolation';
@@ -21,13 +22,14 @@ export interface CreateEncounterInput {
   chiefComplaint: string;
   diagnosis: string;
   notes?: string;
+  appointmentId?: string;
 }
 
 export function useCreateEncounter() {
   const queryClient = useQueryClient();
   return useMutation({
     retry: false,
-    mutationFn: (request: EncounterIdentity & { input: CreateEncounterInput }) => sendEncounterCreate(request),
+    mutationFn: (request: EncounterIdentity & { input: CreateEncounterInput; appointmentSelection?: EncounterAppointmentSelection }) => sendEncounterCreate(request),
     onSuccess: (data, variables) => { if (responseIsCurrent(data)) void queryClient.invalidateQueries({ queryKey: ['patients', variables.patientId, 'records'] }); },
   });
 }
