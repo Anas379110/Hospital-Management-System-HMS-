@@ -81,7 +81,26 @@ if ($Mode -eq 'identity') {
     Stage 'config-before'
     [IO.File]::AppendAllText((Join-Path $data 'postgresql.auto.conf'),("`nlisten_addresses = '127.0.0.1'`nport = $port`n"))
     Stage 'config-after'
-    Run-Pg 'pg_ctl' @('-D',$data,'-l',(Join-Path $probeHome 'postgres-private.log'),'-w','start') 'start'
+    Stage 'start-before'
+    # Wait on pg_ctl alone, without a PowerShell output pipeline or redirected pipes.
+    $startInfo=New-Object System.Diagnostics.ProcessStartInfo
+    $startInfo.FileName=Join-Path $pg 'pg_ctl.exe'
+    $startInfo.UseShellExecute=$false
+    $startInfo.CreateNoWindow=$true
+    $startInfo.RedirectStandardInput=$false
+    $startInfo.RedirectStandardOutput=$false
+    $startInfo.RedirectStandardError=$false
+    $startLog=Join-Path $probeHome 'postgres-private.log'
+    if ($data.Contains('"') -or $startLog.Contains('"')) { throw 'Unsupported quote in controlled path' }
+    $startInfo.Arguments='-D "'+$data+'" -l "'+$startLog+'" -w -t 60 start'
+    $ctl=New-Object System.Diagnostics.Process
+    $ctl.StartInfo=$startInfo
+    try {
+      if (-not $ctl.Start()) { Stage 'start-failed'; throw 'PostgreSQL control process not started' }
+      if (-not $ctl.WaitForExit(90000)) { Stage 'start-timeout'; throw 'PostgreSQL control process timeout' }
+      if ($ctl.ExitCode -ne 0) { Stage 'start-failed'; throw 'PostgreSQL control process failed' }
+    } finally { $ctl.Dispose() }
+    Stage 'start-after'
     $started = $true
     $env:PGPASSWORD = $password; $env:PGHOST='127.0.0.1'; $env:PGPORT=[string]$port; $env:PGUSER='hms_probe'; $env:PGDATABASE='postgres'
     Stage 'query-before'
@@ -99,7 +118,7 @@ if ($Mode -eq 'identity') {
     if ($listeners.Count -ne 1 -or $listeners[0].LocalAddress -ne '127.0.0.1' -or $listeners[0].LocalPort -ne $port) { throw 'Loopback listener mismatch' }
     Stage 'listener-after'
     Run-Pg 'pg_dump' @('--version') 'dump'; Run-Pg 'pg_restore' @('--version') 'restore'
-    @{query=$true;loopback=$true;port=$port;modules=$modules;pid=$pidValue;data=$data} | ConvertTo-Json -Depth 5 | Set-Content $out -Encoding UTF8
+    @{query=$true;loopback=$true;listenerAddress=[string]$listeners[0].LocalAddress;port=$port;modules=$modules;pid=$pidValue;data=$data} | ConvertTo-Json -Depth 5 | Set-Content $out -Encoding UTF8
   } finally {
     Remove-Item Env:PGPASSWORD -ErrorAction SilentlyContinue
     $password=$null
