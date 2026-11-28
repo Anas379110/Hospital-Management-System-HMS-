@@ -161,3 +161,6 @@ CONFIRMED from unchanged services: annotate three read-only scalar/aggregate pro
 
 ### Setup response contracts candidate
 CONFIRMED unchanged service outputs: reuseDepartmentResponseDto forcreate/rename; full7scalarBedSetupResponseDto; id/deleted:boolean marker for unused deletions with exacttrue asserted inHTTP. Native booleanenum(true) generated an incorrect number type in current Swagger, caught before snapshot; use faithful boolean type, not a falsely typed literal. No runtime or dependency workaround. Existing occupied relabel stays unchanged.
+
+## Appointment scalar response continuation,2026-11-28
+Plan-before-code limits four existing writes to their faithful10scalar output, required nullable cancelReason and stored status vocabulary. No service/query/role/policy/database change. GET nested projections and options intentionally deferred. Independent review,exact bothPG CI,private delta,actual hosted proof still gate publication.

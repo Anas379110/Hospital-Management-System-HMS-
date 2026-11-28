@@ -42,3 +42,6 @@ Admissionb0905cc exactCI46110288713bothPGsuccess, actualLive08:17:28 manual1m32,
 
 ## Department read release and setup response candidate
 Department006bdc7 exactCI46112342245bothPGsuccess; actual08:44:47manualdeploy1m33Liveverified08:48:03; hosted50cases/native53schemas55ops/pixels08:48:53pass. Superseding release https://github.com/Anas379110/Hospital-Management-System-HMS-/pull/19#issuecomment-7234906319 . Seven setup response contracts candidate only:55schemas55ops35successcontracts. Local230unit62mockHTTP26metadata/validator/dependency/build/lint, freshrestrictedPG17.12/18.7 fullrunner setup HTTPcases and58inputhashes pass. Standalone models320/390/1280fit. Independent review/exactCI/hosted pending. No service/query/role/schema/config/dependency or functional policy change. WholeHMS incomplete.
+
+### Appointment write response candidate,2026-11-28
+Local230unit62mockHTTP27native/validator/dependency/build/lint pass. Native56schemas55operations39successcontracts; bothfreshrestrictedPG17/18 68namedappointmentwriteHTTPcases and64inputhashes/fullpriorrunnerpass. Standalonemodel320/390/1280fit,actual390/1280pixels10labelsinspected. Annotation-only four writes; independent source review/exactCI/hosted pending. No new audit/concurrency fault-injection or nested keyboard claim. WholeHMS incomplete.

@@ -138,6 +138,67 @@
         ],
         "type": "object"
       },
+      "AppointmentResponseDto": {
+        "properties": {
+          "cancelReason": {
+            "nullable": true,
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "departmentId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "doctorId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "patientId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "scheduledAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "scheduled",
+              "completed",
+              "no_show",
+              "cancelled"
+            ],
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "workspaceId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "workspaceId",
+          "id",
+          "patientId",
+          "doctorId",
+          "departmentId",
+          "scheduledAt",
+          "status",
+          "cancelReason",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
       "BedMaintenanceDto": {
         "properties": {
           "status": {
@@ -1961,7 +2022,14 @@
         },
         "responses": {
           "201": {
-            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppointmentResponseDto"
+                }
+              }
+            },
+            "description": "Existing complete scalar appointment write response"
           },
           "400": {
             "description": "Invalid request"
@@ -2057,7 +2125,14 @@
         },
         "responses": {
           "200": {
-            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppointmentResponseDto"
+                }
+              }
+            },
+            "description": "Existing complete scalar appointment write response"
           },
           "400": {
             "description": "Invalid request"
@@ -2114,7 +2189,14 @@
         },
         "responses": {
           "201": {
-            "description": "Attendance recorded. Response shape is service-defined."
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppointmentResponseDto"
+                }
+              }
+            },
+            "description": "Existing complete scalar appointment write response"
           },
           "400": {
             "description": "Malformed appointment UUID or invalid attendance status"
@@ -2180,7 +2262,14 @@
         },
         "responses": {
           "201": {
-            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppointmentResponseDto"
+                }
+              }
+            },
+            "description": "Existing complete scalar appointment write response"
           },
           "400": {
             "description": "Invalid request"

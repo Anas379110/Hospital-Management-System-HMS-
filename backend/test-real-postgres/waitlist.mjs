@@ -1,3 +1,4 @@
+import {verifyAppointmentWriteResponses} from './appointment-write-response-check.mjs';
 import {verifySetupResponses} from './setup-response-check.mjs';
 import {verifyDepartmentSummaries} from './department-summary-check.mjs';
 import {verifyAdmissionResponses} from './admission-response-check.mjs';
@@ -25,6 +26,7 @@ inputPaths.push('test-real-postgres/pharmacy-response-check.mjs','src/modules/ph
 inputPaths.push('test-real-postgres/admission-response-check.mjs','src/modules/admissions/admissions.controller.ts','src/modules/admissions/dto/admission-response.dto.ts','dist/src/modules/admissions/admissions.controller.js');
 inputPaths.push('test-real-postgres/department-summary-check.mjs','src/modules/departments/departments.controller.ts','src/modules/departments/departments.service.ts','src/modules/departments/dto/department-summary-response.dto.ts','dist/src/modules/departments/departments.controller.js','dist/src/modules/departments/departments.service.js');
 inputPaths.push('test-real-postgres/setup-response-check.mjs','src/modules/departments/department-setup.controller.ts','src/modules/departments/dto/setup-response.dto.ts','dist/src/modules/departments/department-setup.controller.js','dist/src/modules/departments/department-setup.service.js');
+inputPaths.push('test-real-postgres/appointment-write-response-check.mjs','src/modules/appointments/appointments.controller.ts','src/modules/appointments/appointments.service.ts','src/modules/appointments/dto/appointment-response.dto.ts','dist/src/modules/appointments/appointments.controller.js','dist/src/modules/appointments/appointments.service.js');
 const assets=readFileSync(new URL('../../frontend/dist/index.html',import.meta.url),'utf8').matchAll(/(?:src|href)="(\/assets\/[^"]+)"/g);for(const asset of assets)inputPaths.push('../frontend/dist'+asset[1]);
 inputPaths.push('dist/src/modules/waitlist/waitlist.service.js','dist/src/modules/admissions/admissions.service.js','../frontend/dist/index.html');
 report.inputSha256=Object.fromEntries(inputPaths.map(path=>[path,createHash('sha256').update(readFileSync(new URL('../'+path,import.meta.url))).digest('hex')]));
@@ -106,6 +108,7 @@ try{
  report.pharmacyResponseContracts=await verifyPharmacyResponses({call,tokens,patientId:patient.id,native:require('../dist/src/api-documentation').createApiDocument(app)});
  report.admissionResponseContracts=await verifyAdmissionResponses({call,tokens,patientId:patient.id,departmentId:dept.id,foreignToken:otherNurse,native:require('../dist/src/api-documentation').createApiDocument(app)});
  report.departmentSummaryContracts=await verifyDepartmentSummaries({call,tokens,patientId:patient.id,departmentId:dept.id,foreignToken:otherNurse,native:require('../dist/src/api-documentation').createApiDocument(app)});
+ report.appointmentWriteResponseContracts=await verifyAppointmentWriteResponses({call,tokens,patientId:patient.id,departmentId:dept.id,foreignToken:otherNurse,native:require('../dist/src/api-documentation').createApiDocument(app)});
  report.setupResponseContracts=await verifySetupResponses({call,tokens,patientId:patient.id,foreignToken:otherNurse,native:require('../dist/src/api-documentation').createApiDocument(app)});
  report.patientDuplicateRace=await verifyPatientDuplicateRace({call,tokens,owner,workspaceId:ws});
  // Workspace cleanup must cascade retained queue history without new DELETE grant.

@@ -1,0 +1,22 @@
+{
+  "baseCommit": "dc64af397782995d1a4da774910280de49319c14",
+  "comparatorsMatchGitObjects": [
+    {
+      "path": "backend/src/modules/appointments/appointments.controller.ts",
+      "sha256": "266592970f1f821a19ed16f78d6ed33e03e979903ddff57f8b13bae8d9d9dab6"
+    },
+    {
+      "path": "backend/src/modules/appointments/appointments.service.ts",
+      "sha256": "5f14d63b63f1b0af42c5489763cb397b4cf07812c24aadf415c6c511c31f0f32"
+    },
+    {
+      "path": "backend/prisma/schema.prisma",
+      "sha256": "3d4c557752dde410162c2f41fa1e7934e509ad251fd91cc71a2687416f871e9c"
+    },
+    {
+      "path": "backend/src/modules/appointments/dto/cancel-appointment.dto.ts",
+      "sha256": "c7a76b347b73cf52719d221cd026d959a426ba44c6ae85777318c6e09eb5dd37"
+    }
+  ],
+  "verifiedAt": "2026-11-28T09:24:45+03:00"
+}

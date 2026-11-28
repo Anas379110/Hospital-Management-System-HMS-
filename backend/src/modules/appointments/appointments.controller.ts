@@ -1,3 +1,4 @@
+import { AppointmentResponseDto } from './dto/appointment-response.dto';
 import { ApiOperation, ApiResponse, ApiQuery, ApiExtension } from '@nestjs/swagger';
 import { RecordAttendanceDto } from './dto/record-attendance.dto';
 import { FindAppointmentsDto } from './dto/find-appointments.dto';
@@ -27,7 +28,7 @@ export class AppointmentsController {
   @ApiOperation({"summary": "AppointmentsController.create", "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization."})
   @ApiExtension('x-roles', ["receptionist", "admin"])
   @ApiExtension('x-auth', 'roles')
-  @ApiResponse({"status": 201, "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."})
+  @ApiResponse({ status: 201, type: AppointmentResponseDto, description: 'Existing complete scalar appointment write response' })
   @ApiResponse({"status": 400, "description": "Invalid request"})
   @ApiResponse({"status": 401, "description": "Missing/expired token, inactive current user, or invalid/expired workspace"})
   @ApiResponse({"status": 403, "description": "Current persisted role is not permitted"})
@@ -75,7 +76,7 @@ export class AppointmentsController {
   @ApiOperation({"summary": "AppointmentsController.update", "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization."})
   @ApiExtension('x-roles', ["receptionist", "admin"])
   @ApiExtension('x-auth', 'roles')
-  @ApiResponse({"status": 200, "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."})
+  @ApiResponse({ status: 200, type: AppointmentResponseDto, description: 'Existing complete scalar appointment write response' })
   @ApiResponse({"status": 400, "description": "Invalid request"})
   @ApiResponse({"status": 401, "description": "Missing/expired token, inactive current user, or invalid/expired workspace"})
   @ApiResponse({"status": 403, "description": "Current persisted role is not permitted"})
@@ -90,7 +91,7 @@ export class AppointmentsController {
   @ApiOperation({"summary": "AppointmentsController.cancel", "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization."})
   @ApiExtension('x-roles', ["receptionist", "admin"])
   @ApiExtension('x-auth', 'roles')
-  @ApiResponse({"status": 201, "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."})
+  @ApiResponse({ status: 201, type: AppointmentResponseDto, description: 'Existing complete scalar appointment write response' })
   @ApiResponse({"status": 400, "description": "Invalid request"})
   @ApiResponse({"status": 401, "description": "Missing/expired token, inactive current user, or invalid/expired workspace"})
   @ApiResponse({"status": 403, "description": "Current persisted role is not permitted"})
@@ -104,7 +105,7 @@ export class AppointmentsController {
   @ApiOperation({ summary: 'AppointmentsController.recordAttendance', description: 'Manual attendance by Admin/receptionist. Scheduled only, final states cannot reopen. No-show is rejected when an encounter is linked.' })
   @ApiExtension('x-roles', ['receptionist', 'admin'])
   @ApiExtension('x-auth', 'roles')
-  @ApiResponse({ status: 201, description: 'Attendance recorded. Response shape is service-defined.' })
+  @ApiResponse({ status: 201, type: AppointmentResponseDto, description: 'Existing complete scalar appointment write response' })
   @ApiResponse({ status: 400, description: 'Malformed appointment UUID or invalid attendance status' })
   @ApiResponse({ status: 401, description: 'Authentication required' })
   @ApiResponse({ status: 403, description: 'Role forbidden' })
