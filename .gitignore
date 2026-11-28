@@ -28,3 +28,7 @@ frontend/browser-artifacts/
 **/fictional.dump
 local-demo/data/
 local-demo/backups/
+
+# Unsigned local build integrity snapshot, never source or secrets
+local-demo/build-manifest.json
+local-demo/.build-manifest-*.tmp
