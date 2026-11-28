@@ -1,5 +1,5 @@
-import { beginEncounterWrite, finishEncounterWrite, encounterErrorStatus } from '../api/encounterPending';
-import { sessionEpoch, isCurrentSession } from '../api/sessionIsolation';
+import { sendEncounterCreate, type EncounterIdentity } from '../api/encounterCreateWrite';
+import { responseIsCurrent } from '../api/sessionIsolation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../api/client';
 import type { Encounter } from '../types/emr';
@@ -26,15 +26,8 @@ export function useCreateEncounter() {
   const queryClient = useQueryClient();
   return useMutation({
     retry: false,
-    mutationFn: async (input: CreateEncounterInput) => {
-      const userId = JSON.parse(localStorage.getItem('hms_user') ?? 'null')?.userId;
-      const epoch = sessionEpoch();const lockKey = beginEncounterWrite(userId,input.patientId);
-      try { const res = await apiClient.post<Encounter>('/encounters', input);finishEncounterWrite(lockKey,isCurrentSession(epoch),res.status);return res.data; }
-      catch(error) { finishEncounterWrite(lockKey,isCurrentSession(epoch),encounterErrorStatus(error));throw error; }
-    },
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['patients', variables.patientId, 'records'] });
-    },
+    mutationFn: (request: EncounterIdentity & { input: CreateEncounterInput }) => sendEncounterCreate(request),
+    onSuccess: (data, variables) => { if (responseIsCurrent(data)) void queryClient.invalidateQueries({ queryKey: ['patients', variables.patientId, 'records'] }); },
   });
 }
 

@@ -1,6 +1,10 @@
+import { useQueryClient } from '@tanstack/react-query';
+import { acknowledgeEncounterCreate } from '../api/encounterCreateWrite';
+import { encounterWriteHeld } from '../api/encounterPending';
+import { isCurrentSession, sessionEpoch } from '../api/sessionIsolation';
 import { encounterInput } from './encounterDraft';
 import EncounterTestOrder from '../components/EncounterTestOrder';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   Alert,
@@ -22,15 +26,23 @@ import {
   useCreateEncounter,
   useAddPrescription,
 } from '../hooks/useEncounters';
-import { getApiErrorCode, getApiErrorMessage, isUnknownWriteOutcome } from '../api/client';
+import { getApiErrorCode, getApiErrorMessage } from '../api/client';
 import { usePatient } from '../hooks/usePatients';
 import { usePatientTestResults } from '../hooks/useLab';
 
 export default function PatientDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
+  return <PatientDetailWorkspace key={(user?.userId ?? '') + ':' + id} />;
+}
+
+function PatientDetailWorkspace() {
+  const { id } = useParams<{ id: string }>();
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const patient = usePatient(id);
+  const queryClient = useQueryClient();
+  const [mountedEpoch] = useState(sessionEpoch);
   const canReadClinical = ['doctor', 'nurse', 'admin'].includes(user?.role ?? '');
   const recordsQuery = usePatientRecords(id, canReadClinical);
   const { data: records, isLoading } = recordsQuery;
@@ -45,13 +57,20 @@ export default function PatientDetailPage() {
   const [diagnosis, setDiagnosis] = useState('');
   const [notes, setNotes] = useState('');
   const lockKey = 'hms_encounter_unknown:' + user?.userId + ':' + id;
-  const [held, setHeld] = useState(() => sessionStorage.getItem(lockKey) === 'true');
+  const [held, setHeld] = useState(() => encounterWriteHeld(user?.userId ?? '', id ?? ''));
   const [checking, setChecking] = useState(false);
-  useEffect(() => { setHeld(sessionStorage.getItem(lockKey) === 'true');setChiefComplaint('');setDiagnosis('');setNotes(''); }, [lockKey]);
+  const route = useRef({ key: lockKey, generation: 0 });
+  if (route.current.key !== lockKey) route.current = { key: lockKey, generation: route.current.generation + 1 };
+  const mounted = useRef(true);
+  useEffect(() => { mounted.current = true;return () => { mounted.current = false; }; }, []);
+  const generation = route.current.generation;
+  const callbackIsCurrent = () => mounted.current && isCurrentSession(mountedEpoch) && route.current.generation === generation;
+  useEffect(() => { setHeld(encounterWriteHeld(user?.userId ?? '', id ?? ''));setChiefComplaint('');setDiagnosis('');setNotes('');setChecking(false);setError(null);setSuccess(null);setActiveEncounterId(null); }, [lockKey]);
   async function reconcileEncounter() {
     setChecking(true);setError(null);
-    try { const result = await recordsQuery.refetch();if (result.isSuccess) { sessionStorage.removeItem(lockKey);setHeld(false);setChiefComplaint('');setDiagnosis('');setNotes(''); } else setError(t('errors.generic')); }
-    catch { setError(t('errors.generic')); } finally { setChecking(false); }
+    if (!id || !user) { setChecking(false);return; }
+    try { await acknowledgeEncounterCreate({ userId: user.userId, patientId: id, epoch: mountedEpoch }, queryClient);if (!callbackIsCurrent()) return;setHeld(false);setChiefComplaint('');setDiagnosis('');setNotes(''); }
+    catch { if (callbackIsCurrent()) setError(t('errors.generic')); } finally { if (callbackIsCurrent()) setChecking(false); }
   }
   const testTargetKey = 'hms_test_order_encounter:' + user?.userId + ':' + id;
   const [testEncounterId, setTestEncounterId] = useState<string | null>(() => sessionStorage.getItem(testTargetKey));
@@ -68,12 +87,13 @@ export default function PatientDetailPage() {
     if (!id || chiefComplaint.length < 2 || diagnosis.length < 2 || held || createEncounter.isPending || checking) return;
     setError(null); setSuccess(null);
     try {
-    const encounter = await createEncounter.mutateAsync(encounterInput(id, chiefComplaint, diagnosis, notes));
+    const encounter = await createEncounter.mutateAsync({ input: encounterInput(id, chiefComplaint, diagnosis, notes), patientId: id, userId: user?.userId ?? '', epoch: mountedEpoch });
+    if (!callbackIsCurrent()) return;
     setActiveEncounterId(encounter.id); setTestEncounterId(encounter.id); sessionStorage.setItem(testTargetKey, encounter.id);
     setChiefComplaint('');
     setDiagnosis('');setNotes('');
     setSuccess(t('emr.encounterSaved'));
-    } catch (err) { if(isUnknownWriteOutcome(err)){sessionStorage.setItem(lockKey,'true');setHeld(true);}mutationError(err); }
+    } catch (err) { if (!callbackIsCurrent()) return;setHeld(encounterWriteHeld(user?.userId ?? '', id));mutationError(err); }
   }
 
   async function handleAddPrescription() {

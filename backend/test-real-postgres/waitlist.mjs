@@ -1,3 +1,4 @@
+import {verifyEncounterAck} from './encounter-ack-check.mjs';
 import {verifyLowStock} from './low-stock-check.mjs';
 import {verifyMedicationCreate} from './medication-create-check.mjs';
 import {verifyClinicalNotes} from './clinical-notes-check.mjs';
@@ -37,6 +38,7 @@ inputPaths.push('test-real-postgres/clinical-notes-check.mjs','../frontend/src/p
 inputPaths.push('test-real-postgres/patient-edit-check.mjs','../frontend/src/pages/EditPatientPage.tsx','../frontend/src/pages/patientEdit.ts','../frontend/src/hooks/usePatients.ts','../frontend/src/App.tsx');
 inputPaths.push('../frontend/src/api/medicationCreateWrite.ts','../frontend/src/components/medicationCreate.test.ts','test-real-postgres/medication-create-check.mjs','../frontend/src/components/MedicationCreate.tsx','../frontend/src/components/medicationCreate.ts','../frontend/src/hooks/usePharmacy.ts','../frontend/src/pages/PharmacyPage.tsx');
 inputPaths.push('test-real-postgres/low-stock-check.mjs','../frontend/src/components/LowStock.tsx','../frontend/src/hooks/lowStockQuery.ts','../frontend/src/hooks/lowStockQuery.test.ts');
+inputPaths.push('test-real-postgres/encounter-ack-check.mjs','../frontend/src/api/encounterCreateWrite.ts','../frontend/src/api/encounterCreateWrite.test.ts','../frontend/src/api/encounterPending.ts','../frontend/src/api/encounterPending.test.ts');
 const assets=readFileSync(new URL('../../frontend/dist/index.html',import.meta.url),'utf8').matchAll(/(?:src|href)="(\/assets\/[^"]+)"/g);for(const asset of assets)inputPaths.push('../frontend/dist'+asset[1]);
 inputPaths.push('dist/src/modules/waitlist/waitlist.service.js','dist/src/modules/admissions/admissions.service.js','../frontend/dist/index.html');
 report.inputSha256=Object.fromEntries(inputPaths.map(path=>[path,createHash('sha256').update(readFileSync(new URL('../'+path,import.meta.url))).digest('hex')]));
@@ -123,6 +125,7 @@ try{
  report.patientDuplicateRace=await verifyPatientDuplicateRace({call,tokens,owner,workspaceId:ws});
  report.medicationCreate=await verifyMedicationCreate({call,tokens,owner,base,artifacts,workspaceId:ws,otherWorkspace:other.data});report.checks.push('FR6.1 medication create UI');
  report.lowStock=await verifyLowStock({call,tokens,base,artifacts});report.checks.push('FR6.5 low-stock read-only UI');
+ report.encounterAck=await verifyEncounterAck({call,tokens,base,artifacts});report.checks.push('Encounter dedicated acknowledgment correctness');
  report.clinicalNotes=await verifyClinicalNotes({call,tokens,owner,base,artifacts,workspaceId:ws,otherWorkspace:other.data});report.checks.push('FR4.1 clinical notes and US2 history UI');
  report.patientEditing=await verifyPatientEditing({call,tokens,owner,base,artifacts,workspaceId:ws});report.checks.push('patient edit: legacy short name/phone, fresh mount, save without edit refetch, roles, bilingual save/cancel and failure holds');
  // Workspace cleanup must cascade retained queue history without new DELETE grant.
