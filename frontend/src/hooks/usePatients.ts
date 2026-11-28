@@ -37,6 +37,21 @@ export function useCreatePatient() {
   });
 }
 
+export function usePatientForEditing(id: string | undefined) {
+  return useQuery({ queryKey: ['patients', 'edit', id], queryFn: async () => (await apiClient.get<Patient>(`/patients/${id}`)).data, enabled: !!id, staleTime: 0, gcTime: 0, refetchOnMount: 'always', refetchOnWindowFocus: false });
+}
+
 export function usePatient(id: string | undefined) {
   return useQuery({ queryKey: ['patients', id], queryFn: async () => (await apiClient.get<Patient>(`/patients/${id}`)).data, enabled: !!id });
+}
+
+export function useUpdatePatient(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: import('../pages/patientEdit').PatientPatch) => (await apiClient.patch<Patient>(`/patients/${id}`, input)).data,
+    onSuccess: updated => {
+      queryClient.setQueryData(['patients', 'edit', id], updated);
+      void queryClient.invalidateQueries({ queryKey: ['patients'], predicate: query => query.queryKey[1] !== 'edit' });
+    },
+  });
 }

@@ -419,5 +419,20 @@
     "type": "Test type",
     "name": "Test name",
     "submit": "Order test"
+  },
+  "patientEdit": {
+    "title": "Edit patient details",
+    "actions": "Actions",
+    "edit": "Edit details",
+    "emergencyName": "Emergency contact name",
+    "emergencyPhone": "Emergency contact phone",
+    "fixedFields": "Date of birth and gender cannot be changed here. Only ordinary demographic fields are sent.",
+    "saved": "Patient details saved",
+    "saving": "Saving",
+    "cancel": "Cancel and return to search",
+    "unknown": "The save outcome is unknown. Do not submit again. Check current patient details and audit before continuing. A readback cannot prove that a delayed request has finished. This hold applies only to this tab. Acknowledging discards this draft and loads the latest saved details.",
+    "checked": "I checked, load current details",
+    "loading": "Loading patient details",
+    "loadError": "Patient details could not be loaded. The record may be unavailable in this workspace."
   }
 }

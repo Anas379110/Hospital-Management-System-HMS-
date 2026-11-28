@@ -5,6 +5,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import PatientsPage from './pages/PatientsPage';
 import NewPatientPage from './pages/NewPatientPage';
+import EditPatientPage from './pages/EditPatientPage';
 import PatientDetailPage from './pages/PatientDetailPage';
 import AppointmentsPage from './pages/AppointmentsPage';
 import DepartmentsPage from './pages/DepartmentsPage';
@@ -23,7 +24,7 @@ export default function App() {
           <Route element={<ProtectedRoute />}>
             <Route element={<ProtectedRoute page="overview" />}><Route path="/overview" element={<OverviewPage />} /></Route>
             <Route element={<ProtectedRoute page="patients" />}><Route path="/patients" element={<PatientsPage />} /></Route>
-            <Route element={<ProtectedRoute page="registration" />}><Route path="/patients/new" element={<NewPatientPage />} /></Route>
+            <Route element={<ProtectedRoute page="registration" />}><Route path="/patients/new" element={<NewPatientPage />} /><Route path="/patients/:id/edit" element={<EditPatientPage />} /></Route>
             <Route element={<ProtectedRoute page="patients" />}><Route path="/patients/:id" element={<PatientDetailPage />} /></Route>
             <Route element={<ProtectedRoute page="appointments" />}><Route path="/appointments" element={<AppointmentsPage />} /></Route>
             <Route element={<ProtectedRoute page="departments" />}><Route path="/departments" element={<DepartmentsPage />} /></Route>

@@ -63,20 +63,22 @@ export default function PatientsPage() {
 
       {!isLoading && patients && patients.length > 0 && (
         <TableContainer component={Paper}>
-          <Table>
+          <Table sx={{ tableLayout: { xs: 'fixed', sm: 'auto' }, '& .MuiTableCell-root': { px: { xs: 1, sm: 2 }, overflowWrap: 'anywhere' }, '& .MuiButton-root': { minWidth: 0, px: { xs: 0.5, sm: 1 }, overflowWrap: 'anywhere' } }}>
             <TableHead>
               <TableRow>
                 <TableCell>{t('patients.mrn')}</TableCell>
                 <TableCell>{t('patients.fullName')}</TableCell>
                 <TableCell>{t('patients.phone')}</TableCell>
+                {canRegister && <TableCell>{t('patientEdit.actions')}</TableCell>}
               </TableRow>
             </TableHead>
             <TableBody>
               {patients.map((p) => (
-                <TableRow key={p.id} hover component={RouterLink} to={`/patients/${p.id}`} sx={{ cursor: 'pointer', textDecoration: 'none' }}>
-                  <TableCell>{p.mrn}</TableCell>
+                <TableRow key={p.id} hover>
+                  <TableCell><Button component={RouterLink} to={`/patients/${p.id}`}>{p.mrn}</Button></TableCell>
                   <TableCell>{p.fullName}</TableCell>
                   <TableCell>{p.phone}</TableCell>
+                  {canRegister && <TableCell><Button component={RouterLink} to={`/patients/${p.id}/edit`} onClick={event => event.stopPropagation()}>{t('patientEdit.edit')}</Button></TableCell>}
                 </TableRow>
               ))}
             </TableBody>

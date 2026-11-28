@@ -23,4 +23,6 @@ export interface Patient {
   nationalId?: string | null;
   phone: string;
   address?: string | null;
+  emergencyContactName?: string | null;
+  emergencyContactPhone?: string | null;
 }
