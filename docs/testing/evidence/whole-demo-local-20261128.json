@@ -1,0 +1,207 @@
+{
+  "scope": "Actual bounded local runs only. Exact changed-runner CI pending. No app change or hosted redeploy; prior deployed qualification d13de91 remains. Manager sequential endstate only; optional409notrun; original targets and open policy/humanUAT limits preserved.",
+  "versions": {
+    "17": {
+      "reportSHA256": "fd1f980970552fc6c87c502ca74d7fe728c6cf31f3bd7b1cda00147870a2457b",
+      "startedAt": "2026-11-28T17:51:07.213Z",
+      "finishedAt": "2026-11-28T17:52:56.138Z",
+      "scriptSHA256": "b7233baa69d28663bc7c56ca6d3307facaafa4be5c6452ad5988669b4455147d",
+      "helperSHA256": "b747c9d8e2d16537e8dd257283fb3432834516453cc2d57dc2b91c6ad49416da",
+      "complete": true,
+      "externalAttempts": [],
+      "pageErrors": [],
+      "tableCount": 18,
+      "securityProof": {
+        "runtimeRole": "hms_runtime",
+        "nonownerNoBypass": true,
+        "auditMutationsDenied": 3,
+        "cleanupTableDenied": true,
+        "unscopedPatients": 0
+      },
+      "sameOriginExistingSessionRecovery": true,
+      "journeys": [
+        {
+          "lang": "en",
+          "viewportWidth": 1280,
+          "managerCoverage": "Sequential end-state only, not cross-client synchronization",
+          "optional409Branches": "Not run by this extension",
+          "roles": [
+            "admin",
+            "billing_clerk",
+            "doctor",
+            "lab_tech",
+            "manager",
+            "nurse",
+            "pharmacist",
+            "receptionist"
+          ],
+          "ids": {
+            "patient": "63af9cf0-afae-40b9-9f20-0b10e302bcfb",
+            "doctor": "c8b10fab-93e5-4fb8-9544-0c6c449ee693",
+            "department": "ac963ad3-33ef-4954-b089-14d9eeda2605",
+            "bed": "76b6991d-6598-4460-834c-6edb681e06da",
+            "appointment": "da17996c-eaed-4a98-8ab9-5fb7967d1e4a",
+            "encounter": "afbdb40b-7264-4735-82f8-7f6a844dc8cc",
+            "prescription": "17c1a4dd-8d67-4af7-aa2f-1176ca8b04ef",
+            "medication": "e81a38f9-a8b6-4c7a-a7dc-36c79ca170ce",
+            "invoice": "47cd468c-be4f-4d0e-9341-79981f0ba5e5",
+            "payment": "8cf49562-0b4c-4b64-b042-7bb41bdbabe6",
+            "waitlist": "df2d3157-b023-40a3-b456-ba9c767b6900",
+            "admission": "0133de35-0055-4dac-b47e-ddf5cfc61a1f",
+            "mainResults": [
+              "5bea81e2-3a1e-4ce8-bd9a-bbf7f74451f1",
+              "e26685d4-c488-45b2-bdd2-a5bb2b110335"
+            ],
+            "deletedEncounter": "ff862ec9-f1c1-44ed-8736-25e095969ac0",
+            "deletedPrescription": "5e2647eb-8001-4cbd-bab2-5742544c28dc",
+            "deletedTest": "823c9283-e7a0-430f-9ba5-36f11b54d563"
+          },
+          "actualLostDeleteRequests": 1,
+          "recovered": true,
+          "scope": "Fictional UI writes, current API read-only verification and explicit local read-only retained-state inspection. No humanUAT/universal role-state/independent-media/power-loss/offline-installer claim."
+        },
+        {
+          "lang": "ar",
+          "viewportWidth": 390,
+          "managerCoverage": "Sequential end-state only, not cross-client synchronization",
+          "optional409Branches": "Not run by this extension",
+          "roles": [
+            "admin",
+            "billing_clerk",
+            "doctor",
+            "lab_tech",
+            "manager",
+            "nurse",
+            "pharmacist",
+            "receptionist"
+          ],
+          "ids": {
+            "patient": "2eb8c9e3-5d2c-4b86-96ca-3a90acf58741",
+            "doctor": "88b6cc93-a8c7-4518-88cb-3b3441c85798",
+            "department": "d3e51289-05ab-4758-a54f-e52566b97ae9",
+            "bed": "749ec92c-562d-4bf3-b67f-25471a16b6c6",
+            "appointment": "e9d213bf-44e9-46e9-b1eb-da376ecf5d86",
+            "encounter": "f89a81b4-90ff-4efb-a0f0-afbe1f9f08cb",
+            "prescription": "21eea061-85f9-4ac8-a16c-e22c06b6490f",
+            "medication": "8c3a1538-a546-48e5-aa50-9ab75b539aa9",
+            "invoice": "480e259f-720a-449c-a19c-de91ac9c88a2",
+            "payment": "d4535492-c439-448d-aedc-be797aa4afb2",
+            "waitlist": "e5c3a5bc-64bf-4ed7-9d7d-e37bacd1a8cb",
+            "admission": "60379d4c-d5f9-4446-ab6b-f7e1d3c95122",
+            "mainResults": [
+              "501d56e4-f80c-486d-99b7-cc068d80d4ea",
+              "7c19f728-21c3-440b-9d57-75a6ff5ac0b2"
+            ],
+            "deletedEncounter": "f573dbe7-eb83-4f2f-ba4d-d1e00af00e62",
+            "deletedPrescription": "cce6a7e3-302c-4b80-b861-e3f929a00aee",
+            "deletedTest": "da5b47d8-7f3c-4466-99cf-0f7138f3b73f"
+          },
+          "actualLostDeleteRequests": 1,
+          "recovered": true,
+          "scope": "Fictional UI writes, current API read-only verification and explicit local read-only retained-state inspection. No humanUAT/universal role-state/independent-media/power-loss/offline-installer claim."
+        }
+      ]
+    },
+    "18": {
+      "reportSHA256": "378b257c483afa9fed56f43cb8aa82dcb934fd5cc38e7522fca66d206777a91f",
+      "startedAt": "2026-11-28T17:53:04.631Z",
+      "finishedAt": "2026-11-28T17:54:50.599Z",
+      "scriptSHA256": "b7233baa69d28663bc7c56ca6d3307facaafa4be5c6452ad5988669b4455147d",
+      "helperSHA256": "b747c9d8e2d16537e8dd257283fb3432834516453cc2d57dc2b91c6ad49416da",
+      "complete": true,
+      "externalAttempts": [],
+      "pageErrors": [],
+      "tableCount": 18,
+      "securityProof": {
+        "runtimeRole": "hms_runtime",
+        "nonownerNoBypass": true,
+        "auditMutationsDenied": 3,
+        "cleanupTableDenied": true,
+        "unscopedPatients": 0
+      },
+      "sameOriginExistingSessionRecovery": true,
+      "journeys": [
+        {
+          "lang": "en",
+          "viewportWidth": 1280,
+          "managerCoverage": "Sequential end-state only, not cross-client synchronization",
+          "optional409Branches": "Not run by this extension",
+          "roles": [
+            "admin",
+            "billing_clerk",
+            "doctor",
+            "lab_tech",
+            "manager",
+            "nurse",
+            "pharmacist",
+            "receptionist"
+          ],
+          "ids": {
+            "patient": "9c9d0c7a-669e-473c-9701-c5ffe7bf8501",
+            "doctor": "91e1a573-bac8-4b0f-8362-6d90b76a5707",
+            "department": "3f1e7201-4377-4c0e-ae44-afa8a269c1a9",
+            "bed": "c7017f5c-689d-4c79-8390-b811d5a50147",
+            "appointment": "c571c755-4b98-42df-88ff-982ef647b176",
+            "encounter": "9a0cd285-6115-4f23-8d68-bd7bcc961ac1",
+            "prescription": "582a09af-c3b4-423f-8a30-f1da3b4a4f98",
+            "medication": "5c924578-43e0-4d63-99dc-e1026dbcaa3a",
+            "invoice": "998dec0a-58a3-4ca8-a728-b850e14ab860",
+            "payment": "20cffb89-2d14-4f90-b398-efac621272db",
+            "waitlist": "2486d481-976a-41bf-910f-12f62ca04aff",
+            "admission": "5b36e6bb-e692-4d1c-b93d-9aa533547d82",
+            "mainResults": [
+              "64a88eb1-b469-4792-9d3e-dc65a1bd4c67",
+              "a8a9dc1e-e6bf-4801-95d0-a6c7e9dd6f81"
+            ],
+            "deletedEncounter": "4822de30-eae7-481e-bc25-3f2a9dedd484",
+            "deletedPrescription": "38c3370c-2ace-4a9d-970d-87e512a0652a",
+            "deletedTest": "247b7cc6-fd5f-446f-a724-3089b4079eb5"
+          },
+          "actualLostDeleteRequests": 1,
+          "recovered": true,
+          "scope": "Fictional UI writes, current API read-only verification and explicit local read-only retained-state inspection. No humanUAT/universal role-state/independent-media/power-loss/offline-installer claim."
+        },
+        {
+          "lang": "ar",
+          "viewportWidth": 390,
+          "managerCoverage": "Sequential end-state only, not cross-client synchronization",
+          "optional409Branches": "Not run by this extension",
+          "roles": [
+            "admin",
+            "billing_clerk",
+            "doctor",
+            "lab_tech",
+            "manager",
+            "nurse",
+            "pharmacist",
+            "receptionist"
+          ],
+          "ids": {
+            "patient": "69078a20-d71f-40ee-ba4b-b73d598f24c8",
+            "doctor": "c3f11830-a158-4edf-a47d-fee227953c78",
+            "department": "721427e3-c837-4697-af4c-5d6c1d32a534",
+            "bed": "a284576b-f717-4b3b-a585-aa5b3c270686",
+            "appointment": "001cb57e-413e-4c55-b734-9ccca75137db",
+            "encounter": "6512e25e-38a9-4071-9b27-32853dda9370",
+            "prescription": "3f00fe12-a314-4a37-adbf-c585c4468d58",
+            "medication": "dcee46e2-1a44-44ff-9e7b-1d92bcac29f0",
+            "invoice": "7ee568ce-5ed5-479f-aa21-cd25dae1b6b2",
+            "payment": "ec52eb7b-79d2-4d1d-b233-373c500059c8",
+            "waitlist": "ce509bfa-3119-4b86-9448-a7d46ef0ce88",
+            "admission": "3a58b8a6-3553-449f-bafd-ea47c4011f8b",
+            "mainResults": [
+              "8c1706c2-6c35-4c54-ba80-74a091df4a28",
+              "b3aad67f-9527-4337-9110-a201363b15d0"
+            ],
+            "deletedEncounter": "54dcbe04-129b-4e11-8f01-e78389629fa8",
+            "deletedPrescription": "a5e84b4a-3d5a-4c32-9bcb-ad14dc4ac9af",
+            "deletedTest": "c915aa3e-a6ff-47ff-abbb-fd1d30e39725"
+          },
+          "actualLostDeleteRequests": 1,
+          "recovered": true,
+          "scope": "Fictional UI writes, current API read-only verification and explicit local read-only retained-state inspection. No humanUAT/universal role-state/independent-media/power-loss/offline-installer claim."
+        }
+      ]
+    }
+  }
+}
