@@ -6,7 +6,7 @@ const {createApplication}=require(path.join(__dirname,'deps/dist/src/app.factory
 let app, closing=false;
 const deadline=setTimeout(()=>{process.exit(23);},45000);
 (async()=>{
-  assert.equal(process.platform,'win32');assert.equal(process.env.GITHUB_ACTIONS,'true');
+  assert.equal(process.platform,'win32');assert.equal(process.env.HMS_PROBE_CI,'1');
   app=await createApplication({logger:false});
   await app.listen(0,'127.0.0.1');
   const address=app.getHttpServer().address();
