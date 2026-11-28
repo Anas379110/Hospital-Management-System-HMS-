@@ -81,6 +81,18 @@ jobs:
           echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt ${VERSION_CODENAME}-pgdg main" | sudo tee /etc/apt/sources.list.d/hms-pgdg.list
           sudo apt-get update
           sudo apt-get install -y postgresql-${{ matrix.postgres }} postgresql-client-${{ matrix.postgres }}
+      - name: Synthetic rich-history HTTP and snapshot qualification
+        run: |
+          node test-real-postgres/related-history-performance.mjs
+          node test-real-postgres/related-history-integrity.mjs
+        working-directory: backend
+        env:
+          HMS_RELATED_PG_BIN: /usr/lib/postgresql/${{ matrix.postgres }}/bin
+          HMS_RELATED_PG_PORT: '55621'
+          HMS_PERFORMANCE_PORT: '4389'
+          HMS_PERFORMANCE_REPORT: related-history-report.json
+          HMS_RELATED_REPORT: related-history-report.json
+          HMS_RELATED_INTEGRITY_OUTPUT: related-history-integrity.json
       - name: Local fictional journey and independent-cluster recovery
         run: node test-real-browser/local-demo-recovery.cjs
         working-directory: frontend
@@ -202,6 +214,8 @@ jobs:
           name: postgres-regression-pg${{ matrix.postgres }}
           path: |
             backend/postgres-regression.json
+            backend/related-history-report.json
+            backend/related-history-integrity.json
             backend/attendance-report.json
             backend/setup-report.json
             backend/freshness-report.json

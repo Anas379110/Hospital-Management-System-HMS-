@@ -191,6 +191,8 @@ model Prescription {
   dispensedBy       String?            @map("dispensed_by")
   dispensedByUser   User?              @relation("DispensedBy", fields: [dispensedBy], references: [id])
 
+  // Pending workspace/time partial index is SQL-maintained in migration
+  // 20261128110100_pending_prescription_index; Prisma5cannot express WHERE.
   @@map("prescriptions")
 }
 
@@ -232,6 +234,8 @@ model TestOrder {
 
   @@index([status])
   @@index([patientId])
+  // Pending workspace/time partial index is SQL-maintained in migration
+  // 20261128110000_pending_lab_index; preserve it in future migrations.
   @@map("test_orders")
 }
 
@@ -343,6 +347,7 @@ model AuditLog {
   newValue   Json?    @map("new_value")
   createdAt  DateTime @default(now()) @map("created_at")
 
+  @@index([workspaceId, createdAt(sort: Desc)], map: "audit_logs_workspace_created_at_idx")
   @@index([entityType, entityId])
   @@map("audit_logs")
 }

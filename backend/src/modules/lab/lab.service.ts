@@ -50,11 +50,22 @@ export class LabService {
 
   // FR-7.2
   async pendingOrders() {
-    return this.prisma.testOrder.findMany({
-      where: { status: 'pending' },
-      include: { patient: { select: { fullName: true, mrn: true } }, orderedByUser: { select: { fullName: true } } },
-      orderBy: { orderedAt: 'asc' },
-    });
+    return this.prisma.$transaction(async tx => {
+      // Fixed typed literal avoids Prisma's text-to-enum cast preventing a
+      // partial-index plan behind RLS. Transaction-local workspace scope still
+      // applies to this tagged query and to relation hydration below.
+      const ids = await tx.$queryRaw<{ id: string }[]>(Prisma.sql`
+        SELECT id FROM test_orders
+        WHERE status = 'pending'::"TestOrderStatus"
+        ORDER BY ordered_at ASC
+      `);
+      if (ids.length === 0) return [];
+      return tx.testOrder.findMany({
+        where: { id: { in: ids.map(row => row.id) } },
+        include: { patient: { select: { fullName: true, mrn: true } }, orderedByUser: { select: { fullName: true } } },
+        orderBy: { orderedAt: 'asc' },
+      });
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead });
   }
 
   private async findOrderOrThrow(id: string) {

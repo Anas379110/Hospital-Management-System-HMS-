@@ -76,11 +76,19 @@ export class PharmacyService {
 
   // FR-6.2
   async pendingPrescriptions() {
-    return this.prisma.prescription.findMany({
-      where: { status: 'pending' },
-      include: { encounter: { select: { patient: { select: { fullName: true, mrn: true } }, doctor: { select: { fullName: true } } } } },
-      orderBy: { createdAt: 'asc' },
-    });
+    return this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      const ids = await tx.$queryRaw<{ id: string }[]>(Prisma.sql`
+        SELECT id FROM prescriptions
+        WHERE status = 'pending'::"PrescriptionStatus"
+        ORDER BY created_at ASC
+      `);
+      if (ids.length === 0) return [];
+      return tx.prescription.findMany({
+        where: { id: { in: ids.map(row => row.id) } },
+        include: { encounter: { select: { patient: { select: { fullName: true, mrn: true } }, doctor: { select: { fullName: true } } } } },
+        orderBy: { createdAt: 'asc' },
+      });
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead });
   }
 
   /**
