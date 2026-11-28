@@ -55,6 +55,7 @@ try {
   if ($LASTEXITCODE -ne 0) { throw 'Native generation failed' }
   & npm.cmd run build
   if ($LASTEXITCODE -ne 0) { throw 'Locked backend build failed' }
+  if (-not (Test-Path -LiteralPath (Join-Path $app 'dist/app.factory.js') -PathType Leaf)) { throw 'Staged factory build contract failed' }
 } finally { Pop-Location }
 Copy-Item tools/windows-probe/child.ps1,tools/windows-probe/native.cjs,tools/windows-probe/roundtrip.cjs,tools/windows-probe/app-child.cjs,tools/windows-probe/roundtrip-seed.sql $bin
 Write-Output 'Pinned native probe preparation complete. No package or application launch claimed.'
