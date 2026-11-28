@@ -1,3 +1,4 @@
+# R7 publication staging only, CI skipped.
 name: HMS Windows native feasibility probe
 on:
   pull_request:
