@@ -71,6 +71,21 @@ jobs:
           VITE_PUBLIC_DEMO: true
       - run: node node_modules/playwright/cli.js install --with-deps chromium
         working-directory: frontend
+      - name: Install matching local recovery server and clients
+        run: |
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl --fail --silent --show-error -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          . /etc/os-release
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt ${VERSION_CODENAME}-pgdg main" | sudo tee /etc/apt/sources.list.d/hms-pgdg.list
+          sudo apt-get update
+          sudo apt-get install -y postgresql-${{ matrix.postgres }} postgresql-client-${{ matrix.postgres }}
+      - name: Local fictional journey and independent-cluster recovery
+        run: node test-real-browser/local-demo-recovery.cjs
+        working-directory: frontend
+        env:
+          HMS_LOCAL_PG_BIN: /usr/lib/postgresql/${{ matrix.postgres }}/bin
+          HMS_LOCAL_PG_PORT: '55601'
+          HMS_LOCAL_RECOVERY_PG_PORT: '55602'
       - run: node test-real-browser/swagger-model-wrap.cjs && node test-real-browser/swagger-pharmacy-contract.cjs && node test-real-browser/swagger-admission-contract.cjs && node test-real-browser/swagger-department-summary.cjs && node test-real-browser/swagger-setup-contract.cjs && node test-real-browser/swagger-appointment-write.cjs
         working-directory: frontend
         env:

@@ -22,3 +22,9 @@ coverage/
 
 # Local real-browser evidence
 frontend/browser-artifacts/
+
+# Never commit local-demo credentials, recovery keys or logical archives
+**/recovery-key
+**/fictional.dump
+local-demo/data/
+local-demo/backups/

@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import EncounterTestOrder from '../components/EncounterTestOrder';
+import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   Alert,
@@ -40,6 +41,9 @@ export default function PatientDetailPage() {
 
   const [chiefComplaint, setChiefComplaint] = useState('');
   const [diagnosis, setDiagnosis] = useState('');
+  const testTargetKey = 'hms_test_order_encounter:' + user?.userId + ':' + id;
+  const [testEncounterId, setTestEncounterId] = useState<string | null>(() => sessionStorage.getItem(testTargetKey));
+  useEffect(() => { setTestEncounterId(sessionStorage.getItem(testTargetKey)); }, [testTargetKey]);
   const [activeEncounterId, setActiveEncounterId] = useState<string | null>(null);
   const [medicationName, setMedicationName] = useState('');
   const [dosage, setDosage] = useState('');
@@ -53,7 +57,7 @@ export default function PatientDetailPage() {
     setError(null); setSuccess(null);
     try {
     const encounter = await createEncounter.mutateAsync({ patientId: id, chiefComplaint, diagnosis });
-    setActiveEncounterId(encounter.id);
+    setActiveEncounterId(encounter.id); setTestEncounterId(encounter.id); sessionStorage.setItem(testTargetKey, encounter.id);
     setChiefComplaint('');
     setDiagnosis('');
     setSuccess(t('emr.encounterSaved'));
@@ -118,6 +122,7 @@ export default function PatientDetailPage() {
               {t('emr.saveEncounter')}
             </Button>
 
+            {testEncounterId && <EncounterTestOrder key={user!.userId + testEncounterId} patientId={id!} encounterId={testEncounterId} />}
             {/* بعد إنشاء الزيارة مباشرة، يمكن إضافة وصفة لها فوراً — FR-4.2 */}
             {activeEncounterId && (
               <Box mt={3} pt={2} borderTop="1px dashed #ccc">

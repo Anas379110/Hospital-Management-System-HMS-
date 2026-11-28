@@ -409,5 +409,15 @@
     "dismissAdd": "Do not add",
     "keep": "Keep request",
     "checked": "I checked the records"
+  },
+  "testOrder": {
+    "title": "Order lab or imaging test",
+    "encounter": "For the last encounter created here by this doctor in this tab",
+    "saved": "Test ordered. It is now in the pending test queue.",
+    "unknown": "The order outcome is unknown. Check the pending queue, patient record and audit before allowing another order. No automatic retry was sent.",
+    "checked": "I checked the queue, record and audit",
+    "type": "Test type",
+    "name": "Test name",
+    "submit": "Order test"
   }
 }

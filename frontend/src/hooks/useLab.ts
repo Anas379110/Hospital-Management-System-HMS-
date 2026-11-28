@@ -40,6 +40,7 @@ export function useRecordTestResult() {
 export function useCreateTestOrder() {
   const queryClient = useQueryClient();
   return useMutation({
+    retry: false,
     mutationFn: async (input: {
       patientId: string;
       encounterId: string;
