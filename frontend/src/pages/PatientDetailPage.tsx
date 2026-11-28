@@ -1,3 +1,5 @@
+import { appointmentSelection, loadEncounterAppointment } from '../api/encounterAppointment';
+import { useQuery } from '@tanstack/react-query';
 import { prescriptionInput } from './prescriptionDraft';
 import { acknowledgePrescriptionCreate, prescriptionHeld } from '../api/prescriptionCreateWrite';
 import { useQueryClient } from '@tanstack/react-query';
@@ -7,7 +9,7 @@ import { isCurrentSession, sessionEpoch } from '../api/sessionIsolation';
 import { encounterInput } from './encounterDraft';
 import EncounterTestOrder from '../components/EncounterTestOrder';
 import { useEffect, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import {
   Alert,
   Box,
@@ -35,13 +37,19 @@ import { usePatientTestResults } from '../hooks/useLab';
 export default function PatientDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
-  return <PatientDetailWorkspace key={(user?.userId ?? '') + ':' + id} />;
+  const { search } = useLocation();
+  return <PatientDetailWorkspace key={(user?.userId ?? '') + ':' + id + ':' + search} />;
 }
 
 function PatientDetailWorkspace() {
   const { id } = useParams<{ id: string }>();
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
+  const { search } = useLocation();
+  const selectedAppointment=appointmentSelection(search);
+  const [appointmentUsed,setAppointmentUsed]=useState(false);
+  const appointmentQuery=useQuery({queryKey:['encounter-appointment',user?.userId,id,search],queryFn:()=>loadEncounterAppointment(selectedAppointment!,id!,user!.userId),enabled:!!selectedAppointment&&!!id&&user?.role==='doctor',retry:false,staleTime:0});
+  const appointmentBlocked=!!selectedAppointment&&(appointmentUsed||appointmentQuery.isFetching||appointmentQuery.isError||!appointmentQuery.data);
   const patient = usePatient(id);
   const queryClient = useQueryClient();
   const [mountedEpoch] = useState(sessionEpoch);
@@ -89,16 +97,17 @@ function PatientDetailWorkspace() {
   const locale = i18n.language === 'ar' ? 'ar-SY' : 'en-US';
 
   async function handleCreateEncounter() {
-    if (!id || chiefComplaint.length < 2 || diagnosis.length < 2 || held || createEncounter.isPending || checking) return;
+    if (!id || chiefComplaint.length < 2 || diagnosis.length < 2 || held || createEncounter.isPending || checking || appointmentBlocked) return;
     setError(null); setSuccess(null);
     try {
-    const encounter = await createEncounter.mutateAsync({ input: encounterInput(id, chiefComplaint, diagnosis, notes), patientId: id, userId: user?.userId ?? '', epoch: mountedEpoch });
+    const encounter = await createEncounter.mutateAsync({ targetIsCurrent:callbackIsCurrent, input: encounterInput(id, chiefComplaint, diagnosis, notes, selectedAppointment?.id), ...(selectedAppointment ? {appointmentSelection:selectedAppointment} : {}), patientId: id, userId: user?.userId ?? '', epoch: mountedEpoch });
     if (!callbackIsCurrent()) return;
+    if(selectedAppointment)setAppointmentUsed(true);
     setActiveEncounterId(encounter.id); setTestEncounterId(encounter.id); sessionStorage.setItem(testTargetKey, encounter.id);
     setChiefComplaint('');
     setDiagnosis('');setNotes('');
     setSuccess(t('emr.encounterSaved'));
-    } catch (err) { if (!callbackIsCurrent()) return;setHeld(encounterWriteHeld(user?.userId ?? '', id));mutationError(err); }
+    } catch (err) { if (!callbackIsCurrent()) return;setHeld(encounterWriteHeld(user?.userId ?? '', id));if(selectedAppointment)void appointmentQuery.refetch();mutationError(err); }
   }
 
   async function reconcilePrescription() {
@@ -138,12 +147,13 @@ function PatientDetailWorkspace() {
             <Typography variant="subtitle1" fontWeight={600} mb={2}>
               {t('emr.newEncounter')}
             </Typography>
+            {selectedAppointment && <Box sx={{mb:2}}><Alert severity={appointmentBlocked?'warning':'info'}>{t('emr.appointmentContext')}<Typography>{selectedAppointment.id}</Typography>{appointmentQuery.data && <Typography>{new Date(appointmentQuery.data.scheduledAt).toLocaleString(locale)} | {appointmentQuery.data.patient?.fullName}</Typography>}{appointmentQuery.isFetching && <Typography>{t('emr.appointmentLoading')}</Typography>}{appointmentUsed ? <Typography>{t('emr.appointmentUsed')}</Typography> : appointmentBlocked && <Typography>{t('emr.appointmentUnavailable')}</Typography>}</Alert>{!appointmentUsed && <Button disabled={appointmentQuery.isFetching} onClick={()=>void appointmentQuery.refetch()}>{t('emr.appointmentRefresh')}</Button>}<Button component={Link} to={`/patients/${id}`}>{t('emr.standaloneVisit')}</Button></Box>}
             {held && <Alert severity="warning">{t('emr.encounterUnknown')}<Button disabled={checking} onClick={() => void reconcileEncounter()}>{t('emr.checkEncounter')}</Button></Alert>}
             <TextField
               fullWidth
               margin="normal"
               label={t('emr.complaint')}
-              disabled={held || checking || createEncounter.isPending}
+              disabled={held || checking || createEncounter.isPending || appointmentBlocked}
               value={chiefComplaint}
               onChange={(e) => setChiefComplaint(e.target.value)}
             />
@@ -151,16 +161,16 @@ function PatientDetailWorkspace() {
               fullWidth
               margin="normal"
               label={t('emr.diagnosis')}
-              disabled={held || checking || createEncounter.isPending}
+              disabled={held || checking || createEncounter.isPending || appointmentBlocked}
               value={diagnosis}
               onChange={(e) => setDiagnosis(e.target.value)}
             />
-            <TextField fullWidth multiline minRows={3} margin="normal" label={t('emr.clinicalNotes')} value={notes} disabled={held || checking || createEncounter.isPending} onChange={e => setNotes(e.target.value)} />
+            <TextField fullWidth multiline minRows={3} margin="normal" label={t('emr.clinicalNotes')} value={notes} disabled={held || checking || createEncounter.isPending || appointmentBlocked} onChange={e => setNotes(e.target.value)} />
             <Button
               variant="contained"
               sx={{ mt: 2 }}
               onClick={handleCreateEncounter}
-              disabled={createEncounter.isPending || held || checking || chiefComplaint.length < 2 || diagnosis.length < 2}
+              disabled={createEncounter.isPending || held || checking || appointmentBlocked || chiefComplaint.length < 2 || diagnosis.length < 2}
             >
               {t('emr.saveEncounter')}
             </Button>
