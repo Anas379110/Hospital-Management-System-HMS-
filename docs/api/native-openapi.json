@@ -652,6 +652,48 @@
         ],
         "type": "object"
       },
+      "MedicationResponseDto": {
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "currentStock": {
+            "type": "integer"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "reorderThreshold": {
+            "type": "integer"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "workspaceId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "workspaceId",
+          "id",
+          "name",
+          "unit",
+          "currentStock",
+          "reorderThreshold",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
       "OrderingUserIdentityResponseDto": {
         "properties": {
           "fullName": {
@@ -760,6 +802,85 @@
         ],
         "type": "object"
       },
+      "PendingPrescriptionResponseDto": {
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "dispensedAt": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "dispensedBy": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "dosage": {
+            "type": "string"
+          },
+          "duration": {
+            "type": "string"
+          },
+          "encounter": {
+            "$ref": "#/components/schemas/PharmacyEncounterIdentityResponseDto"
+          },
+          "encounterId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "medicationId": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "medicationName": {
+            "type": "string"
+          },
+          "notes": {
+            "nullable": true,
+            "type": "string"
+          },
+          "quantityDispensed": {
+            "nullable": true,
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "dispensed",
+              "unavailable"
+            ],
+            "type": "string"
+          },
+          "workspaceId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "workspaceId",
+          "id",
+          "encounterId",
+          "medicationName",
+          "dosage",
+          "duration",
+          "notes",
+          "createdAt",
+          "status",
+          "medicationId",
+          "quantityDispensed",
+          "dispensedAt",
+          "dispensedBy",
+          "encounter"
+        ],
+        "type": "object"
+      },
       "PendingTestOrderResponseDto": {
         "properties": {
           "completedAt": {
@@ -844,6 +965,47 @@
           "completedAt",
           "patient",
           "orderedByUser"
+        ],
+        "type": "object"
+      },
+      "PharmacyDoctorIdentityResponseDto": {
+        "properties": {
+          "fullName": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "fullName"
+        ],
+        "type": "object"
+      },
+      "PharmacyEncounterIdentityResponseDto": {
+        "properties": {
+          "doctor": {
+            "$ref": "#/components/schemas/PharmacyDoctorIdentityResponseDto"
+          },
+          "patient": {
+            "$ref": "#/components/schemas/PharmacyPatientIdentityResponseDto"
+          }
+        },
+        "required": [
+          "patient",
+          "doctor"
+        ],
+        "type": "object"
+      },
+      "PharmacyPatientIdentityResponseDto": {
+        "properties": {
+          "fullName": {
+            "type": "string"
+          },
+          "mrn": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "fullName",
+          "mrn"
         ],
         "type": "object"
       },
@@ -984,6 +1146,57 @@
         },
         "required": [
           "isActive"
+        ],
+        "type": "object"
+      },
+      "StockAdjustmentResponseDto": {
+        "properties": {
+          "adjustmentDelta": {
+            "type": "integer"
+          },
+          "adjustmentReason": {
+            "description": "Existing optional echoed request reason, not retained as free text in audit.",
+            "nullable": true,
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "currentStock": {
+            "type": "integer"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "reorderThreshold": {
+            "type": "integer"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "workspaceId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "workspaceId",
+          "id",
+          "name",
+          "unit",
+          "currentStock",
+          "reorderThreshold",
+          "createdAt",
+          "updatedAt",
+          "adjustmentDelta"
         ],
         "type": "object"
       },
@@ -3361,7 +3574,17 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MedicationResponseDto"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Existing service payload; lists remain unbounded where applicable."
           },
           "400": {
             "description": "Invalid request"
@@ -3407,7 +3630,14 @@
         },
         "responses": {
           "201": {
-            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MedicationResponseDto"
+                }
+              }
+            },
+            "description": "Existing service payload; lists remain unbounded where applicable."
           },
           "400": {
             "description": "Invalid request"
@@ -3445,7 +3675,17 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MedicationResponseDto"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Existing service payload; lists remain unbounded where applicable."
           },
           "400": {
             "description": "Invalid request"
@@ -3502,7 +3742,14 @@
         },
         "responses": {
           "200": {
-            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StockAdjustmentResponseDto"
+                }
+              }
+            },
+            "description": "Existing service payload; lists remain unbounded where applicable."
           },
           "400": {
             "description": "Invalid request"
@@ -4173,7 +4420,17 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PendingPrescriptionResponseDto"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Existing service payload; lists remain unbounded where applicable."
           },
           "400": {
             "description": "Invalid request"
@@ -4230,7 +4487,14 @@
         },
         "responses": {
           "201": {
-            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrescriptionResponseDto"
+                }
+              }
+            },
+            "description": "Existing service payload; lists remain unbounded where applicable."
           },
           "400": {
             "description": "Invalid request"

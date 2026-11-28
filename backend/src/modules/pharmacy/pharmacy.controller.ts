@@ -1,3 +1,5 @@
+import { MedicationResponseDto, StockAdjustmentResponseDto, PendingPrescriptionResponseDto } from './dto/pharmacy-response.dto';
+import { PrescriptionResponseDto } from '../encounters/dto/clinical-response.dto';
 import { ApiOperation, ApiResponse, ApiExtension } from '@nestjs/swagger';
 import { Body, Controller, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -28,7 +30,7 @@ export class PharmacyController {
   @ApiOperation({"summary": "PharmacyController.createMedication", "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization."})
   @ApiExtension('x-roles', ["pharmacist", "admin"])
   @ApiExtension('x-auth', 'roles')
-  @ApiResponse({"status": 201, "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."})
+  @ApiResponse({"status": 201, type: MedicationResponseDto, description: 'Existing service payload; lists remain unbounded where applicable.'})
   @ApiResponse({"status": 400, "description": "Invalid request"})
   @ApiResponse({"status": 401, "description": "Missing/expired token, inactive current user, or invalid/expired workspace"})
   @ApiResponse({"status": 403, "description": "Current persisted role is not permitted"})
@@ -42,7 +44,7 @@ export class PharmacyController {
   @ApiOperation({"summary": "PharmacyController.listMedications", "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization."})
   @ApiExtension('x-roles', ["pharmacist", "admin"])
   @ApiExtension('x-auth', 'roles')
-  @ApiResponse({"status": 200, "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."})
+  @ApiResponse({"status": 200, type: MedicationResponseDto, isArray: true, description: 'Existing service payload; lists remain unbounded where applicable.'})
   @ApiResponse({"status": 400, "description": "Invalid request"})
   @ApiResponse({"status": 401, "description": "Missing/expired token, inactive current user, or invalid/expired workspace"})
   @ApiResponse({"status": 403, "description": "Current persisted role is not permitted"})
@@ -56,7 +58,7 @@ export class PharmacyController {
   @ApiOperation({"summary": "PharmacyController.lowStock", "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization."})
   @ApiExtension('x-roles', ["pharmacist", "admin"])
   @ApiExtension('x-auth', 'roles')
-  @ApiResponse({"status": 200, "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."})
+  @ApiResponse({"status": 200, type: MedicationResponseDto, isArray: true, description: 'Existing service payload; lists remain unbounded where applicable.'})
   @ApiResponse({"status": 400, "description": "Invalid request"})
   @ApiResponse({"status": 401, "description": "Missing/expired token, inactive current user, or invalid/expired workspace"})
   @ApiResponse({"status": 403, "description": "Current persisted role is not permitted"})
@@ -71,7 +73,7 @@ export class PharmacyController {
   @ApiOperation({"summary": "PharmacyController.adjustStock", "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization."})
   @ApiExtension('x-roles', ["pharmacist", "admin"])
   @ApiExtension('x-auth', 'roles')
-  @ApiResponse({"status": 200, "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."})
+  @ApiResponse({"status": 200, type: StockAdjustmentResponseDto, description: 'Existing service payload; lists remain unbounded where applicable.'})
   @ApiResponse({"status": 400, "description": "Invalid request"})
   @ApiResponse({"status": 401, "description": "Missing/expired token, inactive current user, or invalid/expired workspace"})
   @ApiResponse({"status": 403, "description": "Current persisted role is not permitted"})
@@ -85,7 +87,7 @@ export class PharmacyController {
   @ApiOperation({"summary": "PharmacyController.pendingPrescriptions", "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization."})
   @ApiExtension('x-roles', ["pharmacist", "admin"])
   @ApiExtension('x-auth', 'roles')
-  @ApiResponse({"status": 200, "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."})
+  @ApiResponse({"status": 200, type: PendingPrescriptionResponseDto, isArray: true, description: 'Existing service payload; lists remain unbounded where applicable.'})
   @ApiResponse({"status": 400, "description": "Invalid request"})
   @ApiResponse({"status": 401, "description": "Missing/expired token, inactive current user, or invalid/expired workspace"})
   @ApiResponse({"status": 403, "description": "Current persisted role is not permitted"})
@@ -100,7 +102,7 @@ export class PharmacyController {
   @ApiOperation({"summary": "PharmacyController.dispense", "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization."})
   @ApiExtension('x-roles', ["pharmacist", "admin"])
   @ApiExtension('x-auth', 'roles')
-  @ApiResponse({"status": 201, "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."})
+  @ApiResponse({"status": 201, type: PrescriptionResponseDto, description: 'Existing service payload; lists remain unbounded where applicable.'})
   @ApiResponse({"status": 400, "description": "Invalid request"})
   @ApiResponse({"status": 401, "description": "Missing/expired token, inactive current user, or invalid/expired workspace"})
   @ApiResponse({"status": 403, "description": "Current persisted role is not permitted"})

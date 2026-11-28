@@ -1,3 +1,4 @@
+import {verifyPharmacyResponses} from './pharmacy-response-check.mjs';
 import {verifyPatientDuplicateRace} from './patient-duplicate-race.mjs';
 import {verifyClinicalResponses} from './clinical-response-check.mjs';
 import {verifyPatientWaitlistResponses} from './response-contract-check.mjs';
@@ -17,6 +18,7 @@ if(ci){assert.equal(process.env.GITHUB_ACTIONS,'true');assert.equal(u.pathname,'
 else{assert.match(u.pathname,/^\/hms_test_perf_[a-z0-9_]+$/);data=realpathSync(process.env.HMS_TEST_PG_DATA??'');assert.match(data,/^\/tmp\/hms_test_perf_[a-zA-Z0-9_]+$/);}
 const owner=new PrismaClient({datasources:{db:{url:u.toString()}}});let app;const report={scope:'Disposable PostgreSQL waitlist and HTTP/browser, fictional data only',mode:ci?'GitHub Actions dedicated empty database':'local cluster identity checked',complete:false,checks:[],scriptSha256:createHash('sha256').update(readFileSync(new URL(import.meta.url))).digest('hex'),startedAt:new Date().toISOString()};
 const inputPaths=['prisma/demo/supabase-normalize.sql','prisma/schema.prisma','prisma/migrations/20261128005000_department_waitlist/migration.sql','prisma/demo/waitlist-grants.sql','prisma/demo/grants.sql','prisma/demo/supabase-audit.sql','src/modules/waitlist/waitlist.service.ts','src/modules/waitlist/waitlist.controller.ts','src/modules/admissions/admissions.service.ts','src/modules/departments/department-setup.service.ts','src/common/transaction-audit.ts','src/common/dto/api-error-response.dto.ts','src/modules/patients/dto/patient-response.dto.ts','src/modules/waitlist/dto/waitlist-response.dto.ts','src/modules/patients/patients.controller.ts','src/modules/waitlist/waitlist.controller.ts','test-real-postgres/response-contract-check.mjs','test-real-postgres/clinical-response-check.mjs','test-real-postgres/patient-duplicate-race.mjs','dist/src/modules/patients/patients.service.js','src/modules/encounters/encounters.controller.ts','src/modules/encounters/dto/clinical-response.dto.ts','src/modules/lab/lab.controller.ts','src/modules/lab/dto/test-order-response.dto.ts','src/modules/encounters/encounters.service.ts','src/modules/lab/lab.service.ts','src/modules/patients/patients.service.ts','src/common/filters/http-exception.filter.ts','dist/src/modules/encounters/encounters.controller.js','dist/src/modules/lab/lab.controller.js','../frontend/src/components/DepartmentWaitlist.tsx','../frontend/src/hooks/useWaitlist.ts'];
+inputPaths.push('test-real-postgres/pharmacy-response-check.mjs','src/modules/pharmacy/pharmacy.controller.ts','src/modules/pharmacy/dto/pharmacy-response.dto.ts','src/modules/pharmacy/pharmacy.service.ts','dist/src/modules/pharmacy/pharmacy.controller.js','dist/src/modules/pharmacy/pharmacy.service.js');
 const assets=readFileSync(new URL('../../frontend/dist/index.html',import.meta.url),'utf8').matchAll(/(?:src|href)="(\/assets\/[^"]+)"/g);for(const asset of assets)inputPaths.push('../frontend/dist'+asset[1]);
 inputPaths.push('dist/src/modules/waitlist/waitlist.service.js','dist/src/modules/admissions/admissions.service.js','../frontend/dist/index.html');
 report.inputSha256=Object.fromEntries(inputPaths.map(path=>[path,createHash('sha256').update(readFileSync(new URL('../'+path,import.meta.url))).digest('hex')]));
@@ -95,6 +97,7 @@ try{
  await page.close();}}finally{await browser.close();}assert.deepEqual(pageErrors,[]);
  // New independent HTTP batch gets a fresh rate window, no limiter bypass.
  await new Promise(resolve=>setTimeout(resolve,61000));
+ report.pharmacyResponseContracts=await verifyPharmacyResponses({call,tokens,patientId:patient.id,native:require('../dist/src/api-documentation').createApiDocument(app)});
  report.patientDuplicateRace=await verifyPatientDuplicateRace({call,tokens,owner,workspaceId:ws});
  // Workspace cleanup must cascade retained queue history without new DELETE grant.
  const allAudits=await owner.auditLog.findMany({where:{entityType:'WaitlistRequest'}});assert.ok(allAudits.length>=5);const audit=JSON.stringify(allAudits);assert.ok(!audit.includes(patient.fullName));assert.ok(!audit.includes(patient.mrn));

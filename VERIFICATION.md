@@ -1,6 +1,6 @@
 # HMS verification and open requirements
 
-Reconciled28 November2026 02:43 Istanbul. Fictional-data demonstration, not hospital readiness or compliance certification. Latest verified public release fdee7ece38c73431758f6ef9e0bf40aa749fe8d5. Earlier evidence remains historical and does not establish newer source execution.
+Reconciled28 November2026 07:40 Istanbul. Fictional-data demonstration, not hospital readiness or compliance certification. Latest verified public release552ddc845cf7abcc44f05511a1b8ed6150670567. Earlier evidence remains historical and does not establish newer source execution.
 
 ## Executed release evidence
 
@@ -11,7 +11,7 @@ Reconciled28 November2026 02:43 Istanbul. Fictional-data demonstration, not hosp
 
 ## Current engineering evidence
 
-Latest exact source CI PostgreSQL17/18 passed https://github.com/Anas379110/Hospital-Management-System-HMS-/actions/runs/46082348667 including actual320/390/1280Swagger model browser checks. Render Free/manual exactfdee7ec Live November28 02:34:56 in1m44, actual public hosted same six model checks, unchanged42schema55operation snapshot and keyboard nested controls passed. Actual pixels inspected. This is scoped model-layout proof, not blanket Swagger/WCAG acceptance.
+Prior model-layout exact source CI PostgreSQL17/18 passed https://github.com/Anas379110/Hospital-Management-System-HMS-/actions/runs/46082348667 including actual320/390/1280Swagger model browser checks. Render Free/manual exactfdee7ec Live November28 02:34:56 in1m44, actual public hosted same six model checks, unchanged42schema55operation snapshot and keyboard nested controls passed. Actual pixels inspected. This is scoped model-layout proof, not blanket Swagger/WCAG acceptance.
 
 Prior clinical contracts8dbf28f CI46080158788 and actual hosted22response checks passed02:16; patient/waitlist contracts8d7abab CI46078195061 and17hosted checks passed01:56. Response schemas cover selected routes only. Prescription dispensed/unavailable and test cancelled enums had schema-only coverage, not those22clinical probes. No new serializer/audience semantics.
 
@@ -23,10 +23,13 @@ Approved attendance, Admin department/bed setup, active-view15s freshness and pe
 
 ## Open requirements
 
-Concrete functional gaps include national-ID duplicate matching, DOB/gender correction scope and zero-responsibility invoice status semantics. Existing exact name+DOB warning concurrency fix is locally qualified only, not released at this snapshot. See traceability for exact partial/missing labels. Eight roles/eleven capability groups do not establish all requirements complete.
+Concrete functional gaps include national-ID duplicate matching, DOB/gender correction scope and zero-responsibility invoice status semantics. Existing exact name+DOB warning concurrency fix552ddc8 is released: PostgreSQL17/18 CI https://github.com/Anas379110/Hospital-Management-System-HMS-/actions/runs/46084720712 passed, Render actualLive03:06:32 after startup03:02:52 and public concurrent201/409/readback proof03:06 passed. Exact name+DOB only, no nationalID normalization or update-race guarantee. See traceability for exact partial/missing labels. Eight roles/eleven capability groups do not establish all requirements complete.
 
-Offline/intranet deployment, scheduled daily backup and independent-host disaster restore, physical power-loss guarantees, complete accessibility, legal compliance and future interoperability are not certified. Two-real-client-network rate separation and actual provider pause/resume persistence remain unmeasured. Hidden provider resume with preserved DB start and fresh heartbeat remains undetectable within the agreed90minute boundary. Daily prune's first actual scheduled observation is separate support work, not yet claimed here.
+Offline/intranet deployment, scheduled daily backup and independent-host disaster restore, physical power-loss guarantees, complete accessibility, legal compliance and future interoperability are not certified. Two-real-client-network rate separation and actual provider pause/resume persistence remain unmeasured. Hidden provider resume with preserved DB start and fresh heartbeat remains undetectable within the agreed90minute boundary. Actual daily cron prune run15 observed03:20:50Istanbul succeeded00:15UTC withDELETE0 because no aged eligible rows. This proves scheduled execution, not deletion of aged rows or provider pause/resume persistence.
 
 [Local process-crash evidence](docs/testing/CRASH-RECOVERY.md): actual disposable PostgreSQL18immediate-stop/restart preserved10,040committedfictionalpatientsand40audits, discarded an open uncommitted transaction. This is not a physical power-cut, hosted restart or backup/restore certification.
 
 No auto-delete/credential rotation, disruptive hosted test or paid infrastructure is implied. HMS remains active after demo launch until full targets are met or the user changes scope.
+
+## Pharmacy response documentation candidate November28
+Six unchanged service outputs annotated, local48schemas55operations23successcontracts.230unit62mockHTTP23metadata/validator/dependency tests pass; actual restrictedPG17.12/18.7 each53named pharmacy HTTP cases and full existing waitlist/clinical/patient/race suite pass. Input43hashes bind reports. No service/query/role/DB/config/dependency change. Local model pixels320/390/1280 inspected in scope; Independent source-only review accepted final bundle and552ddc8 baseline comparison07:39; no independent runtime reproduction. ExactCI and hosted proof pending. WholeHMS remains incomplete.
