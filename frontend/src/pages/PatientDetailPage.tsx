@@ -1,3 +1,4 @@
+import { acknowledgePrescriptionCreate, prescriptionHeld } from '../api/prescriptionCreateWrite';
 import { useQueryClient } from '@tanstack/react-query';
 import { acknowledgeEncounterCreate } from '../api/encounterCreateWrite';
 import { encounterWriteHeld } from '../api/encounterPending';
@@ -52,6 +53,8 @@ function PatientDetailWorkspace() {
   const { data: testResults } = usePatientTestResults(id, canReadClinical);
   const createEncounter = useCreateEncounter();
   const addPrescription = useAddPrescription();
+  const [rxHeld, setRxHeld] = useState(() => prescriptionHeld(user?.userId ?? '', id ?? ''));
+  const [rxChecking, setRxChecking] = useState(false);
 
   const [chiefComplaint, setChiefComplaint] = useState('');
   const [diagnosis, setDiagnosis] = useState('');
@@ -96,22 +99,24 @@ function PatientDetailWorkspace() {
     } catch (err) { if (!callbackIsCurrent()) return;setHeld(encounterWriteHeld(user?.userId ?? '', id));mutationError(err); }
   }
 
+  async function reconcilePrescription() {
+    if (!id || !user || rxChecking) return;setRxChecking(true);setError(null);
+    try { await acknowledgePrescriptionCreate({ userId: user.userId, patientId: id, epoch: mountedEpoch }, queryClient);if (!callbackIsCurrent()) return;setRxHeld(false);setMedicationName('');setDosage('');setDuration('');setActiveEncounterId(null); }
+    catch { if (callbackIsCurrent()) setError(t('errors.generic')); } finally { if (callbackIsCurrent()) setRxChecking(false); }
+  }
+
   async function handleAddPrescription() {
-    if (!activeEncounterId || !medicationName || !dosage || !duration) return;
+    if (!id || !user || !activeEncounterId || !medicationName || !dosage || !duration || rxHeld || rxChecking || addPrescription.isPending) return;
     setError(null); setSuccess(null);
     try {
-    await addPrescription.mutateAsync({
-      encounterId: activeEncounterId,
-      medicationName,
-      dosage,
-      duration,
-    });
+    await addPrescription.mutateAsync({ userId: user.userId, patientId: id, epoch: mountedEpoch, input: { encounterId: activeEncounterId, medicationName, dosage, duration } });
+    if (!callbackIsCurrent()) return;
     setMedicationName('');
     setDosage('');
     setDuration('');
     setActiveEncounterId(null);
     setSuccess(t('emr.prescriptionSaved'));
-    } catch (err) { mutationError(err); }
+    } catch (err) { if (!callbackIsCurrent()) return;setRxHeld(prescriptionHeld(user.userId, id));mutationError(err); }
   }
 
   return (
@@ -160,6 +165,7 @@ function PatientDetailWorkspace() {
 
             {testEncounterId && <EncounterTestOrder key={user!.userId + testEncounterId} patientId={id!} encounterId={testEncounterId} />}
             {/* بعد إنشاء الزيارة مباشرة، يمكن إضافة وصفة لها فوراً — FR-4.2 */}
+            {rxHeld && <Alert severity="warning">{t('emr.prescriptionUnknown')}<Button disabled={rxChecking} onClick={() => void reconcilePrescription()}>{t('emr.checkPrescription')}</Button></Alert>}
             {activeEncounterId && (
               <Box mt={3} pt={2} borderTop="1px dashed #ccc">
                 <Typography variant="subtitle2" mb={1}>
@@ -168,23 +174,23 @@ function PatientDetailWorkspace() {
                 <Stack direction="row" gap={2} flexWrap="wrap">
                   <TextField
                     label={t('emr.medication')}
-                    value={medicationName}
+                    disabled={rxHeld || rxChecking || addPrescription.isPending} value={medicationName}
                     onChange={(e) => setMedicationName(e.target.value)}
                     size="small"
                   />
                   <TextField
                     label={t('emr.dose')}
-                    value={dosage}
+                    disabled={rxHeld || rxChecking || addPrescription.isPending} value={dosage}
                     onChange={(e) => setDosage(e.target.value)}
                     size="small"
                   />
                   <TextField
                     label={t('emr.duration')}
-                    value={duration}
+                    disabled={rxHeld || rxChecking || addPrescription.isPending} value={duration}
                     onChange={(e) => setDuration(e.target.value)}
                     size="small"
                   />
-                  <Button variant="outlined" disabled={addPrescription.isPending || !medicationName || !dosage || !duration} onClick={handleAddPrescription}>
+                  <Button variant="outlined" disabled={rxHeld || rxChecking || addPrescription.isPending || !medicationName || !dosage || !duration} onClick={handleAddPrescription}>
                     {t('emr.add')}
                   </Button>
                 </Stack>

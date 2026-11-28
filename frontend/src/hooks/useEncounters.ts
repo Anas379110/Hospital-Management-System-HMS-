@@ -1,3 +1,4 @@
+import { sendPrescriptionCreate, type PrescriptionRequest } from '../api/prescriptionCreateWrite';
 import { sendEncounterCreate, type EncounterIdentity } from '../api/encounterCreateWrite';
 import { responseIsCurrent } from '../api/sessionIsolation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -42,12 +43,8 @@ export interface CreatePrescriptionInput {
 export function useAddPrescription() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ encounterId, ...input }: CreatePrescriptionInput) => {
-      const res = await apiClient.post(`/encounters/${encounterId}/prescriptions`, input);
-      return res.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['patients'] });
-    },
+    retry: false,
+    mutationFn: (request: PrescriptionRequest) => sendPrescriptionCreate(request),
+    onSuccess: (data, request) => { if (responseIsCurrent(data)) void queryClient.invalidateQueries({ queryKey: ['patients', request.patientId, 'records'] }); },
   });
 }
