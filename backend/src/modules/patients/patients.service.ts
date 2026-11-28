@@ -7,6 +7,15 @@ import { UpdatePatientDto } from './dto/update-patient.dto';
 
 const MAX_MRN_RETRIES = 3;
 
+// Literal national-ID equality is an extra warning, never a unique constraint.
+// trim() decides only whether an ID is blank; the original value is queried/stored.
+function duplicateWhere(fullName: string, dateOfBirth: string, nationalId?: string): Prisma.PatientWhereInput {
+  const nameAndDob = { fullName, dateOfBirth: new Date(dateOfBirth) };
+  return typeof nationalId === 'string' && nationalId.trim().length > 0
+    ? { OR: [nameAndDob, { nationalId }] }
+    : nameAndDob;
+}
+
 @Injectable()
 export class PatientsService {
   constructor(private readonly prisma: PrismaService) {}
@@ -21,9 +30,9 @@ export class PatientsService {
   }
 
   /** FR-2.5: تحقق من احتمال وجود المريض مسبقاً — تنبيه لا حجب */
-  async findPotentialDuplicate(fullName: string, dateOfBirth: string) {
+  async findPotentialDuplicate(fullName: string, dateOfBirth: string, nationalId?: string) {
     return this.prisma.patient.findFirst({
-      where: { fullName, dateOfBirth: new Date(dateOfBirth) },
+      where: duplicateWhere(fullName, dateOfBirth, nationalId),
     });
   }
 
@@ -41,7 +50,7 @@ export class PatientsService {
     // Keep the existing allocation lock until registration and audit both commit.
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(18472931)`;
     if (!force) {
-      const duplicate = await tx.patient.findFirst({ where: { fullName: dto.fullName, dateOfBirth: new Date(dto.dateOfBirth) } });
+      const duplicate = await tx.patient.findFirst({ where: duplicateWhere(dto.fullName, dto.dateOfBirth, dto.nationalId) });
       if (duplicate) {
         throw new ConflictException({
           error: {
