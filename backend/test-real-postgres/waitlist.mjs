@@ -1,3 +1,4 @@
+import {verifyAppointmentEncounter} from './appointment-encounter-check.mjs';
 import {verifyPrescriptionNotes} from './prescription-notes-check.mjs';
 import {verifyPrescriptionSafety} from './prescription-safety-check.mjs';
 import {verifyEncounterAck} from './encounter-ack-check.mjs';
@@ -43,6 +44,7 @@ inputPaths.push('test-real-postgres/low-stock-check.mjs','../frontend/src/compon
 inputPaths.push('test-real-postgres/prescription-notes-check.mjs','../frontend/src/pages/prescriptionDraft.ts','../frontend/src/pages/prescriptionDraft.test.ts');
 inputPaths.push('test-real-postgres/prescription-safety-check.mjs','../frontend/src/api/prescriptionCreateWrite.ts','../frontend/src/api/prescriptionCreateWrite.test.ts');
 inputPaths.push('test-real-postgres/encounter-ack-check.mjs','../frontend/src/api/encounterCreateWrite.ts','../frontend/src/api/encounterCreateWrite.test.ts','../frontend/src/api/encounterPending.ts','../frontend/src/api/encounterPending.test.ts');
+inputPaths.push('test-real-postgres/appointment-encounter-check.mjs','../frontend/src/api/encounterAppointment.ts','../frontend/src/api/encounterAppointment.test.ts','../frontend/src/pages/AppointmentsPage.tsx','../frontend/src/pages/encounterDraft.test.ts');
 const assets=readFileSync(new URL('../../frontend/dist/index.html',import.meta.url),'utf8').matchAll(/(?:src|href)="(\/assets\/[^"]+)"/g);for(const asset of assets)inputPaths.push('../frontend/dist'+asset[1]);
 inputPaths.push('dist/src/modules/waitlist/waitlist.service.js','dist/src/modules/admissions/admissions.service.js','../frontend/dist/index.html');
 report.inputSha256=Object.fromEntries(inputPaths.map(path=>[path,createHash('sha256').update(readFileSync(new URL('../'+path,import.meta.url))).digest('hex')]));
@@ -129,6 +131,7 @@ try{
  report.patientDuplicateRace=await verifyPatientDuplicateRace({call,tokens,owner,workspaceId:ws});
  report.medicationCreate=await verifyMedicationCreate({call,tokens,owner,base,artifacts,workspaceId:ws,otherWorkspace:other.data});report.checks.push('FR6.1 medication create UI');
  report.lowStock=await verifyLowStock({call,tokens,base,artifacts});report.checks.push('FR6.5 low-stock read-only UI');
+ report.appointmentEncounter=await verifyAppointmentEncounter({call,tokens,base,artifacts,owner,workspace:ws,otherWorkspace:other.data});report.checks.push('FR4.1 appointment-linked encounter UI');
  report.prescriptionNotes=await verifyPrescriptionNotes({call,tokens,base,artifacts,owner,workspace:ws,otherWorkspace:other.data});report.checks.push('FR4.2 optional prescription notes create/history');
  report.prescriptionSafety=await verifyPrescriptionSafety({call,tokens,owner,workspace:ws,base,artifacts});report.checks.push('Prescription create unknown-outcome safety');
  report.encounterAck=await verifyEncounterAck({call,tokens,base,artifacts});report.checks.push('Encounter dedicated acknowledgment correctness');
