@@ -1,3 +1,4 @@
+import { DepartmentResponseDto, DepartmentBedCountsResponseDto, DepartmentOverviewResponseDto } from './dto/department-summary-response.dto';
 import { ApiOperation, ApiResponse, ApiQuery, ApiExtension } from '@nestjs/swagger';
 import { ApiProperty } from '@nestjs/swagger';
 import { Controller, Get, Param, ParseUUIDPipe, Query, Req, UseGuards } from '@nestjs/common';
@@ -34,7 +35,7 @@ export class DepartmentsController {
   @ApiOperation({"summary": "DepartmentsController.findAll", "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization."})
   @ApiExtension('x-roles', ["receptionist", "doctor", "nurse", "admin", "manager"])
   @ApiExtension('x-auth', 'roles')
-  @ApiResponse({"status": 200, "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."})
+  @ApiResponse({ status: 200, type: DepartmentResponseDto, isArray: true })
   @ApiResponse({"status": 400, "description": "Invalid request"})
   @ApiResponse({"status": 401, "description": "Missing/expired token, inactive current user, or invalid/expired workspace"})
   @ApiResponse({"status": 403, "description": "Current persisted role is not permitted"})
@@ -50,7 +51,7 @@ export class DepartmentsController {
   @ApiExtension('x-auth', 'roles')
   @ApiQuery({"name": "start", "required": true, "description": "ISO8601 validated date/date-time; see route notes for stricter range rules", "schema": {"pattern": "(Z|[+-]\\d{2}:\\d{2})$", "type": "string"}})
   @ApiQuery({"name": "end", "required": true, "description": "ISO8601 validated date/date-time; see route notes for stricter range rules", "schema": {"pattern": "(Z|[+-]\\d{2}:\\d{2})$", "type": "string"}})
-  @ApiResponse({"status": 200, "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."})
+  @ApiResponse({ status: 200, type: DepartmentOverviewResponseDto })
   @ApiResponse({"status": 400, "description": "Invalid request"})
   @ApiResponse({"status": 401, "description": "Missing/expired token, inactive current user, or invalid/expired workspace"})
   @ApiResponse({"status": 403, "description": "Current persisted role is not permitted"})
@@ -78,7 +79,7 @@ export class DepartmentsController {
   @ApiOperation({"summary": "DepartmentsController.getBedsSummary", "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization."})
   @ApiExtension('x-roles', ["manager", "admin"])
   @ApiExtension('x-auth', 'roles')
-  @ApiResponse({"status": 200, "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."})
+  @ApiResponse({ status: 200, type: DepartmentBedCountsResponseDto })
   @ApiResponse({"status": 400, "description": "Invalid request"})
   @ApiResponse({"status": 401, "description": "Missing/expired token, inactive current user, or invalid/expired workspace"})
   @ApiResponse({"status": 403, "description": "Current persisted role is not permitted"})

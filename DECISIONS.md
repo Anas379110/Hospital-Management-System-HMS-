@@ -155,3 +155,6 @@ CONFIRMED from current service/schema: annotate existing six pharmacy output sha
 
 ### Admission scalar documentation, November28 candidate
 CONFIRMED from unchanged service/schema: annotate both admission outputs with one scalar DTO and required nullable discharge fields. No new authorization or admission/discharge/waitlist policy. Qualify actual existing JSON and errors before release, independently of unresolved patient-ID/demographic/billing decisions.
+
+### Department summary contract candidate
+CONFIRMED from unchanged services: annotate three read-only scalar/aggregate projections. Defer role-polymorphic bed list and seven setup write outputs. Do not change ordering, cachedcount semantics, pagination, role or patient disclosure. Four DTOs mirror existing output only; actual HTTP role/isolation/range/count tests gate release.

@@ -472,6 +472,33 @@
         ],
         "type": "object"
       },
+      "DepartmentBedCountsResponseDto": {
+        "properties": {
+          "available": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "maintenance": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "occupied": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "total": {
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "total",
+          "available",
+          "occupied",
+          "maintenance"
+        ],
+        "type": "object"
+      },
       "DepartmentNamesDto": {
         "properties": {
           "nameAr": {
@@ -490,6 +517,108 @@
         "required": [
           "nameAr",
           "nameEn"
+        ],
+        "type": "object"
+      },
+      "DepartmentOverviewItemResponseDto": {
+        "properties": {
+          "available": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "maintenance": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "nameAr": {
+            "type": "string"
+          },
+          "nameEn": {
+            "type": "string"
+          },
+          "occupied": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "total": {
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "total",
+          "available",
+          "occupied",
+          "maintenance",
+          "id",
+          "nameAr",
+          "nameEn"
+        ],
+        "type": "object"
+      },
+      "DepartmentOverviewResponseDto": {
+        "properties": {
+          "appointmentCount": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "departments": {
+            "items": {
+              "$ref": "#/components/schemas/DepartmentOverviewItemResponseDto"
+            },
+            "type": "array"
+          },
+          "end": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "start": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "start",
+          "end",
+          "appointmentCount",
+          "departments"
+        ],
+        "type": "object"
+      },
+      "DepartmentResponseDto": {
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "nameAr": {
+            "type": "string"
+          },
+          "nameEn": {
+            "type": "string"
+          },
+          "totalBeds": {
+            "type": "integer"
+          },
+          "workspaceId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "workspaceId",
+          "id",
+          "nameAr",
+          "nameEn",
+          "totalBeds",
+          "createdAt"
         ],
         "type": "object"
       },
@@ -2224,7 +2353,17 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/DepartmentResponseDto"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
           },
           "400": {
             "description": "Invalid request"
@@ -2338,7 +2477,14 @@
         ],
         "responses": {
           "200": {
-            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DepartmentOverviewResponseDto"
+                }
+              }
+            },
+            "description": ""
           },
           "400": {
             "description": "Invalid request"
@@ -2952,7 +3098,14 @@
         ],
         "responses": {
           "200": {
-            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DepartmentBedCountsResponseDto"
+                }
+              }
+            },
+            "description": ""
           },
           "400": {
             "description": "Invalid request"

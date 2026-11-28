@@ -16,7 +16,7 @@ const app=await createApplication({logger:false});
 const native=createApiDocument(app);await app.close();
 const reference=JSON.parse(readFileSync(root+'docs/api/openapi.yaml','utf8'));
 const inventory=JSON.parse(readFileSync(root+'docs/api/ROUTE-INVENTORY.json','utf8'));
-const responseSchemas=['PatientIdentityResponseDto','PatientResponseDto','WaitlistRequestResponseDto','WaitlistItemResponseDto','WaitlistPageResponseDto','ApiErrorResponseDto','ApiErrorDetailResponseDto','PrescriptionResponseDto','EncounterResponseDto','EncounterWithPrescriptionsResponseDto','TestOrderResponseDto','PendingTestOrderResponseDto','TestPatientIdentityResponseDto','OrderingUserIdentityResponseDto','MedicationResponseDto','StockAdjustmentResponseDto','PharmacyPatientIdentityResponseDto','PharmacyDoctorIdentityResponseDto','PharmacyEncounterIdentityResponseDto','PendingPrescriptionResponseDto','AdmissionResponseDto'];
+const responseSchemas=['PatientIdentityResponseDto','PatientResponseDto','WaitlistRequestResponseDto','WaitlistItemResponseDto','WaitlistPageResponseDto','ApiErrorResponseDto','ApiErrorDetailResponseDto','PrescriptionResponseDto','EncounterResponseDto','EncounterWithPrescriptionsResponseDto','TestOrderResponseDto','PendingTestOrderResponseDto','TestPatientIdentityResponseDto','OrderingUserIdentityResponseDto','MedicationResponseDto','StockAdjustmentResponseDto','PharmacyPatientIdentityResponseDto','PharmacyDoctorIdentityResponseDto','PharmacyEncounterIdentityResponseDto','PendingPrescriptionResponseDto','AdmissionResponseDto','DepartmentResponseDto','DepartmentBedCountsResponseDto','DepartmentOverviewItemResponseDto','DepartmentOverviewResponseDto'];
 const fields=['type','format','enum','minimum','maximum','minLength','maxLength','minItems','maxItems','nullable','pattern','not'];
 function compareProperties(actual,expected,label){
  assert.deepEqual(Object.keys(actual.properties).sort(),Object.keys(expected.properties).sort(),label+' fields');
@@ -26,7 +26,7 @@ function compareProperties(actual,expected,label){
 test('all native request DTO fields/required/constraints match independent validators',()=>{
  assert.deepEqual(Object.keys(reference.components.schemas).filter(k=>!native.components.schemas[k]).sort(),['FindAppointmentsDto','OverviewRangeDto','SearchUsersDto','WaitlistPageDto']);
  assert.deepEqual(Object.keys(native.components.schemas).filter(k=>!reference.components.schemas[k]).sort(),[...responseSchemas].sort());
- assert.equal(Object.keys(native.components.schemas).length,49);
+ assert.equal(Object.keys(native.components.schemas).length,53);
  for(const [name,actual]of Object.entries(native.components.schemas).filter(([name])=>!responseSchemas.includes(name))){assert.ok(Object.keys(actual.properties).length,name+' not empty');compareProperties(actual,reference.components.schemas[name],name);}
 });
 test('all55native controller operations have correct roles, security and codes',()=>{
@@ -38,6 +38,7 @@ test('explicit query bounds, optional force and current default semantics are no
 });
 test('only explicitly scoped existing patient and waitlist payloads get response contracts',()=>{
  const successes={
+ '/api/v1/departments:get:200':['DepartmentResponseDto',true],'/api/v1/departments/overview:get:200':['DepartmentOverviewResponseDto',false],'/api/v1/departments/{id}/beds/summary:get:200':['DepartmentBedCountsResponseDto',false],
  '/api/v1/admissions:post:201':['AdmissionResponseDto',false],'/api/v1/admissions/{id}/discharge:post:201':['AdmissionResponseDto',false],
  '/api/v1/medications:post:201':['MedicationResponseDto',false],'/api/v1/medications:get:200':['MedicationResponseDto',true],'/api/v1/medications/low-stock:get:200':['MedicationResponseDto',true],'/api/v1/medications/{id}/stock:patch:200':['StockAdjustmentResponseDto',false],'/api/v1/prescriptions/pending:get:200':['PendingPrescriptionResponseDto',true],'/api/v1/prescriptions/{id}/dispense:post:201':['PrescriptionResponseDto',false],
  '/api/v1/encounters:post:201':['EncounterResponseDto',false],'/api/v1/encounters/{id}:get:200':['EncounterWithPrescriptionsResponseDto',false],'/api/v1/encounters/{id}:delete:200':['EncounterResponseDto',false],'/api/v1/encounters/{id}/prescriptions:post:201':['PrescriptionResponseDto',false],'/api/v1/patients/{id}/records:get:200':['EncounterWithPrescriptionsResponseDto',true],'/api/v1/test-orders:post:201':['TestOrderResponseDto',false],'/api/v1/test-orders/pending:get:200':['PendingTestOrderResponseDto',true],'/api/v1/test-orders/{id}/result:post:201':['TestOrderResponseDto',false],'/api/v1/patients/{id}/test-results:get:200':['TestOrderResponseDto',true],
@@ -48,7 +49,7 @@ test('only explicitly scoped existing patient and waitlist payloads get response
  const target=successes[path+':'+method+':'+code];if(target){count++;assert.deepEqual(response.content['application/json'].schema,target[1]?{type:'array',items:{$ref:'#/components/schemas/'+target[0]}}:{$ref:'#/components/schemas/'+target[0]});}
  else if(response.content){assert.ok((path.startsWith('/api/v1/patients')||path.includes('/waitlist'))&&Number(code)>=400);assert.deepEqual(response.content['application/json'].schema,{$ref:'#/components/schemas/ApiErrorResponseDto'});}
  }
- assert.equal(count,25);const schemas=native.components.schemas;assert.deepEqual(Object.keys(schemas.PatientIdentityResponseDto.properties).sort(),['fullName','id','mrn']);assert.deepEqual([...schemas.PatientResponseDto.required].sort(),Object.keys(schemas.PatientResponseDto.properties).sort());assert.equal(schemas.PatientResponseDto.properties.nationalId.nullable,true);assert.equal(schemas.PatientResponseDto.properties.dateOfBirth.format,'date-time');assert.deepEqual(schemas.WaitlistItemResponseDto.properties.status.enum,['pending']);assert.equal(schemas.WaitlistPageResponseDto.properties.items.maxItems,100);
+ assert.equal(count,28);const schemas=native.components.schemas;assert.deepEqual(Object.keys(schemas.PatientIdentityResponseDto.properties).sort(),['fullName','id','mrn']);assert.deepEqual([...schemas.PatientResponseDto.required].sort(),Object.keys(schemas.PatientResponseDto.properties).sort());assert.equal(schemas.PatientResponseDto.properties.nationalId.nullable,true);assert.equal(schemas.PatientResponseDto.properties.dateOfBirth.format,'date-time');assert.deepEqual(schemas.WaitlistItemResponseDto.properties.status.enum,['pending']);assert.equal(schemas.WaitlistPageResponseDto.properties.items.maxItems,100);
 });
 test('clinical nested projection shapes and nullable scalar histories stay distinct',()=>{
  const s=native.components.schemas;assert.deepEqual(s.EncounterWithPrescriptionsResponseDto.properties.prescriptions,{type:'array',items:{$ref:'#/components/schemas/PrescriptionResponseDto'}});
@@ -70,5 +71,11 @@ test('pharmacy scalar, echoed optional reason and nested minimal identities stay
  assert.equal(s.StockAdjustmentResponseDto.properties.adjustmentReason.nullable,true);assert.ok(!s.StockAdjustmentResponseDto.required.includes('adjustmentReason'));assert.ok(s.StockAdjustmentResponseDto.required.includes('adjustmentDelta'));
  assert.deepEqual(Object.keys(s.PharmacyPatientIdentityResponseDto.properties).sort(),['fullName','mrn']);assert.deepEqual(Object.keys(s.PharmacyDoctorIdentityResponseDto.properties),['fullName']);assert.deepEqual(Object.keys(s.PharmacyEncounterIdentityResponseDto.properties).sort(),['doctor','patient']);
  assert.equal(s.PendingPrescriptionResponseDto.properties.encounter.$ref,'#/components/schemas/PharmacyEncounterIdentityResponseDto');assert.deepEqual([...s.PendingPrescriptionResponseDto.required].sort(),Object.keys(s.PendingPrescriptionResponseDto.properties).sort());
+});
+test('department read scalar and aggregate shapes exclude clinical identity',()=>{
+ const s=native.components.schemas;
+ for(const[name,keys]of [['DepartmentResponseDto',['workspaceId','id','nameAr','nameEn','totalBeds','createdAt']],['DepartmentBedCountsResponseDto',['total','available','occupied','maintenance']],['DepartmentOverviewItemResponseDto',['id','nameAr','nameEn','total','available','occupied','maintenance']],['DepartmentOverviewResponseDto',['start','end','appointmentCount','departments']]]){assert.deepEqual(Object.keys(s[name].properties).sort(),keys.sort());assert.deepEqual([...s[name].required].sort(),keys);}
+ assert.equal(s.DepartmentOverviewResponseDto.properties.departments.items.$ref,'#/components/schemas/DepartmentOverviewItemResponseDto');
+ const counts={total:1,available:1,occupied:0,maintenance:0};checkResponse(counts,s.DepartmentBedCountsResponseDto,s);assert.throws(()=>checkResponse({...counts,patient:{id:'no'}},s.DepartmentBedCountsResponseDto,s));assert.throws(()=>checkResponse({...counts,total:-1},s.DepartmentBedCountsResponseDto,s));assert.equal(native.paths['/api/v1/departments/{id}/beds'].get.responses['200'].content,undefined);
 });
 test('snapshot generation or drift check runs after prior contract assertions',()=>{assert.equal(contractFailed,false,'prior contract assertions must pass before snapshot write');if(process.argv.includes('--snapshot'))writeFileSync(root+'docs/api/native-openapi.json',JSON.stringify(sorted(native),null,2)+'\n');else assert.deepEqual(JSON.parse(readFileSync(root+'docs/api/native-openapi.json','utf8')),sorted(native));});

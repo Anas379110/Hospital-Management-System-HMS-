@@ -1,6 +1,6 @@
 # HMS verification and open requirements
 
-Reconciled28 November2026 07:40 Istanbul. Fictional-data demonstration, not hospital readiness or compliance certification. Latest verified public release98c706a1e7b4063721bf17a35019bf16df3bf721. Earlier evidence remains historical and does not establish newer source execution.
+Reconciled28 November2026 07:40 Istanbul. Fictional-data demonstration, not hospital readiness or compliance certification. Latest verified public releaseb0905cc7b2eccd0889bcd500e8e37d2e1a3f62ab. Earlier evidence remains historical and does not establish newer source execution.
 
 ## Executed release evidence
 
@@ -36,3 +36,6 @@ Six unchanged service outputs annotated, local48schemas55operations23successcont
 
 ## Released pharmacy reconciliation and admission candidate
 Pharmacy98c706a fullCI46108642762bothPG success; RenderactualLive07:53:37duration1m53 and hosted53responses/native48schemas55operations/modelpixels07:54:15 passed. See PR17 release comment https://github.com/Anas379110/Hospital-Management-System-HMS-/pull/17#issuecomment-7234335250 for superseding evidence. Admission candidate adds two unchanged scalar response contracts, native49schemas55operations25successcontracts. Local230unit62mockHTTP24metadata/validator/dependency/build/lint and restrictedPG17/18 each33new named admission HTTP checks plus existing suites pass47boundinputs. Local320/390/1280modelpixels checked. Independentreview/exactCI/hostedproof pending for admission, not released. No service/query/role/schema/config/dependency change. WholeHMS incomplete.
+
+## Admission release and department read candidate
+Admissionb0905cc exactCI46110288713bothPGsuccess, actualLive08:17:28 manual1m32, hosted33case/native49schemas55ops/modelpixels08:18:05pass. Superseding release https://github.com/Anas379110/Hospital-Management-System-HMS-/pull/18#issuecomment-7234589388 . Three department read summary contracts now candidate only:53schemas55ops28successcontracts, local230unit62mockHTTP25metadata/validator/dependency tests/build/lint pass. FreshrestrictedPG17.12/18.7 entire runner each50named department cases and53inputhashes pass. Fourmodel320/390/1280pixels fit. Independent review/exactCI/hosted pending. No service/query/role/schema/config/dependency or policy change. Existing department lists remain unbounded; polymorphic bed list and7setup writes not contracted here. WholeHMS incomplete.
