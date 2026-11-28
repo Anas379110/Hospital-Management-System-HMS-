@@ -3,6 +3,7 @@ const { spawn } = require("node:child_process"),
   assert = require("node:assert/strict"),
   { chromium } = require("playwright");
 const { createHash } = require("node:crypto");
+const { createJourney } = require("./whole-demo-journey.cjs");
 const path = require("node:path"),
   os = require("node:os"),
   { spawnSync } = require("node:child_process");
@@ -21,6 +22,7 @@ const root = path.resolve(__dirname, "../.."),
     startedAt: new Date().toISOString(),
     inputSha256: Object.fromEntries(
       [
+        "frontend/test-real-browser/whole-demo-journey.cjs",
         "local-demo/hms-local.mjs",
         "backend/src/main.ts",
         "backend/dist/src/main.js",
@@ -120,7 +122,7 @@ fs.mkdirSync(out, { recursive: true });
     for (const lang of ["en", "ar"]) {
       const c = await browser.newContext({
         timezoneId: "Europe/Istanbul",
-        viewport: { width: lang === "ar" ? 390 : 1440, height: 1100 },
+        viewport: { width: lang === "ar" ? 390 : 1280, height: 1100 },
         serviceWorkers: "block",
       });
       await c.route("**/*", (route) => {
@@ -153,14 +155,37 @@ fs.mkdirSync(out, { recursive: true });
         })
         .click();
       await page.waitForURL((u) => !u.pathname.includes("/login"));
+      let lastObservedActor;
       const changeRole = async (role) => {
+        if(lastObservedActor && label('roles.'+lastObservedActor.role)===role)return lastObservedActor;
         await page
           .getByRole("combobox", {
             name: T("Demo role", "الدور التجريبي"),
             exact: true,
           })
           .click();
-        const navigation = page.waitForEvent("load");
+        let observedIdentity,
+          observedRoleStatus,
+          roleObservationFailed = false;
+        const roleRoute = "**/api/v1/demo/role";
+        await page.route(roleRoute, async (route) => {
+          try {
+            const response = await route.fetch();
+            observedRoleStatus = response.status();
+            const body = await response.json();
+            observedIdentity = {
+              id: body.user?.id,
+              username: body.user?.username,
+              role: body.user?.role,
+            };
+            await route.fulfill({ response });
+          } catch {
+            roleObservationFailed = true;
+            await route.abort("failed");
+          }
+        });
+        let navigationError;
+        const navigation = page.waitForEvent("load").catch(error=>{navigationError=error});
         const response = page.waitForResponse(
           (r) =>
             r.url().endsWith("/api/v1/demo/role") &&
@@ -169,7 +194,17 @@ fs.mkdirSync(out, { recursive: true });
         await page.getByRole("option", { name: role, exact: true }).click();
         const changed = await response;
         assert.equal(changed.status(), 201, "role switch");
+        assert.equal(
+          roleObservationFailed,
+          false,
+          "Role observer transport failure",
+        );
+        assert.equal(observedRoleStatus, 201);
+        const identity = observedIdentity;
+        assert.ok(identity?.id);
         await navigation;
+        if(navigationError)throw navigationError;
+        await page.unroute(roleRoute);
         await page
           .getByRole("combobox", {
             name: T("Demo role", "الدور التجريبي"),
@@ -178,7 +213,23 @@ fs.mkdirSync(out, { recursive: true });
           .filter({ hasText: role })
           .waitFor();
         await page.waitForTimeout(100);
+        journey.observeRole(identity);
+        lastObservedActor={id:identity.id,username:identity.username,role:identity.role};
+        return {
+          id: identity.id,
+          username: identity.username,
+          role: identity.role,
+        };
       };
+      const journey = createJourney({
+        page,
+        changeRole,
+        label,
+        lang,
+        origin,
+        out,
+      });
+      await journey.setup();
       // UI creates a new patient. No direct API fixtures or injected token.
       await page.goto(origin + "/patients/new");
       await page
@@ -194,8 +245,26 @@ fs.mkdirSync(out, { recursive: true });
         .getByRole("textbox", { name: T("Phone", "رقم الهاتف"), exact: true })
         .fill("0000000000");
       await page
+        .locator("form").getByRole("combobox")
+        .click();
+      await page
+        .getByRole("option", {
+          name: label("patients.genderMale"),
+          exact: true,
+        })
+        .click();
+      await page
+        .getByLabel(label("patients.nationalId"), { exact: true })
+        .fill(journey.expected.nationalId);
+      const patientSaved = page.waitForResponse(
+        (r) =>
+          r.url().endsWith("/api/v1/patients") &&
+          r.request().method() === "POST",
+      );
+      await page
         .getByRole("button", { name: T("Save", "حفظ"), exact: true })
         .click();
+      await journey.patientCreated(await patientSaved);
       await page.waitForURL((u) => u.pathname === "/patients");
       await page
         .getByRole("textbox", {
@@ -208,8 +277,70 @@ fs.mkdirSync(out, { recursive: true });
         .first();
       await link.click();
       const patientPath = new URL(page.url()).pathname;
-      await changeRole(T("Doctor", "طبيب"));
-      await page.goto(origin + patientPath);
+      await journey.patientReady(patientPath);
+      await changeRole(label("roles.receptionist"));
+      await page.goto(origin + "/appointments");
+      const day = await journey.scenarioDay();
+      await page.locator("input[type=date]").fill(day);
+      await page
+        .getByRole("button", { name: label("appointments.new"), exact: true })
+        .click();
+      let dialog = page.getByRole("dialog");
+      await dialog
+        .getByRole("combobox", {
+          name: label("appointments.patientId"),
+          exact: true,
+        })
+        .fill("Fictional Local Recovery " + lang);
+      await page
+        .getByRole("option", {
+          name: new RegExp("Fictional Local Recovery " + lang),
+        })
+        .click();
+      await dialog.locator("#appointment-doctor").click();
+      await journey.selectDoctor();
+      await dialog.locator("#appointment-department").click();
+      await journey.selectDepartment();
+      // Tomorrow in the browser timezone. Fictional scenario only, not a real commitment.
+      await dialog.locator("input[type=datetime-local]").fill(day + "T18:30");
+      const booked = page.waitForResponse(
+        (r) =>
+          r.url().endsWith("/api/v1/appointments") &&
+          r.request().method() === "POST",
+      );
+      await dialog
+        .getByRole("button", { name: label("appointments.book"), exact: true })
+        .click();
+      await journey.booked(await booked);
+      await dialog.waitFor({ state: "hidden" });
+      const appointment = page.locator(".MuiCard-root").filter({
+        has: page.getByText("Fictional Local Recovery " + lang, {
+          exact: true,
+        }),
+      });
+      await appointment
+        .getByRole("button", {
+          name: label("appointments.markAttended"),
+          exact: true,
+        })
+        .click();
+      dialog = page.getByRole("dialog");
+      const attended = page.waitForResponse(
+        (r) =>
+          r.url().endsWith("/attendance") && r.request().method() === "POST",
+      );
+      await dialog
+        .getByRole("button", {
+          name: label("appointments.confirmAttendance"),
+          exact: true,
+        })
+        .click();
+      await dialog.waitFor({ state: "hidden" });
+      await page
+        .getByText(label("appointments.attendanceSaved"), { exact: true })
+        .waitFor();
+      await journey.attended(await attended);
+      await journey.startLinkedVisit();
       await page
         .getByRole("textbox", {
           name: T("Chief complaint", "الشكوى الرئيسية"),
@@ -220,6 +351,14 @@ fs.mkdirSync(out, { recursive: true });
         .getByRole("textbox", { name: T("Diagnosis", "التشخيص"), exact: true })
         .fill("Fictional diagnosis");
       await page
+        .getByLabel(label("emr.clinicalNotes"), { exact: true })
+        .fill(journey.expected.clinicalNotes);
+      const encounterSaved = page.waitForResponse(
+        (r) =>
+          r.url().endsWith("/api/v1/encounters") &&
+          r.request().method() === "POST",
+      );
+      await page
         .getByRole("button", {
           name: T("Save encounter", "حفظ الزيارة"),
           exact: true,
@@ -228,6 +367,7 @@ fs.mkdirSync(out, { recursive: true });
       await page
         .getByText(T("Encounter saved.", "حُفظت الزيارة."), { exact: true })
         .waitFor();
+      await journey.encounterSaved(await encounterSaved);
       const order = page.getByRole("region", {
         name: T("Order lab or imaging test", "طلب تحليل أو تصوير"),
         exact: true,
@@ -288,12 +428,20 @@ fs.mkdirSync(out, { recursive: true });
         .getByRole("textbox", { name: T("Duration", "المدة"), exact: true })
         .fill("Fictional duration");
       await page
+        .getByLabel(label("emr.prescriptionNotes"), { exact: true })
+        .fill(journey.expected.prescriptionNotes);
+      const rxSaved = page.waitForResponse(
+        (r) =>
+          r.url().endsWith("/prescriptions") && r.request().method() === "POST",
+      );
+      await page
         .getByRole("button", { name: T("Add", "إضافة"), exact: true })
         .click();
       await page
         .getByText(T("Prescription saved.", "حُفظت الوصفة."), { exact: true })
         .waitFor();
 
+      await journey.prescriptionSaved(await rxSaved);
       // Explicit rejections remain editable; uncertain outcomes hold until reconciliation and never auto-retry.
       const endpoint = origin + "/api/v1/test-orders";
       let intercepted = 0;
@@ -399,6 +547,7 @@ fs.mkdirSync(out, { recursive: true });
       }
       await changeRole(T("Pharmacist", "صيدلي"));
       await page.goto(origin + "/pharmacy");
+      await journey.medication();
       const rx = page.locator(".MuiCard-root").filter({
         has: page.getByText("Fictional Local Recovery " + lang, {
           exact: false,
@@ -407,15 +556,18 @@ fs.mkdirSync(out, { recursive: true });
       await rx
         .getByRole("button", { name: T("Dispense", "صرف"), exact: true })
         .click();
-      let dialog = page.getByRole("dialog");
+      dialog = page.getByRole("dialog");
       await dialog.getByRole("combobox").click();
-      await page.getByRole("option", { name: /Fictional medicine/ }).click();
+      await journey.selectMedication();
       await dialog
         .getByRole("spinbutton", {
           name: T("Quantity to dispense", "الكمية المصروفة"),
           exact: true,
         })
         .fill("1");
+      const dispensed = page.waitForResponse(
+        (r) => r.url().includes("/dispense") && r.request().method() === "POST",
+      );
       await dialog
         .getByRole("button", {
           name: T("Confirm dispensing", "تأكيد الصرف"),
@@ -423,6 +575,7 @@ fs.mkdirSync(out, { recursive: true });
         })
         .click();
       await dialog.waitFor({ state: "hidden" });
+      await journey.dispensed(await dispensed);
       await changeRole(T("Doctor", "طبيب"));
       await page.goto(origin + patientPath);
       for (const test of ["Fictional Lab " + lang, "Fictional Imaging " + lang])
@@ -434,56 +587,6 @@ fs.mkdirSync(out, { recursive: true });
         fullPage: true,
       });
 
-      await changeRole(label("roles.receptionist"));
-      await page.goto(origin + "/appointments");
-      await page
-        .getByRole("button", { name: label("appointments.new"), exact: true })
-        .click();
-      dialog = page.getByRole("dialog");
-      await dialog
-        .getByRole("combobox", {
-          name: label("appointments.patientId"),
-          exact: true,
-        })
-        .fill("Fictional Local Recovery " + lang);
-      await page
-        .getByRole("option", {
-          name: new RegExp("Fictional Local Recovery " + lang),
-        })
-        .click();
-      await dialog.locator("#appointment-doctor").click();
-      await page.getByRole("option").first().click();
-      await dialog.locator("#appointment-department").click();
-      await page.getByRole("option").first().click();
-      // Fixed fictional scenario date is computed from this browser's current local day, no scheduling commitment.
-      const day = await page.locator("input[type=date]").inputValue();
-      await dialog.locator("input[type=datetime-local]").fill(day + "T18:30");
-      await dialog
-        .getByRole("button", { name: label("appointments.book"), exact: true })
-        .click();
-      await dialog.waitFor({ state: "hidden" });
-      const appointment = page.locator(".MuiCard-root").filter({
-        has: page.getByText("Fictional Local Recovery " + lang, {
-          exact: true,
-        }),
-      });
-      await appointment
-        .getByRole("button", {
-          name: label("appointments.markAttended"),
-          exact: true,
-        })
-        .click();
-      dialog = page.getByRole("dialog");
-      await dialog
-        .getByRole("button", {
-          name: label("appointments.confirmAttendance"),
-          exact: true,
-        })
-        .click();
-      await dialog.waitFor({ state: "hidden" });
-      await page
-        .getByText(label("appointments.attendanceSaved"), { exact: true })
-        .waitFor();
       await changeRole(label("roles.billing_clerk"));
       await page.goto(origin + "/billing");
       await page
@@ -509,28 +612,36 @@ fs.mkdirSync(out, { recursive: true });
           exact: true,
         })
         .fill("100");
+      const invoiced = page.waitForResponse(
+        (r) => r.url().endsWith("/invoices") && r.request().method() === "POST",
+      );
       await page
         .getByRole("button", { name: label("billing.create"), exact: true })
         .click();
       await page.getByText(label("billing.saved"), { exact: true }).waitFor();
+      await journey.invoiced(await invoiced);
       await page
         .getByRole("spinbutton", { name: label("billing.amount"), exact: true })
-        .fill("100");
+        .fill("40");
+      const paid = page.waitForResponse(
+        (r) => r.url().endsWith("/payments") && r.request().method() === "POST",
+      );
       await page
         .getByRole("button", { name: label("billing.record"), exact: true })
         .click();
       await page
         .getByText(label("billing.paymentSaved"), { exact: true })
         .waitFor();
+      await journey.paid(await paid);
       await page.screenshot({
-        path: out + "/paid-invoice-" + lang + ".png",
+        path: out + "/partial-invoice-" + lang + ".png",
         fullPage: true,
       });
 
       await changeRole(label("roles.nurse"));
       await page.goto(origin + "/departments");
       await page.locator("main").getByRole("combobox").first().click();
-      await page.getByRole("option").first().click();
+      await journey.selectDepartment();
       const queue = page.getByRole("region", {
         name: label("waitlist.title"),
         exact: true,
@@ -547,6 +658,9 @@ fs.mkdirSync(out, { recursive: true });
           name: new RegExp("Fictional Local Recovery " + lang),
         })
         .click();
+      const waitlisted = page.waitForResponse(
+        (r) => r.url().endsWith("/waitlist") && r.request().method() === "POST",
+      );
       await dialog
         .getByRole("button", {
           name: label("waitlist.confirmAdd"),
@@ -555,6 +669,7 @@ fs.mkdirSync(out, { recursive: true });
         .click();
       await dialog.waitFor({ state: "hidden" });
       await queue.getByText(label("waitlist.added"), { exact: true }).waitFor();
+      await journey.waitlisted(await waitlisted);
       await page
         .getByRole("button", { name: label("departments.admit"), exact: true })
         .first()
@@ -568,6 +683,10 @@ fs.mkdirSync(out, { recursive: true });
           name: new RegExp("Fictional Local Recovery " + lang),
         })
         .click();
+      const admitted = page.waitForResponse(
+        (r) =>
+          r.url().endsWith("/admissions") && r.request().method() === "POST",
+      );
       await dialog
         .getByRole("button", {
           name: label("departments.confirmAdmit"),
@@ -578,6 +697,7 @@ fs.mkdirSync(out, { recursive: true });
       await page
         .getByText(label("departments.admitSuccess"), { exact: true })
         .waitFor();
+      await journey.admitted(await admitted);
       await queue.getByText(label("waitlist.empty"), { exact: true }).waitFor();
       await page
         .getByRole("button", {
@@ -587,6 +707,10 @@ fs.mkdirSync(out, { recursive: true });
         .first()
         .click();
       dialog = page.getByRole("dialog");
+      const discharged = page.waitForResponse(
+        (r) =>
+          r.url().endsWith("/discharge") && r.request().method() === "POST",
+      );
       await dialog
         .getByRole("button", {
           name: label("departments.confirmDischarge"),
@@ -601,8 +725,11 @@ fs.mkdirSync(out, { recursive: true });
         path: out + "/beds-waitlist-" + lang + ".png",
         fullPage: true,
       });
+      await journey.discharged(await discharged);
+      await journey.finish();
       await changeRole(label("roles.doctor"));
       await page.goto(origin + patientPath);
+      await journey.verifyState(dir, true);
       report.checks.push({
         lang,
         patientPath,
@@ -616,7 +743,7 @@ fs.mkdirSync(out, { recursive: true });
         unknownHoldAfterActualReloadNoDuplicate: true,
         waitlistAdmitDischarge: true,
       });
-      sessions.push({ context: c, page, patientPath, lang });
+      sessions.push({ context: c, page, patientPath, lang, journey });
     }
     await stop();
     report.backup = JSON.parse(
@@ -686,6 +813,9 @@ fs.mkdirSync(out, { recursive: true });
         await page
           .getByText(test + " completed fictional result", { exact: true })
           .waitFor();
+      await session.journey.recovered(restored);
+      report.extendedJourney ??= [];
+      report.extendedJourney.push(session.journey.summary());
       await page.screenshot({
         path: out + "/recovered-record-" + session.lang + ".png",
         fullPage: true,
