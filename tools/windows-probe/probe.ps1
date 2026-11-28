@@ -6,7 +6,7 @@ $root = Join-Path $env:RUNNER_TEMP ('hms-native-' + $env:GITHUB_RUN_ID + '-' + $
 $bin = Join-Path $root 'runtime'
 $reportPath = Join-Path $env:RUNNER_TEMP 'hms-windows-probe-report.json'
 $report = [ordered]@{ complete=$false; head=$env:GITHUB_SHA; os=(Get-CimInstance Win32_OperatingSystem).Caption; build=[Environment]::OSVersion.VersionString; architecture=$env:PROCESSOR_ARCHITECTURE; image=$env:ImageVersion; checks=@(); cleanup=$false }
-$cleanupDetails=@(); $childProcesses=@(); $probeSids=@(); $cleanupOk=$true
+$cleanupDetails=@(); $childProcesses=@(); $probeSids=@(); $cleanupOk=$true; $script:roundtripAttempted=$false
 $users = @(); $ruleNames = @(); $credentials = @{}
 $prefix = 'hms' + ($env:GITHUB_RUN_ID.Substring([Math]::Max(0,$env:GITHUB_RUN_ID.Length-9)))
 function Add-Check($name,$value) { $script:report.checks += @{name=$name;value=$value} }
@@ -37,13 +37,25 @@ function Cleanup-Result($component,$ok,$errorRecord) {
     $script:cleanupDetails += $item
     if (-not $ok) { $script:cleanupOk=$false }
   }
+function Scan-PrivateReport {
+  param($candidate)
+  $secretPath=Join-Path $probeHome 'roundtrip-secrets.json'
+  if (-not (Test-Path $secretPath)) {return $false}
+  $secrets=@(Get-Content $secretPath -Raw | ConvertFrom-Json)
+  $scan=@(($candidate | ConvertTo-Json -Depth 10))
+  foreach ($f in @(Get-ChildItem $probeHome -File | Where-Object {$_.Name -match '\.(log|err)$'})) {$scan += [IO.File]::ReadAllText($f.FullName)}
+  foreach ($secret in $secrets) {
+    if ($secret.Length -gt 12 -and @($scan | Where-Object {$_.Contains($secret)}).Count) {return $false}
+  }
+  return $true
+}
 function Read-PgStages($stageDir) {
   $path=Join-Path $stageDir 'postgres-stages.txt'
   $result=@{count=0}
   if (Test-Path $path) {
     $tokens=@([IO.File]::ReadAllLines($path))
-    $allowed=@('entered','initdb-before','initdb-after','hba-before','hba-after','config-before','config-after','start-before','start-after','query-before','query-after','modules-before','modules-after','listener-before','listener-after','dump-before','dump-after','restore-before','restore-after','stop-before','stop-after','initdb-failed','start-failed','start-timeout','dump-failed','restore-failed','stop-failed')
-    if ($tokens.Count -le 32 -and @($tokens | Where-Object {$_ -notin $allowed}).Count -eq 0) {
+    $allowed=@('entered','initdb-before','initdb-after','hba-before','hba-after','config-before','config-after','start-before','start-after','query-before','query-after','modules-before','modules-after','listener-before','listener-after','dump-before','dump-after','restore-before','restore-after','stop-before','stop-after','initdb-failed','start-failed','start-timeout','migrate-before','migrate-after','backup-before','backup-after','api-before','api-after','app-stop-before','app-stop-after','dump-failed','restore-failed','stop-failed')
+    if ($tokens.Count -le 64 -and @($tokens | Where-Object {$_ -notin $allowed}).Count -eq 0) {
       $result.count=$tokens.Count
       if ($tokens.Count) {$result.last=$tokens[-1]}
     } else {$result.invalid=$true}
@@ -88,9 +100,10 @@ function Child($mode,$probeHome,$credential) {
   $p=Start-Process @start
   $null=$p.Handle
   $script:childProcesses += $p.Id
-  if (-not $p.WaitForExit(180000)) {
-    $timeout=@{mode=$mode;seconds=180}
-    if ($mode -eq 'postgres') {$timeout.pgStages=Read-PgStages $probeHome}
+  $seconds=if ($mode -eq 'roundtrip') {420} else {180}
+  if (-not $p.WaitForExit($seconds*1000)) {
+    $timeout=@{mode=$mode;seconds=$seconds}
+    if ($mode -eq 'postgres' -or $mode -eq 'roundtrip') {$timeout.pgStages=Read-PgStages $probeHome}
     $timeout.probePortListenerCount=@(Get-NetTCPConnection -LocalPort 55773 -State Listen -ErrorAction SilentlyContinue).Count
     Add-Check 'childTimeout' $timeout
     $snapshot=Stop-ScopedProcesses
@@ -100,7 +113,7 @@ function Child($mode,$probeHome,$credential) {
   $p.Refresh()
   if ($p.ExitCode -ne 0) {
     $failure=@{mode=$mode;exitCode=$p.ExitCode}
-    if ($mode -eq 'postgres') {$failure.pgStages=Read-PgStages $probeHome}
+    if ($mode -eq 'postgres' -or $mode -eq 'roundtrip') {$failure.pgStages=Read-PgStages $probeHome}
     $diagnosticPath=Join-Path $probeHome ($mode+'.failure.json')
     if (-not (Test-Path $diagnosticPath) -and $mode -eq 'identity') { $diagnosticPath=Join-Path $bootstrap ($mode+'.failure.json') }
     if (Test-Path $diagnosticPath) {
@@ -162,14 +175,42 @@ try {
   $pg=Get-Content (Join-Path $probeHome 'postgres.json') -Raw | ConvertFrom-Json
   Add-Check 'postgres' @{query=$pg.query;loopback=$pg.loopback;listenerAddress=$pg.listenerAddress;modules=$pg.modules}
   if (@(Get-NetTCPConnection -LocalPort $pg.port -State Listen -ErrorAction SilentlyContinue).Count) { throw 'Probe listener remains' }
+  $script:roundtripAttempted=$true
+  Child 'roundtrip' $probeHome $a.credential
+  $roundtrip=Get-Content (Join-Path $probeHome 'roundtrip-result.json') -Raw | ConvertFrom-Json
+  foreach ($key in @('backupRestore','negativeControl','sourceUnchanged','gracefulAppClose','runtimeDdlDenied','apiHealth','apiDbEndpoint')) {
+    if ($roundtrip.PSObject.Properties.Name -notcontains $key -or $roundtrip.$key -ne $true) { throw 'Roundtrip required gate missing or false' }
+  }
+  if ($roundtrip.emptyTables.Count -ne 0 -or $roundtrip.appExitCode -ne 0 -or $roundtrip.listenerAddress -ne '127.0.0.1') { throw 'Roundtrip result contract failed' }
+  Add-Check 'roundtrip' $roundtrip
+  Add-Check 'roundtripStages' (Read-PgStages $probeHome)
+  if (-not (Test-Path (Join-Path $probeHome 'roundtrip-secrets.json'))) { throw 'Required generated-value scan list missing' }
+  if (Test-Path (Join-Path $probeHome 'fictional-roundtrip.dump')) { throw 'Private dump remains' }
+  $runtime=@($pg.modules | Where-Object {$_.name -in @('VCRUNTIME140.dll','VCRUNTIME140_1.dll','MSVCP140.dll')})
+  if ($runtime.Count -ne 3) { throw 'VC++ x64 runtime prerequisite missing' }
+  Add-Check 'vcRuntimePrerequisite' @{status='prerequisite-not-bundled';modules=$runtime}
+  if (@(Get-NetTCPConnection -LocalPort 55773 -State Listen -ErrorAction SilentlyContinue).Count) { throw 'Roundtrip listener remains' }
   Assert-PrivateAcl $probeHome $a.sid
   if ((Get-Acl -LiteralPath $probeHome).GetOwner([Security.Principal.SecurityIdentifier]).Value -ne $a.sid) { throw 'Final owner mismatch' }
+  $report['secretScan']=Scan-PrivateReport $report
+  if (-not $report.secretScan) { throw 'Generated-value scan failed' }
   $report.complete=$true
 } catch {
   # Do not emit raw native/credential exception strings. Preserve failure stage only.
   $report['failure']=@{exceptionType=$_.Exception.GetType().FullName;line=[int]$_.InvocationInfo.ScriptLineNumber;hresult=[int]$_.Exception.HResult}
   throw 'Bounded Windows native probe failed; sanitized report retained'
 } finally {
+  if ($script:roundtripAttempted) {
+    $listExists=Test-Path (Join-Path $probeHome 'roundtrip-secrets.json')
+    $generatorEntered=Test-Path (Join-Path $probeHome 'roundtrip-generator-entered.txt')
+    $stages=Read-PgStages $probeHome
+    $preGenerator=@('entered','initdb-before','initdb-after','hba-before','hba-after','config-before','config-after','start-before','start-after','start-failed','start-timeout','initdb-failed','query-before','query-after','modules-before','modules-after','listener-before','listener-after','stop-before','stop-after','stop-failed')
+    $provenBeforeGenerator=(-not $generatorEntered -and -not $listExists -and -not $report.complete -and $stages.ContainsKey('last') -and $stages.last -in $preGenerator)
+    if ($provenBeforeGenerator) {$report['secretScan']='helper-generator-not-entered';Add-Check 'roundtripStages' $stages}
+    elseif ($listExists -and (Scan-PrivateReport $report)) {$report['secretScan']=$true}
+    else {$report=[ordered]@{complete=$false;head=$env:GITHUB_SHA;secretScan=$false;scanFailure='missing-list-or-value-detected';checks=@()}}
+    Remove-Item (Join-Path $probeHome 'roundtrip-secrets.json') -Force -ErrorAction SilentlyContinue
+  }
   $cleanupOk=@($cleanupDetails | Where-Object {-not $_.ok}).Count -eq 0
   foreach ($name in $ruleNames) {
     try { Remove-NetFirewallRule -Name $name -ErrorAction Stop; Cleanup-Result 'firewall-rule' (-not [bool](Get-NetFirewallRule -Name $name -ErrorAction SilentlyContinue)) $null } catch {Cleanup-Result 'firewall-rule' $false $_}
@@ -201,5 +242,6 @@ try {
   $report.cleanup=$cleanupOk
   if (-not $cleanupOk) {$report.complete=$false}
   $report | ConvertTo-Json -Depth 10 | Set-Content $reportPath -Encoding UTF8
+  if ($script:roundtripAttempted -and $report.secretScan -eq $false) { Write-Error 'Generated-value scan failed; only minimal diagnostics retained' }
   if (-not $cleanupOk) { Write-Error 'Probe cleanup incomplete on disposable runner' }
 }
