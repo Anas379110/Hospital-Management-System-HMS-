@@ -20,23 +20,19 @@ function New-Credential($name) {
   Add-LocalGroupMember -SID 'S-1-5-32-545' -Member $name
   return @{sid=$user.SID.Value;credential=(New-Object Management.Automation.PSCredential(($env:COMPUTERNAME+'\'+$name),$secret))}
 }
-function Set-PrivateAcl($path,$sid) {
-  $acl=New-Object Security.AccessControl.DirectorySecurity
-  $acl.SetAccessRuleProtection($true,$false)
-  foreach ($s in @($sid,'S-1-5-18','S-1-5-32-544')) {
-    $identity=New-Object Security.Principal.SecurityIdentifier($s)
-    $rule=New-Object Security.AccessControl.FileSystemAccessRule($identity,'FullControl','ContainerInherit,ObjectInherit','None','Allow')
-    $acl.AddAccessRule($rule)
-  }
-  Set-Acl -LiteralPath $path -AclObject $acl
+function Assert-PrivateAcl($path,$sid) {
   $actual=Get-Acl -LiteralPath $path
+  Assert-AclValue $actual $sid
+}
+function Assert-AclValue($actual,$sid) {
   if (-not $actual.AreAccessRulesProtected) { throw 'Private owner/inheritance mismatch' }
   $rules=@($actual.GetAccessRules($true,$true,[Security.Principal.SecurityIdentifier]))
   if ($rules.Count -ne 3 -or @($rules | Where-Object {$_.IdentityReference.Value -notin @($sid,'S-1-5-18','S-1-5-32-544') -or $_.AccessControlType -ne 'Allow'}).Count) { throw 'Private SID allowlist mismatch' }
   Add-Check 'privateAcl' @{owner=$actual.GetOwner([Security.Principal.SecurityIdentifier]).Value;protected=$true;allowSids=@($rules | ForEach-Object {$_.IdentityReference.Value})}
 }
 function Child($mode,$probeHome,$credential) {
-  $log=Join-Path $probeHome ('child-'+$mode+'.log')
+  $logBase=if ($mode -eq 'identity') {$bootstrap} else {$probeHome}
+  $log=Join-Path $logBase ('child-'+$mode+'.log')
   # Negative user must not get write permission in the protected home.
   $start=@{FilePath="$env:WINDIR\System32\WindowsPowerShell\v1.0\powershell.exe";ArgumentList=@('-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',('"'+(Join-Path $bin 'child.ps1')+'"'),'-Mode',$mode,'-ProbeHome',('"'+$probeHome+'"'));Credential=$credential;LoadUserProfile=$true;PassThru=$true;WorkingDirectory=$bin}
   if ($mode -ne 'negative') { $start.RedirectStandardOutput=$log; $start.RedirectStandardError=($log+'.err') }
@@ -47,6 +43,7 @@ function Child($mode,$probeHome,$credential) {
   if ($p.ExitCode -ne 0) {
     $failure=@{mode=$mode;exitCode=$p.ExitCode}
     $diagnosticPath=Join-Path $probeHome ($mode+'.failure.json')
+    if (-not (Test-Path $diagnosticPath) -and $mode -eq 'identity') { $diagnosticPath=Join-Path $bootstrap ($mode+'.failure.json') }
     if (Test-Path $diagnosticPath) {
       $d=Get-Content $diagnosticPath -Raw | ConvertFrom-Json
       if ($d.exceptionType -match '^[A-Za-z0-9_.+`]+$') {$failure.exceptionType=$d.exceptionType}
@@ -65,12 +62,18 @@ try {
   if ($LASTEXITCODE -ne 0) { throw 'Stage traversal grant failed' }
   & icacls.exe $bin /grant ('*'+$a.sid+':(OI)(CI)(RX)') ('*'+$b.sid+':(OI)(CI)(RX)') /T /Q | Out-Null
   if ($LASTEXITCODE -ne 0) { throw 'Runtime RX grant failed' }
-  $probeHome=Join-Path $root 'private probe تجربة'
-  New-Item $probeHome -ItemType Directory | Out-Null; Set-PrivateAcl $probeHome $a.sid
-  [IO.File]::WriteAllText((Join-Path $probeHome 'sentinel.txt'),'fictional nonsecret ACL sentinel')
+  # Nonsecret protected bootstrap has only A, Administrators and SYSTEM.
+  $bootstrap=Join-Path $root 'bootstrap'
+  New-Item $bootstrap -ItemType Directory | Out-Null
+  & icacls.exe $bootstrap /inheritance:r /grant:r ('*'+$a.sid+':(OI)(CI)F') '*S-1-5-18:(OI)(CI)F' '*S-1-5-32-544:(OI)(CI)F' | Out-Null
+  if ($LASTEXITCODE -ne 0) { throw 'Bootstrap ACL failed' }
+  Assert-PrivateAcl $bootstrap $a.sid
+  $probeHome=Join-Path $bootstrap 'private probe تجربة'
+  if (Test-Path $probeHome) { throw 'Child private target must be absent' }
   Child 'identity' $probeHome $a.credential
   $identity=Get-Content (Join-Path $probeHome 'identity.json') -Raw | ConvertFrom-Json
   if ($identity.sid -ne $a.sid -or $identity.admin -or -not $identity.sentinelRead -or $identity.owner -ne $a.sid) { throw 'Child identity mismatch' }
+  Assert-PrivateAcl $probeHome $a.sid
   Child 'negative' $probeHome $b.credential
   Add-Check 'otherOrdinaryUserDenied' $true
   Child 'network-before' $probeHome $a.credential
@@ -99,7 +102,7 @@ try {
   $pg=Get-Content (Join-Path $probeHome 'postgres.json') -Raw | ConvertFrom-Json
   Add-Check 'postgres' @{query=$pg.query;loopback=$pg.loopback;modules=$pg.modules}
   if (@(Get-NetTCPConnection -LocalPort $pg.port -State Listen -ErrorAction SilentlyContinue).Count) { throw 'Probe listener remains' }
-  Set-PrivateAcl $probeHome $a.sid
+  Assert-PrivateAcl $probeHome $a.sid
   if ((Get-Acl -LiteralPath $probeHome).GetOwner([Security.Principal.SecurityIdentifier]).Value -ne $a.sid) { throw 'Final owner mismatch' }
   $report.complete=$true
 } catch {
