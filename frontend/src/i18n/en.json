@@ -124,7 +124,14 @@
     "prescriptionUnknown": "The prescription save outcome is unknown. Do not submit again. Check the patient records and audit log. Readback cannot prove a delayed request has finished. This hold applies only to this tab. Acknowledging discards the prescription draft.",
     "checkPrescription": "I checked, reload records and discard prescription draft",
     "prescriptionNotes": "Prescription notes, optional",
-    "prescriptionNotesSaved": "Prescription notes"
+    "prescriptionNotesSaved": "Prescription notes",
+    "startAppointment": "Start appointment visit",
+    "appointmentContext": "This visit is linked to the selected appointment. Attendance is recorded separately.",
+    "appointmentLoading": "Checking the appointment...",
+    "appointmentUnavailable": "The appointment is unavailable or could not be verified. No standalone visit will be created from this selection.",
+    "appointmentUsed": "The linked visit was saved. Start a separate visit only if that is intended.",
+    "appointmentRefresh": "Check appointment again",
+    "standaloneVisit": "Open a separate standalone visit"
   },
   "stock": {
     "title": "Stock adjustment",
