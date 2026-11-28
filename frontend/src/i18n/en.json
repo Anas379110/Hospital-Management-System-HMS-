@@ -131,7 +131,21 @@
     "appointmentUnavailable": "The appointment is unavailable or could not be verified. No standalone visit will be created from this selection.",
     "appointmentUsed": "The linked visit was saved. Start a separate visit only if that is intended.",
     "appointmentRefresh": "Check appointment again",
-    "standaloneVisit": "Open a separate standalone visit"
+    "standaloneVisit": "Open a separate standalone visit",
+    "deleteOpen": "Remove encounter from current history:",
+    "deleteTitle": "Confirm logical deletion",
+    "deleteConsequences": "This encounter will disappear from current medical history. Its stored record and prescriptions are retained. Completed test history remains. A linked appointment stays used and is not reopened. There is no restore action here.",
+    "deleteReason": "Reason for logical deletion",
+    "deleteReasonHelp": "At least 5 characters after trimming edge spaces. The exact text you enter, including edge spaces, is stored. Avoid unnecessary identifying information.",
+    "deleteCancel": "Cancel",
+    "deleteConfirm": "Confirm logical deletion",
+    "deleteSaved": "Encounter removed from current history.",
+    "deleteUnknown": "The deletion outcome is uncertain. Do not resend. Check current visibility, then explicitly close this pending review. This does not confirm whether the earlier request committed.",
+    "deleteCheck": "Check current visibility",
+    "deleteReviewed": "I reviewed current visibility, close pending review",
+    "deleteVisible": "The encounter is currently visible. This does not establish the earlier request outcome. Closing this review does not retry deletion.",
+    "deleteUnavailable": "The encounter is currently unavailable and absent from current history. This does not prove this request deleted it.",
+    "deleteStorageError": "A pending deletion record could not be read. Deletion controls are blocked. Do not resend; review the current record before changing browser storage."
   },
   "stock": {
     "title": "Stock adjustment",
