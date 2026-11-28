@@ -42,9 +42,10 @@ if ($Mode -eq 'identity') {
   if ($LASTEXITCODE -ne 0) { throw 'Native loading failed' }
   $v = & (Join-Path $PSScriptRoot 'schema-engine.exe') --version
   if ($LASTEXITCODE -ne 0 -or $v -notmatch '605197351a3c8bdd595af2d2a9bc3025bca48ea2') { throw 'Schema engine version mismatch' }
-} elseif ($Mode -eq 'postgres') {
+} elseif ($Mode -eq 'postgres' -or $Mode -eq 'roundtrip') {
   $pg = Join-Path $PSScriptRoot 'pg/bin'
-  $data = Join-Path $probeHome 'pgdata'
+  $data = Join-Path $probeHome $(if ($Mode -eq 'roundtrip') {'pgdata-roundtrip'} else {'pgdata'})
+  if ($Mode -eq 'roundtrip') { Remove-Item (Join-Path $probeHome 'postgres-stages.txt') -ErrorAction SilentlyContinue }
   $passfile = Join-Path $probeHome 'pg-password.txt'
   $started = $false
   function Stage($value) {
@@ -117,6 +118,14 @@ if ($Mode -eq 'identity') {
     $listeners = @(Get-NetTCPConnection -OwningProcess $pidValue -State Listen)
     if ($listeners.Count -ne 1 -or $listeners[0].LocalAddress -ne '127.0.0.1' -or $listeners[0].LocalPort -ne $port) { throw 'Loopback listener mismatch' }
     Stage 'listener-after'
+    if ($Mode -eq 'roundtrip') {
+      [IO.File]::WriteAllText((Join-Path $probeHome 'roundtrip-generator-entered.txt'),'entered')
+      $env:HMS_PROBE_HOME=$probeHome
+      $env:PGOPTIONS='-c timezone=UTC -c datestyle=ISO,YMD'
+      $env:PGCLIENTENCODING='UTF8'
+      & $node (Join-Path $PSScriptRoot 'roundtrip.cjs')
+      if ($LASTEXITCODE -ne 0) { throw 'Bounded roundtrip failed' }
+    }
     Run-Pg 'pg_dump' @('--version') 'dump'; Run-Pg 'pg_restore' @('--version') 'restore'
     @{query=$true;loopback=$true;listenerAddress=[string]$listeners[0].LocalAddress;port=$port;modules=$modules;pid=$pidValue;data=$data} | ConvertTo-Json -Depth 5 | Set-Content $out -Encoding UTF8
   } finally {
