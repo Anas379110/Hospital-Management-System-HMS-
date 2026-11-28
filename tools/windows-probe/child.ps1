@@ -10,13 +10,20 @@ if ($principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))
 $node = Join-Path $PSScriptRoot 'node.exe'
 $out = Join-Path $probeHome ($Mode + '.json')
 if ($Mode -eq 'identity') {
-  # The standard child may assign its own SID as owner using its granted WRITE_OWNER.
-  # Parent never transfers ownership to another SID using an unenabled privilege.
-  $acl=Get-Acl -LiteralPath $probeHome
-  $acl.SetOwner($identity.User)
-  Set-Acl -LiteralPath $probeHome -AclObject $acl
-  $owner=(Get-Acl -LiteralPath $probeHome).GetOwner([Security.Principal.SecurityIdentifier]).Value
-  if ($owner -ne $identity.User.Value) { throw 'Self ownership failed' }
+  # Child creates the directory and therefore owns it, no ownership transfer.
+  if (Test-Path $probeHome) { throw 'Fresh private target required' }
+  New-Item $probeHome -ItemType Directory | Out-Null
+  & icacls.exe $probeHome /inheritance:d | Out-Null
+  if ($LASTEXITCODE -ne 0) { throw 'Access-only privacy update failed' }
+  $actual=Get-Acl -LiteralPath $probeHome
+  $owner=$actual.GetOwner([Security.Principal.SecurityIdentifier]).Value
+  if ($owner -ne $identity.User.Value -or -not $actual.AreAccessRulesProtected) { throw 'Created owner or privacy mismatch' }
+  $allowed=@($identity.User.Value,'S-1-5-18','S-1-5-32-544')
+  $rules=@($actual.GetAccessRules($true,$true,[Security.Principal.SecurityIdentifier]))
+  if ($rules.Count -ne 3 -or @($rules | Where-Object {$_.IdentityReference.Value -notin $allowed -or $_.AccessControlType -ne 'Allow'}).Count) { throw 'Private allowed SID set mismatch' }
+  [IO.File]::WriteAllText((Join-Path $probeHome 'sentinel.txt'),'fictional nonsecret ACL sentinel')
+  $fileAcl=Get-Acl -LiteralPath (Join-Path $probeHome 'sentinel.txt')
+  if (@($fileAcl.GetAccessRules($true,$true,[Security.Principal.SecurityIdentifier]) | Where-Object {$_.IdentityReference.Value -notin $allowed -or $_.AccessControlType -ne 'Allow'}).Count) { throw 'Child file has unexpected ACL' }
   if ([IO.File]::ReadAllText((Join-Path $probeHome 'sentinel.txt')) -ne 'fictional nonsecret ACL sentinel') { throw 'Positive sentinel read failed' }
   @{sid=$identity.User.Value;admin=$false;sentinelRead=$true;owner=$owner;os=[Environment]::OSVersion.VersionString} | ConvertTo-Json | Set-Content $out -Encoding UTF8
 } elseif ($Mode -eq 'negative') {
@@ -54,6 +61,9 @@ if ($Mode -eq 'identity') {
     $password = [Convert]::ToBase64String($bytes)
     # Ephemeral CI-only database secret, never emitted or included in artifacts.
     [IO.File]::WriteAllText($passfile,$password)
+    $passwordAcl=Get-Acl -LiteralPath $passfile
+    $passwordRules=@($passwordAcl.GetAccessRules($true,$true,[Security.Principal.SecurityIdentifier]))
+    if ($passwordRules.Count -ne 3 -or @($passwordRules | Where-Object {$_.IdentityReference.Value -notin @($identity.User.Value,'S-1-5-18','S-1-5-32-544') -or $_.AccessControlType -ne 'Allow'}).Count) { throw 'Password file SID allowlist mismatch' }
     Run-Pg 'initdb' @('-D',$data,'--username=hms_probe','--auth-host=scram-sha-256',('--pwfile=' + $passfile),'--encoding=UTF8','--locale=C')
     Remove-Item $passfile
     $hba=[IO.File]::ReadAllLines((Join-Path $data 'pg_hba.conf'))
@@ -84,6 +94,9 @@ if ($Mode -eq 'identity') {
 
 } catch {
   $diagnostic=@{exceptionType=$_.Exception.GetType().FullName;line=[int]$_.InvocationInfo.ScriptLineNumber;hresult=[int]$_.Exception.HResult}
-  try { $diagnostic | ConvertTo-Json | Set-Content (Join-Path $ProbeHome ($Mode+'.failure.json')) -Encoding UTF8 } catch {}
+  try {
+    $failureBase=if (Test-Path $ProbeHome) {$ProbeHome} else {Split-Path $ProbeHome -Parent}
+    $diagnostic | ConvertTo-Json | Set-Content (Join-Path $failureBase ($Mode+'.failure.json')) -Encoding UTF8
+  } catch {}
   exit 20
 }
