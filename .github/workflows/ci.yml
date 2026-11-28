@@ -71,7 +71,7 @@ jobs:
           VITE_PUBLIC_DEMO: true
       - run: node node_modules/playwright/cli.js install --with-deps chromium
         working-directory: frontend
-      - run: node test-real-browser/swagger-model-wrap.cjs && node test-real-browser/swagger-pharmacy-contract.cjs && node test-real-browser/swagger-admission-contract.cjs && node test-real-browser/swagger-department-summary.cjs
+      - run: node test-real-browser/swagger-model-wrap.cjs && node test-real-browser/swagger-pharmacy-contract.cjs && node test-real-browser/swagger-admission-contract.cjs && node test-real-browser/swagger-department-summary.cjs && node test-real-browser/swagger-setup-contract.cjs
         working-directory: frontend
         env:
           HMS_SWAGGER_PROOF_DIR: browser-artifacts/swagger-model-wrap

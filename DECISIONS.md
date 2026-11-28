@@ -158,3 +158,6 @@ CONFIRMED from unchanged service/schema: annotate both admission outputs with on
 
 ### Department summary contract candidate
 CONFIRMED from unchanged services: annotate three read-only scalar/aggregate projections. Defer role-polymorphic bed list and seven setup write outputs. Do not change ordering, cachedcount semantics, pagination, role or patient disclosure. Four DTOs mirror existing output only; actual HTTP role/isolation/range/count tests gate release.
+
+### Setup response contracts candidate
+CONFIRMED unchanged service outputs: reuseDepartmentResponseDto forcreate/rename; full7scalarBedSetupResponseDto; id/deleted:boolean marker for unused deletions with exacttrue asserted inHTTP. Native booleanenum(true) generated an incorrect number type in current Swagger, caught before snapshot; use faithful boolean type, not a falsely typed literal. No runtime or dependency workaround. Existing occupied relabel stays unchanged.

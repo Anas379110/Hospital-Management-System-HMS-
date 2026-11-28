@@ -167,6 +167,50 @@
         ],
         "type": "object"
       },
+      "BedSetupResponseDto": {
+        "properties": {
+          "bedNumber": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "departmentId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "available",
+              "occupied",
+              "maintenance"
+            ],
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "workspaceId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "workspaceId",
+          "id",
+          "departmentId",
+          "bedNumber",
+          "status",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
       "CancelAppointmentDto": {
         "properties": {
           "reason": {
@@ -1325,6 +1369,22 @@
         ],
         "type": "object"
       },
+      "SetupDeletionResponseDto": {
+        "properties": {
+          "deleted": {
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "deleted"
+        ],
+        "type": "object"
+      },
       "StockAdjustmentResponseDto": {
         "properties": {
           "adjustmentDelta": {
@@ -2411,6 +2471,13 @@
         },
         "responses": {
           "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DepartmentResponseDto"
+                }
+              }
+            },
             "description": ""
           },
           "400": {
@@ -2873,6 +2940,13 @@
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupDeletionResponseDto"
+                }
+              }
+            },
             "description": ""
           },
           "400": {
@@ -2934,6 +3008,13 @@
         },
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DepartmentResponseDto"
+                }
+              }
+            },
             "description": ""
           },
           "400": {
@@ -3044,6 +3125,13 @@
         },
         "responses": {
           "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BedSetupResponseDto"
+                }
+              }
+            },
             "description": ""
           },
           "400": {
@@ -3159,6 +3247,13 @@
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupDeletionResponseDto"
+                }
+              }
+            },
             "description": ""
           },
           "400": {
@@ -3228,6 +3323,13 @@
         },
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BedSetupResponseDto"
+                }
+              }
+            },
             "description": ""
           },
           "400": {
@@ -3299,6 +3401,13 @@
         },
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BedSetupResponseDto"
+                }
+              }
+            },
             "description": ""
           },
           "400": {

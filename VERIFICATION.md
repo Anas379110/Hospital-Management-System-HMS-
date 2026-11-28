@@ -1,6 +1,6 @@
 # HMS verification and open requirements
 
-Reconciled28 November2026 07:40 Istanbul. Fictional-data demonstration, not hospital readiness or compliance certification. Latest verified public releaseb0905cc7b2eccd0889bcd500e8e37d2e1a3f62ab. Earlier evidence remains historical and does not establish newer source execution.
+Reconciled28 November2026 07:40 Istanbul. Fictional-data demonstration, not hospital readiness or compliance certification. Latest verified public release006bdc7f2d55c1d0d7d5dbb458cdf52944c45c41. Earlier evidence remains historical and does not establish newer source execution.
 
 ## Executed release evidence
 
@@ -39,3 +39,6 @@ Pharmacy98c706a fullCI46108642762bothPG success; RenderactualLive07:53:37duratio
 
 ## Admission release and department read candidate
 Admissionb0905cc exactCI46110288713bothPGsuccess, actualLive08:17:28 manual1m32, hosted33case/native49schemas55ops/modelpixels08:18:05pass. Superseding release https://github.com/Anas379110/Hospital-Management-System-HMS-/pull/18#issuecomment-7234589388 . Three department read summary contracts now candidate only:53schemas55ops28successcontracts, local230unit62mockHTTP25metadata/validator/dependency tests/build/lint pass. FreshrestrictedPG17.12/18.7 entire runner each50named department cases and53inputhashes pass. Fourmodel320/390/1280pixels fit. Independent review/exactCI/hosted pending. No service/query/role/schema/config/dependency or policy change. Existing department lists remain unbounded; polymorphic bed list and7setup writes not contracted here. WholeHMS incomplete.
+
+## Department read release and setup response candidate
+Department006bdc7 exactCI46112342245bothPGsuccess; actual08:44:47manualdeploy1m33Liveverified08:48:03; hosted50cases/native53schemas55ops/pixels08:48:53pass. Superseding release https://github.com/Anas379110/Hospital-Management-System-HMS-/pull/19#issuecomment-7234906319 . Seven setup response contracts candidate only:55schemas55ops35successcontracts. Local230unit62mockHTTP26metadata/validator/dependency/build/lint, freshrestrictedPG17.12/18.7 fullrunner setup HTTPcases and58inputhashes pass. Standalone models320/390/1280fit. Independent review/exactCI/hosted pending. No service/query/role/schema/config/dependency or functional policy change. WholeHMS incomplete.
