@@ -13,6 +13,7 @@ const appDir = path.join(base, 'deps');
 let app;
 let phase='preflight';
 let appClosed=false;
+let childTermination='not-started';
 const secrets=[];
 function saveSecrets(){fs.writeFileSync(path.join(home,'roundtrip-secrets.json'),JSON.stringify(secrets.flatMap(v=>[v,encodeURIComponent(v)])));}
 const timeout=setTimeout(()=>{if(app&&!appClosed)app.kill();process.exit(25);},240000);
@@ -56,6 +57,8 @@ function snapshot(db) {
   assert.equal(process.env.PGUSER,'hms_probe');
   process.env.PGCLIENTENCODING='UTF8';
   assert.ok(home && ownerPassword);
+  phase='preflight-path';
+  assert.ok(fs.existsSync(path.join(appDir,'dist','src','app.factory.js')));
   process.env.DATABASE_URL=dburl('hms_roundtrip','hms_probe',ownerPassword);
   process.env.PRISMA_SCHEMA_ENGINE_BINARY=path.join(base,'schema-engine.exe');
   process.env.PRISMA_QUERY_ENGINE_LIBRARY=path.join(base,'query_engine.dll.node');
@@ -112,21 +115,23 @@ CREATE ROLE hms_cleanup LOGIN PASSWORD '${cleanupPassword}' NOSUPERUSER NOCREATE
   assert.deepEqual(snapshot('hms_restored'),before);
   assert.deepEqual(snapshot('hms_roundtrip'),before);
   stage('backup-after');
-  phase='api';stage('api-before');
+  phase='api-env';stage('api-before');
   process.env.DATABASE_URL=dburl('hms_restored','hms_runtime',runtimePassword);
   process.env.JWT_SECRET=crypto.randomBytes(48).toString('hex');
   process.env.HMS_PUBLIC_DEMO='true';
   process.env.HMS_QUALIFICATION_MODE='false';
   process.env.HMS_RATE_LIMIT_IDENTITY='';
-  process.env.HMS_TRUSTED_PROXY_ADDRESSES='';
+  delete process.env.HMS_TRUSTED_PROXY_ADDRESSES;
   process.env.FRONTEND_URL='http://127.0.0.1:55774';
   process.env.PORT='55774';
   const jwt=process.env.JWT_SECRET; secrets.push(jwt);
   saveSecrets();
   const {PrismaClient}=require(path.join(appDir,'node_modules','@prisma','client'));
+  phase='api-cleanup';
   const cleanup=new PrismaClient({datasources:{db:{url:dburl('hms_restored','hms_cleanup',cleanupPassword)}}});
   try { await cleanup.$executeRawUnsafe('SELECT hms_cleanup_expired_workspaces()'); }
   finally { await cleanup.$disconnect(); }
+  phase='api-runtime';
   const runtime=new PrismaClient();
   let ddlDenied=false;
   try {
@@ -135,6 +140,7 @@ CREATE ROLE hms_cleanup LOGIN PASSWORD '${cleanupPassword}' NOSUPERUSER NOCREATE
       return tx.$queryRawUnsafe('SELECT count(*)::int AS count FROM demo_workspaces');
     });
     assert.equal(positive[0].count,1);
+    phase='api-ddl';
     try {await runtime.$executeRawUnsafe('CREATE TABLE public.must_not_exist(id int)');}
     catch(error){ddlDenied=error?.meta?.code==='42501';}
   }
@@ -142,16 +148,33 @@ CREATE ROLE hms_cleanup LOGIN PASSWORD '${cleanupPassword}' NOSUPERUSER NOCREATE
   assert.equal(ddlDenied,true);
   const appEnv={...process.env};
   for(const k of Object.keys(appEnv))if(k.startsWith('PG')||k==='HMS_PROBE_HOME')delete appEnv[k];
+  phase='api-fork';
   app=fork(path.join(base,'app-child.cjs'),[],{cwd:appDir,env:appEnv,stdio:['ignore','ignore','ignore','ipc'],execPath:process.execPath});
-  const nextMessage=()=>Promise.race([once(app,'message').then(([m])=>m),new Promise((_,reject)=>setTimeout(()=>reject(Error('IPC timeout')),15000).unref())]);
-  const ready=await nextMessage(); assert.equal(ready.type,'ready'); assert.equal(ready.address,'127.0.0.1');
+  childTermination='running';
+  app.on('exit',(code,signal)=>{childTermination=signal?'signal':({0:'exit-zero',22:'exit-startup',23:'exit-deadline',24:'exit-close'}[code]||'exit-other');});
+  const nextMessage=()=>new Promise((resolve,reject)=>{
+    const done=(error,message)=>{clearTimeout(timer);app.off('message',messageListener);app.off('exit',exitListener);error?reject(error):resolve(message);};
+    const messageListener=message=>done(null,message);
+    const exitListener=()=>done(Error('Child exited'));
+    const timer=setTimeout(()=>done(Error('IPC timeout')),15000);timer.unref();
+    app.once('message',messageListener);app.once('exit',exitListener);
+  });
+  const ready=await nextMessage();
+  if(ready?.type==='startup-failed'){
+    if(['load','create','listen'].includes(ready.phase))phase='api-fork-'+ready.phase;
+    throw Error('Child startup failed');
+  }
+  assert.equal(ready.type,'ready'); assert.equal(ready.address,'127.0.0.1');
   const url='http://127.0.0.1:'+ready.port;
+  phase='api-health';
   const r=await fetch(url+'/api/v1/health',{signal:AbortSignal.timeout(5000)});
   assert.equal(r.status,200); assert.deepEqual(await r.json(),{ok:true});
+  phase='api-demo';
   const workspace=await fetch(url+'/api/v1/demo/start',{method:'POST',headers:{'content-type':'application/json'},body:'{}',signal:AbortSignal.timeout(5000)});
   assert.equal(workspace.status,201);
   const session=await workspace.json(); assert.equal(typeof session.accessToken,'string'); assert.equal(session.user.role,'receptionist');
   secrets.push(session.accessToken);saveSecrets();
+  phase='api-patients';
   const patients=await fetch(url+'/api/v1/patients',{headers:{Authorization:'Bearer '+session.accessToken},signal:AbortSignal.timeout(5000)});
   assert.equal(patients.status,200);
   stage('api-after');
@@ -172,7 +195,7 @@ CREATE ROLE hms_cleanup LOGIN PASSWORD '${cleanupPassword}' NOSUPERUSER NOCREATE
   fs.rmSync(archive);assert.equal(fs.existsSync(archive),false);
   fs.writeFileSync(path.join(home,'roundtrip-result.json'),safeText);
 })().catch(() => {
-  try{fs.writeFileSync(path.join(home,'helper-failure.json'),JSON.stringify({phase}));}catch{}
+  try{fs.writeFileSync(path.join(home,'helper-failure.json'),JSON.stringify({phase,childTermination}));}catch{}
   // Force termination is cleanup only, never a graceful-close pass.
   if(app&&!appClosed)app.kill();
   clearTimeout(timeout);
