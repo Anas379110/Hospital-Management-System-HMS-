@@ -438,5 +438,18 @@
     "checked": "I checked, load current details",
     "loading": "Loading patient details",
     "loadError": "Patient details could not be loaded. The record may be unavailable in this workspace."
+  },
+  "medicationCreate": {
+    "title": "Add medication",
+    "description": "Create an inventory item using the existing medication fields",
+    "name": "Medication name",
+    "unit": "Unit",
+    "currentStock": "Initial stock",
+    "reorderThreshold": "Reorder threshold, optional",
+    "defaultThreshold": "Leave blank to use the existing default of 10",
+    "create": "Create medication",
+    "saved": "Medication created and selected for stock adjustment",
+    "unknown": "The medication creation outcome is unknown. Do not submit again. Review the inventory and audit log. Readback cannot prove a delayed request has finished. This hold applies only to this tab. Acknowledging discards the draft.",
+    "checked": "I checked, reload inventory and discard draft"
   }
 }

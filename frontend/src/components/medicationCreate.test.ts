@@ -1,0 +1,14 @@
+import { beforeEach, expect, it } from 'vitest';
+import { beginMedicationCreate, emptyMedicationDraft, finishMedicationCreate, medicationCreateHeld, medicationInput } from './medicationCreate';
+const valid = { name: ' Fictional medicine ', unit: ' box ', currentStock: '0', reorderThreshold: '' };
+it('preserves text/zero and omits optional threshold for existing server default', () => { expect(medicationInput(valid)).toEqual({ name: valid.name, unit: valid.unit, currentStock: 0 }); });
+it('supports explicit zero and maximum32bit integers', () => { expect(medicationInput({ ...valid, currentStock: '2147483647', reorderThreshold: '0' })).toEqual({ name: valid.name, unit: valid.unit, currentStock: 2147483647, reorderThreshold: 0 }); });
+it.each(['', ' ', '-1', '1.5', '1e2', 'NaN', 'Infinity', '2147483648'])('rejects invalid initial stock %s', currentStock => { expect(medicationInput({ ...valid, currentStock })).toBeNull(); });
+it.each([' ', '-1', '1.5', '2147483648'])('rejects invalid optional threshold %s', reorderThreshold => { expect(medicationInput({ ...valid, reorderThreshold })).toBeNull(); });
+it('requires existing minimal text fields and leaves initial draft unsendable', () => { expect(medicationInput(emptyMedicationDraft)).toBeNull();expect(medicationInput({ ...valid, name: 'x' })).toBeNull();expect(medicationInput({ ...valid, unit: '' })).toBeNull(); });
+let values: Map<string, string>;
+beforeEach(() => { values = new Map();Object.defineProperty(globalThis, 'sessionStorage', { configurable: true, value: { getItem: (key: string) => values.get(key) ?? null, setItem: (key: string, value: string) => values.set(key, value), removeItem: (key: string) => values.delete(key) } }); });
+it.each([400, 401, 403])('clears current confirmed response %s', status => { const key = beginMedicationCreate('u');finishMedicationCreate(key, true, status);expect(medicationCreateHeld('u')).toBe(false); });
+it.each([500, 502, 503, 504, undefined])('retains unknown response %s', status => { const key = beginMedicationCreate('u');finishMedicationCreate(key, true, status);expect(medicationCreateHeld('u')).toBe(true);expect(medicationCreateHeld('other')).toBe(false); });
+it('late old-session201 does not clear marker', () => { const key = beginMedicationCreate('u');finishMedicationCreate(key, false, 201);expect(medicationCreateHeld('u')).toBe(true); });
+it('unavailable storage fails closed before dispatch', () => { Object.defineProperty(globalThis, 'sessionStorage', { configurable: true, value: { getItem: () => { throw Error('unavailable'); }, setItem: () => { throw Error('unavailable'); } } });expect(medicationCreateHeld('u')).toBe(true);let posts = 0;expect(() => { beginMedicationCreate('u');posts++; }).toThrow();expect(posts).toBe(0); });

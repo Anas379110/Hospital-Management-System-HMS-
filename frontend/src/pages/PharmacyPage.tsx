@@ -1,3 +1,4 @@
+import MedicationCreate from '../components/MedicationCreate';
 import { useState } from 'react';
 import {
   Alert,
@@ -71,6 +72,7 @@ export default function PharmacyPage() {
         {t('pharmacy.title')}
       </Typography>
 
+      <MedicationCreate onCreated={medication => setStockId(medication.id)} />
       <Card sx={{ mb: 3 }}><CardContent>
         <Typography variant="h6">{t('stock.title')}</Typography>
         <TextField fullWidth select margin="normal" label={t('stock.medication')} value={stockId} onChange={e => setStockId(e.target.value)}>{medications?.map(m => <MenuItem key={m.id} value={m.id}>{m.name} ({m.currentStock})</MenuItem>)}</TextField>
