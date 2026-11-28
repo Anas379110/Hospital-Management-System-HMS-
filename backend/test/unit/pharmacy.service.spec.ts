@@ -4,6 +4,8 @@ import { PharmacyService } from '../../src/modules/pharmacy/pharmacy.service';
 import { PrismaService } from '../../src/prisma/prisma.service';
 
 interface TxMock {
+  user: { findUnique: jest.Mock }; auditLog: { create: jest.Mock };
+  $queryRaw: jest.Mock;
   prescription: { findUnique: jest.Mock; update: jest.Mock };
   medication: { findUnique: jest.Mock; update: jest.Mock };
 }
@@ -19,6 +21,8 @@ describe('PharmacyService', () => {
 
   beforeEach(async () => {
     tx = {
+      user: { findUnique: jest.fn().mockResolvedValue({ isActive: true, role: "pharmacist" }) }, auditLog: { create: jest.fn().mockResolvedValue({}) },
+      $queryRaw: jest.fn().mockResolvedValue([]),
       prescription: { findUnique: jest.fn(), update: jest.fn() },
       medication: { findUnique: jest.fn(), update: jest.fn() },
     };
@@ -29,6 +33,8 @@ describe('PharmacyService', () => {
       prescription: { findMany: jest.fn() },
     };
 
+    tx.medication = prisma.medication;
+    tx.medication.update.mockImplementation(({ where, data }) => Promise.resolve({ id: where.id, ...data }));
     const moduleRef = await Test.createTestingModule({
       providers: [PharmacyService, { provide: PrismaService, useValue: prisma }],
     }).compile();
@@ -99,7 +105,7 @@ describe('PharmacyService', () => {
       prisma.medication.findUnique.mockResolvedValue({ id: 'med-1', currentStock: 20 });
       prisma.medication.update.mockResolvedValue({ id: 'med-1', currentStock: 70 });
 
-      await service.adjustStock('med-1', 50, 'شحنة جديدة');
+      await service.adjustStock('med-1', 50, 'شحنة جديدة', 'pharm-1');
 
       expect(prisma.medication.update).toHaveBeenCalledWith({
         where: { id: 'med-1' },
@@ -107,11 +113,11 @@ describe('PharmacyService', () => {
       });
     });
 
-    it('Finding #8 (RESOLVED): يُضمِّن سبب التعديل بالنتيجة ليلتقطه Audit Log — لا فقدان صامت لسبب تعديل المخزون', async () => {
+    it('returns adjustment display fields; separate transaction-audit tests verify retained reason category', async () => {
       prisma.medication.findUnique.mockResolvedValue({ id: 'med-1', currentStock: 20 });
       prisma.medication.update.mockResolvedValue({ id: 'med-1', currentStock: 70 });
 
-      const result = await service.adjustStock('med-1', 50, 'شحنة جديدة من المورِّد');
+      const result = await service.adjustStock('med-1', 50, 'شحنة جديدة من المورِّد', 'pharm-1');
 
       expect(result).toEqual(
         expect.objectContaining({ adjustmentReason: 'شحنة جديدة من المورِّد', adjustmentDelta: 50 }),
@@ -121,7 +127,7 @@ describe('PharmacyService', () => {
     it('يرفض بـ409 إن أدى التعديل لرصيد سالب', async () => {
       prisma.medication.findUnique.mockResolvedValue({ id: 'med-1', currentStock: 5 });
 
-      await expect(service.adjustStock('med-1', -10, 'تصحيح خاطئ')).rejects.toThrow(
+      await expect(service.adjustStock('med-1', -10, 'تصحيح خاطئ', 'pharm-1')).rejects.toThrow(
         ConflictException,
       );
       expect(prisma.medication.update).not.toHaveBeenCalled();

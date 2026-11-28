@@ -6,7 +6,7 @@ export interface ApiErrorShape {
   };
 }
 
-export type Role = 'admin' | 'receptionist' | 'doctor' | 'nurse' | 'manager';
+export type Role = 'admin' | 'receptionist' | 'doctor' | 'nurse' | 'manager' | 'pharmacist' | 'lab_tech' | 'billing_clerk';
 
 export interface CurrentUser {
   userId: string;
@@ -23,4 +23,6 @@ export interface Patient {
   nationalId?: string | null;
   phone: string;
   address?: string | null;
+  emergencyContactName?: string | null;
+  emergencyContactPhone?: string | null;
 }

@@ -7,5 +7,5 @@ export const AUDIT_KEY = 'audit_action';
  * مريض/طبية) ليتم تسجيلها تلقائياً في audit_logs عبر AuditInterceptor.
  * مثال: @Audit('PATIENT_CREATED', 'Patient')
  */
-export const Audit = (action: string, entityType: string) =>
-  SetMetadata(AUDIT_KEY, { action, entityType });
+export const Audit = (action: string, entityType: string, transactional = false) =>
+  SetMetadata(AUDIT_KEY, { action, entityType, transactional });

@@ -128,3 +128,39 @@
 ## Decision 027 — Finding #9 (Billing insurance %) — قرار مفتوح عمداً
 راجع docs/security/SECURITY-REVIEW.md Finding #9. لا قيد تقني مفروض حالياً على `insuranceCoveragePercent` — قرار سياسة عمل لا خطأ برمجي، 3 خيارات مطروحة، **بانتظار قرارك الصريح** بدل فرض قيد قد يُعطِّل سير عمل شرعي.
 **Status:** OPEN — NEEDS USER DECISION.
+
+## Decision 028 — Approved setup roles and preserved history, candidate November27
+
+User approved workflow rules22:09 and clarified Admin rather than Manager22:10. Extend existing department/bed schema and stack. Admin setup and available/maintenance only; doctor/nurse admission/discharge unchanged. No delete when linked history exists. Locks/CAS serialize setup/admission and actual count updates, with audit in same transaction. Bilingual confirmation UI does not implement authorization. No schema/migration required for this slice. Waitlist and live DB gate separate. Candidate remains unreviewed/unpublished until review/exact CI/hosted checks.
+
+## November28 active-view reads
+Keep existing React Query, no WebSocket/SSE or new dependency. Fifteen-second visible-online reads on overview/departmentbed views, manual refresh and last-confirmed/stale state, no mutation retries. Read failures retain old data honestly. Query staleTime0 only for live views supports immediate resume. Hidden/offline starts no new periodic reads, already-running server work not claimed cancelled. No schema or provider changes.
+
+## Native patient/waitlist response documentation, November28 local candidate
+Continue the already selected native Nest annotation approach for existing success payloads, not a new schema engine/serializer. Full patient row, minimal billing identity and pending waitlist projection remain distinct. Required-but-nullable fields describe the current complete JSON row. Only eight success responses receive explicit schemas; other services remain unqualified. Shared filter error-envelope details are intentionally unconstrained array items because actual validation strings and redacted objects differ. No new permission or output field is created by a schema. Actual restricted PG17/18 HTTP comparisons and negative validator tests supplement metadata tests. No DB migration/grant/provider change.
+
+## Existing clinical and lab response contracts, November28 local candidate
+Continue native annotations for actual existing scalar and nested response projections, with separate DTOs for complete encounter versus encounter-with-prescriptions and test scalar versus pending minimal identities. Do not change serializers, clinical permission, query or business semantics to make a DTO convenient. Explicitly preserve unbounded lists, null completion fields, current missing-patient empty results and completed results surviving encounter soft-delete. Actual restrictedPG17/18 HTTP compare all keys/types/enums/dates against the same native document and assert existing negative access/state behavior. Independent review and release gates remain.
+
+### November28 Swagger nested-model narrow viewport layout
+
+Actual hosted390px proof showed model name overflow. Keep existing Nest Swagger API/dependencies/schema. A documentation-only600px-and-below CSS override stacks complete model property/value rows and wraps names. This preserves readable nested fields instead of shrinking/truncating/hiding overflow. Native desktop table layout and native JSON snapshot unchanged. Local320/390/1280 pixels and six geometry/snapshot cases pass, keyboard nested-control expansion works. Removing override reproduces28 overflowing nodes. Scoped model-layout proof only, not universal Swagger accessibility/mobile acceptance. No business/DB/account/provider choice.
+
+### November28 existing exact patient duplicate warning concurrency candidate
+
+Move the existing global MRN advisory transaction lock before the unchanged exact name+DOB query. Actor check remains first, one lock held through MRN/create/audit. At existing READ COMMITTED each post-lock statement sees preceding holder commit. No normalization, national-ID matching, uniqueness constraint, demographic correction policy or update-vs-registration guarantee added. Existing global allocation contention remains, lock held slightly longer. Actual two blocked HTTP calls gated externally then released yield201+409 and one patient/audit on restrictedPG17.12/18.7. Explicit force yields201+201uniqueMRNs. Distinct name/DOB and foreign workspace unchanged; auth/auditrollbackretry checked.37inputhashbindings. Suite waits61seconds for fresh rate window before new batch, no throttle bypass. Local230unit62mockHTTP21contract checks pass. Review/exactCI/release/hosted proof pending.
+
+### Pharmacy output documentation, November28 candidate
+CONFIRMED from current service/schema: annotate existing six pharmacy output shapes without changing behavior. Preserve optional/null echoed stock reason rather than declaring it universally required; keep narrow nested identity projections and reuse existing prescription scalar. No new patient matching, clinical state, privilege, dependency or live DB decision. Runtime acceptance requires restricted PG17/18, review, exact CI and hosted proof, not annotation alone.
+
+### Admission scalar documentation, November28 candidate
+CONFIRMED from unchanged service/schema: annotate both admission outputs with one scalar DTO and required nullable discharge fields. No new authorization or admission/discharge/waitlist policy. Qualify actual existing JSON and errors before release, independently of unresolved patient-ID/demographic/billing decisions.
+
+### Department summary contract candidate
+CONFIRMED from unchanged services: annotate three read-only scalar/aggregate projections. Defer role-polymorphic bed list and seven setup write outputs. Do not change ordering, cachedcount semantics, pagination, role or patient disclosure. Four DTOs mirror existing output only; actual HTTP role/isolation/range/count tests gate release.
+
+### Setup response contracts candidate
+CONFIRMED unchanged service outputs: reuseDepartmentResponseDto forcreate/rename; full7scalarBedSetupResponseDto; id/deleted:boolean marker for unused deletions with exacttrue asserted inHTTP. Native booleanenum(true) generated an incorrect number type in current Swagger, caught before snapshot; use faithful boolean type, not a falsely typed literal. No runtime or dependency workaround. Existing occupied relabel stays unchanged.
+
+## Appointment scalar response continuation,2026-11-28
+Plan-before-code limits four existing writes to their faithful10scalar output, required nullable cancelReason and stored status vocabulary. No service/query/role/policy/database change. GET nested projections and options intentionally deferred. Independent review,exact bothPG CI,private delta,actual hosted proof still gate publication.

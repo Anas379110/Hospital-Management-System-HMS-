@@ -1,0 +1,228 @@
+name: HMS verification
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: hms-ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        postgres: [17, 18]
+    services:
+      postgres:
+        image: postgres:${{ matrix.postgres }}
+        env:
+          POSTGRES_USER: hms_test
+          POSTGRES_PASSWORD: isolated-ci-only
+          POSTGRES_DB: hms_test_ci
+        ports: [5432:5432]
+        options: >-
+          --health-cmd "pg_isready -U hms_test -d hms_test_ci"
+          --health-interval 5s --health-timeout 5s --health-retries 12
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4 verified tag
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4 verified tag
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+      - name: Standalone local readiness diagnostics
+        run: node --test local-demo/check-ready.test.mjs
+      - run: npm ci --ignore-scripts --no-fund
+        working-directory: backend
+      - run: node node_modules/prisma/build/index.js generate
+        working-directory: backend
+      - run: npm audit --omit=dev --audit-level=high
+        working-directory: backend
+      - run: npm run lint
+        working-directory: backend
+      - run: npm run build
+        working-directory: backend
+      - run: node test-real-postgres/export-openapi.mjs --check && node --test test-real-postgres/openapi-contract.test.mjs test-real-postgres/native-openapi.test.mjs test-real-postgres/response-contract-check.test.mjs test-real-postgres/dependency-security.test.mjs
+        working-directory: backend
+      - run: npm test -- --runInBand
+        working-directory: backend
+      - run: npm run test:e2e -- --runInBand
+        working-directory: backend
+      - run: node test-real-postgres/concurrency.mjs
+        working-directory: backend
+        env:
+          # Migration URL is owner-only; the test creates and verifies a non-owner runtime URL.
+          HMS_TEST_DATABASE_URL: postgresql://hms_test:isolated-ci-only@127.0.0.1:5432/hms_test_ci?schema=public&connection_limit=8&options=-c%20hms.workspace_id%3Dbaseline-test
+      - run: npm ci --ignore-scripts --no-fund
+        working-directory: frontend
+      - run: npm audit --omit=dev --audit-level=high
+        working-directory: frontend
+      - run: npm run lint
+        working-directory: frontend
+      - run: npm test
+        working-directory: frontend
+      - run: npm run build
+        working-directory: frontend
+        env:
+          VITE_PUBLIC_DEMO: true
+      - run: node node_modules/playwright/cli.js install --with-deps chromium
+        working-directory: frontend
+      - name: Install matching local recovery server and clients
+        run: |
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl --fail --silent --show-error -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          . /etc/os-release
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt ${VERSION_CODENAME}-pgdg main" | sudo tee /etc/apt/sources.list.d/hms-pgdg.list
+          sudo apt-get update
+          sudo apt-get install -y postgresql-${{ matrix.postgres }} postgresql-client-${{ matrix.postgres }}
+      - name: Synthetic rich-history HTTP and snapshot qualification
+        run: |
+          node test-real-postgres/related-history-performance.mjs
+          node test-real-postgres/related-history-integrity.mjs
+        working-directory: backend
+        env:
+          HMS_RELATED_PG_BIN: /usr/lib/postgresql/${{ matrix.postgres }}/bin
+          HMS_RELATED_PG_PORT: '55621'
+          HMS_PERFORMANCE_PORT: '4389'
+          HMS_PERFORMANCE_REPORT: related-history-report.json
+          HMS_RELATED_REPORT: related-history-report.json
+          HMS_RELATED_INTEGRITY_OUTPUT: related-history-integrity.json
+      - name: Local fictional journey and independent-cluster recovery
+        run: node test-real-browser/local-demo-recovery.cjs
+        working-directory: frontend
+        env:
+          HMS_LOCAL_PG_BIN: /usr/lib/postgresql/${{ matrix.postgres }}/bin
+          HMS_LOCAL_PG_PORT: '55601'
+          HMS_LOCAL_RECOVERY_PG_PORT: '55602'
+      - run: node test-real-browser/swagger-model-wrap.cjs && node test-real-browser/swagger-pharmacy-contract.cjs && node test-real-browser/swagger-admission-contract.cjs && node test-real-browser/swagger-department-summary.cjs && node test-real-browser/swagger-setup-contract.cjs && node test-real-browser/swagger-appointment-write.cjs
+        working-directory: frontend
+        env:
+          HMS_SWAGGER_PROOF_DIR: browser-artifacts/swagger-model-wrap
+      - run: createdb -h 127.0.0.1 -U hms_test hms_test_browser && createdb -h 127.0.0.1 -U hms_test hms_test_stock && createdb -h 127.0.0.1 -U hms_test hms_test_workflows && createdb -h 127.0.0.1 -U hms_test hms_test_appointments && createdb -h 127.0.0.1 -U hms_test hms_test_billing && createdb -h 127.0.0.1 -U hms_test hms_test_users
+        env:
+          PGPASSWORD: isolated-ci-only
+      - run: createdb -h 127.0.0.1 -U hms_test hms_test_cleanup && createdb -h 127.0.0.1 -U hms_test hms_test_upgrade
+        env:
+          PGPASSWORD: isolated-ci-only
+      - run: node test-real-postgres/cleanup-upgrade.mjs
+        working-directory: backend
+        env:
+          HMS_UPGRADE_TEST_DATABASE_URL: postgresql://hms_test:isolated-ci-only@127.0.0.1:5432/hms_test_upgrade
+      - run: node test-real-postgres/cleanup-readiness.mjs
+        working-directory: backend
+        env:
+          HMS_CLEANUP_TEST_DATABASE_URL: postgresql://hms_test:isolated-ci-only@127.0.0.1:5432/hms_test_cleanup
+      - run: createdb -h 127.0.0.1 -U hms_test hms_test_waitlist_upgrade && createdb -h 127.0.0.1 -U hms_test hms_test_waitlist_restore
+        env:
+          PGPASSWORD: isolated-ci-only
+      - run: node test-real-postgres/waitlist-upgrade.mjs
+        working-directory: backend
+        env:
+          HMS_WAITLIST_UPGRADE_CI: 'true'
+          HMS_WAITLIST_UPGRADE_URL: postgresql://hms_test:isolated-ci-only@127.0.0.1:5432/hms_test_waitlist_upgrade
+          HMS_WAITLIST_RESTORE_URL: postgresql://hms_test:isolated-ci-only@127.0.0.1:5432/hms_test_waitlist_restore
+          HMS_WAITLIST_PG_CONTAINER: ${{ job.services.postgres.id }}
+          HMS_WAITLIST_UPGRADE_REPORT: waitlist-upgrade-report.json
+      - run: node test-real-browser/wake-bootstrap.cjs
+        working-directory: frontend
+      - run: node test-real-browser/client-pressure.mjs
+        working-directory: frontend
+        env:
+          HMS_BROWSER_EXECUTABLE: /usr/bin/google-chrome
+      - run: node test-real-browser/public-clinical.mjs
+        working-directory: frontend
+        env:
+          HMS_BROWSER_DATABASE_URL: postgresql://hms_test:isolated-ci-only@127.0.0.1:5432/hms_test_browser?schema=public&connection_limit=8&options=-c%20hms.workspace_id%3D00000000-0000-4000-a000-000000000001
+      - run: node test-real-browser/public-stock.mjs
+        working-directory: frontend
+        env:
+          HMS_BROWSER_DATABASE_URL: postgresql://hms_test:isolated-ci-only@127.0.0.1:5432/hms_test_stock?schema=public&connection_limit=8&options=-c%20hms.workspace_id%3D00000000-0000-4000-a000-000000000001
+      - run: node test-real-browser/public-workflows.mjs
+        working-directory: frontend
+        env:
+          HMS_BROWSER_DATABASE_URL: postgresql://hms_test:isolated-ci-only@127.0.0.1:5432/hms_test_workflows?schema=public&connection_limit=8&options=-c%20hms.workspace_id%3D00000000-0000-4000-a000-000000000001
+      - run: node test-real-browser/public-appointments.mjs
+        working-directory: frontend
+        env:
+          HMS_BROWSER_DATABASE_URL: postgresql://hms_test:isolated-ci-only@127.0.0.1:5432/hms_test_appointments?schema=public&connection_limit=8&options=-c%20hms.workspace_id%3D00000000-0000-4000-a000-000000000001
+      - run: node test-real-browser/public-billing.mjs
+        working-directory: frontend
+        env:
+          HMS_BROWSER_DATABASE_URL: postgresql://hms_test:isolated-ci-only@127.0.0.1:5432/hms_test_billing?schema=public&connection_limit=8&options=-c%20hms.workspace_id%3D00000000-0000-4000-a000-000000000001
+      - run: node test-real-browser/public-users.mjs
+        working-directory: frontend
+        env:
+          HMS_BROWSER_DATABASE_URL: postgresql://hms_test:isolated-ci-only@127.0.0.1:5432/hms_test_users?schema=public&connection_limit=8&options=-c%20hms.workspace_id%3D00000000-0000-4000-a000-000000000001
+      - run: createdb -h 127.0.0.1 -U hms_test hms_test_attendance
+        env:
+          PGPASSWORD: isolated-ci-only
+      - run: node test-real-postgres/attendance.mjs
+        working-directory: backend
+        env:
+          HMS_ATTENDANCE_CI: 'true'
+          HMS_ATTENDANCE_DATABASE_URL: postgresql://hms_test:isolated-ci-only@127.0.0.1:5432/hms_test_attendance
+          HMS_ATTENDANCE_REPORT: attendance-report.json
+          HMS_ATTENDANCE_ARTIFACTS: ../frontend/browser-artifacts/attendance
+      - run: createdb -h 127.0.0.1 -U hms_test hms_test_setup
+        env:
+          PGPASSWORD: isolated-ci-only
+      - run: node test-real-postgres/department-setup.mjs
+        working-directory: backend
+        env:
+          HMS_SETUP_CI: 'true'
+          HMS_SETUP_DATABASE_URL: postgresql://hms_test:isolated-ci-only@127.0.0.1:5432/hms_test_setup
+          HMS_SETUP_REPORT: setup-report.json
+          HMS_SETUP_ARTIFACTS: ../frontend/browser-artifacts/setup
+      - run: createdb -h 127.0.0.1 -U hms_test hms_test_freshness
+        env:
+          PGPASSWORD: isolated-ci-only
+      - run: node test-real-postgres/active-freshness.mjs
+        working-directory: backend
+        env:
+          HMS_SETUP_CI: 'true'
+          HMS_SETUP_DATABASE_URL: postgresql://hms_test:isolated-ci-only@127.0.0.1:5432/hms_test_freshness
+          HMS_SETUP_REPORT: freshness-report.json
+          HMS_SETUP_ARTIFACTS: ../frontend/browser-artifacts/freshness
+      - run: createdb -h 127.0.0.1 -U hms_test hms_test_waitlist
+        env:
+          PGPASSWORD: isolated-ci-only
+      - run: node test-real-postgres/waitlist.mjs
+        working-directory: backend
+        env:
+          HMS_SETUP_CI: 'true'
+          HMS_SETUP_DATABASE_URL: postgresql://hms_test:isolated-ci-only@127.0.0.1:5432/hms_test_waitlist
+          HMS_SETUP_REPORT: waitlist-report.json
+          HMS_SETUP_ARTIFACTS: ../frontend/browser-artifacts/waitlist
+      - run: createdb -h 127.0.0.1 -U hms_test hms_test_isolation
+        env:
+          PGPASSWORD: isolated-ci-only
+      - run: node test-real-browser/isolation.mjs
+        working-directory: frontend
+        env:
+          HMS_ISOLATION_DATABASE_URL: postgresql://hms_test:isolated-ci-only@127.0.0.1:5432/hms_test_isolation?connection_limit=2
+      - run: npm ci --ignore-scripts --no-fund && npm test && npm run build && npm audit
+        working-directory: functions
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4 verified tag
+        if: always()
+        with:
+          name: postgres-regression-pg${{ matrix.postgres }}
+          path: |
+            backend/postgres-regression.json
+            backend/related-history-report.json
+            backend/related-history-integrity.json
+            backend/attendance-report.json
+            backend/setup-report.json
+            backend/freshness-report.json
+            backend/waitlist-report.json
+            backend/waitlist-upgrade-report.json
+            backend/cleanup-readiness-report.json
+            backend/cleanup-upgrade-report.json
+            frontend/browser-artifacts
+          if-no-files-found: ignore
+          retention-days: 7

@@ -1,0 +1,1350 @@
+{
+  "scope": "Disposable PostgreSQL waitlist and HTTP/browser, fictional data only",
+  "mode": "local cluster identity checked",
+  "complete": true,
+  "checks": [
+    "Clean migration and restricted nonowner runtime",
+    "3endpoints401andallnonclinicalroles403, invalidDTO/UUID/page400, missing404",
+    "CrossworkspaceHTTP404, runtime0foreignrows and compositeFKreject",
+    "Duplicatependingrace201+409, retainedcancelhistory409onsecondclose",
+    "Actualcancel/admission auditfailure503fullrollback includingbed andqueue",
+    "Same-departmentcloseatomic, otherdepartmentuntouched, no reopening ondischarge",
+    "Add/admit and cancel/admit races serialized",
+    "101tiedrequests deterministicFIFO andtwo-pageHTTPcoverage",
+    "ENdesktop/AR390UIadd/cancelconfirm/pagination andunknownnetworkwriteonePOST",
+    "Queueauditnophysicalidentity, cleanupcascadeshistory withnoDELETERuntime"
+  ],
+  "scriptSha256": "5bbc5e9f2c0ab92a86bc40ffbf5637ca2dc4e501082450fdfe32f5ba722b6601",
+  "startedAt": "2026-11-28T06:21:19.912Z",
+  "inputSha256": {
+    "prisma/demo/supabase-normalize.sql": "834bb3171b26a3accbc29334047e4b2d898060b5a7485ef79fbfb8dc578cfad3",
+    "prisma/schema.prisma": "3d4c557752dde410162c2f41fa1e7934e509ad251fd91cc71a2687416f871e9c",
+    "prisma/migrations/20261128005000_department_waitlist/migration.sql": "dae1aaa83bfaa9c87dec396ec692ad5d6347f99923a797bfda8b550de8980a8f",
+    "prisma/demo/waitlist-grants.sql": "524a43d1c8d65c462f1b45557afd867c3acee602e9b02b87a379facdd8e19874",
+    "prisma/demo/grants.sql": "09ecc660b16652302c05d6ba3c0acdef211401581253b50c5a6d42e3f915a2f3",
+    "prisma/demo/supabase-audit.sql": "78e908bf299217c5cbddca7f501d19b235802644462248b825d11cccde37f8f0",
+    "src/modules/waitlist/waitlist.service.ts": "853582e0c525e2b183e8b7c09ad7d7cf2f63c2e1d009d5d9932c9baed94387ff",
+    "src/modules/waitlist/waitlist.controller.ts": "7f93aca2ec6cd2e2b41f105c2a64dcb900e2bd8bd7435792250edc8c9694020e",
+    "src/modules/admissions/admissions.service.ts": "8f58e8fb7602f5b62c37d1700e9552021408ff8e788d68652b5e2cd3533b49e7",
+    "src/modules/departments/department-setup.service.ts": "0493e68b63bb8e6391b578086cb79ddea45229c396739bdb07789fcdc1477005",
+    "src/common/transaction-audit.ts": "bffaf20720393c9ca12a89353433414399fd3474e4623fe53843264fe1a54c5e",
+    "src/common/dto/api-error-response.dto.ts": "c76302ecb666f225762fa0de156c1e5b23077e6548d7d4b7ae4b5be04a5a5e90",
+    "src/modules/patients/dto/patient-response.dto.ts": "21305b49680496ddebcbc0a96466967c91c1780a7c4d7e44a38dd1b7d8f15468",
+    "src/modules/waitlist/dto/waitlist-response.dto.ts": "2356e19f3fcb7a15219082de20c8186b036f6bf113e643a76e6aa2198ddf5cc3",
+    "src/modules/patients/patients.controller.ts": "2b720c0b796f3f651cc04d59c0f799899cd21f0bd2d2361fd9eb4cc32333adef",
+    "test-real-postgres/response-contract-check.mjs": "a46ca116bba50beb045a9a756c7832d9b989f03a079f9b81e9955bc9b6c93691",
+    "test-real-postgres/clinical-response-check.mjs": "07a80d68725ed7035c9905b523f86433e9c8e2547f7fc803a4e352e43b3a8f64",
+    "test-real-postgres/patient-duplicate-race.mjs": "fa6f560a50f1d91d56fde6b583b43d918071555337f74b250cbc0e3c594a2213",
+    "dist/src/modules/patients/patients.service.js": "19a643bb6d29d91a5b0202089d948f4f65858171cfc010d7e75769be47ba8364",
+    "src/modules/encounters/encounters.controller.ts": "ff22178c66320cc1dff98ddfc3579aec50a5b68fd45a9cbbf69215d168ed9b78",
+    "src/modules/encounters/dto/clinical-response.dto.ts": "4670c7a677663564d5631d1145b45a795f3ed87f378705b704ed15d7b077354a",
+    "src/modules/lab/lab.controller.ts": "e9a53fa997a1d5e5da1cc574666a519504467e7c84dc1050e3a5bc6b21cec624",
+    "src/modules/lab/dto/test-order-response.dto.ts": "960e4627c99f3b740f89ef1dd1e990530ecee24b4534da3c5ea75477064fa1a3",
+    "src/modules/encounters/encounters.service.ts": "18b415b0856a4e95e6651c866b5a84177e26e95d5aebfd6a52d90e833fc37be2",
+    "src/modules/lab/lab.service.ts": "926b3bab6fcdd082b73854f4a1c4889e39245e3bd20788480f682860c82acafd",
+    "src/modules/patients/patients.service.ts": "5c8722bccb775dd1676c4a12a04399e2a6317e89239e357e963addaea6686b59",
+    "src/common/filters/http-exception.filter.ts": "a778b7dfe002016acb86e4d6ca210cbfaec266e9b82677f52ead168189f0d4a2",
+    "dist/src/modules/encounters/encounters.controller.js": "348cdedf6a738d00965b89f35490bd4dac748e92c2b1d81ea93122e7cc087842",
+    "dist/src/modules/lab/lab.controller.js": "18d8919deb3852525d0255cbd7317396a82807b62ef426e8f42c667bb600b4df",
+    "../frontend/src/components/DepartmentWaitlist.tsx": "d49448d8a52dd213f92b0539cb6c1b3275ef5d6b90d6dbbc8284cf193a322de6",
+    "../frontend/src/hooks/useWaitlist.ts": "b8a958e7a7927e9fc091be65fcd113f8ee8fa174ca203b1dde6d979620134d20",
+    "test-real-postgres/pharmacy-response-check.mjs": "8b40c698ae83f2d0adaac69cf695bcf8beec07986d8b1f3cd85df40ca3a57799",
+    "src/modules/pharmacy/pharmacy.controller.ts": "8dcde82316254c44abc215774f716919426a5789d8616e75abe541f2d7348f33",
+    "src/modules/pharmacy/dto/pharmacy-response.dto.ts": "75aefa2f5e76e0c6cc3128ec893772b92bae17eb754a0ac053871e6580dc36ba",
+    "src/modules/pharmacy/pharmacy.service.ts": "2b9ec9409360684c9637d1cc99b852a91fd59d0b90618613441c7006cde8c8c0",
+    "dist/src/modules/pharmacy/pharmacy.controller.js": "f869f5d0f4389d43643f9a8e378549a74d49a38a1ce59fbe6434ed7edd8767c5",
+    "dist/src/modules/pharmacy/pharmacy.service.js": "b1f558f4b1f55176f480481f131193bae460baeee7093b00f21728e4c5d79449",
+    "test-real-postgres/admission-response-check.mjs": "0d6336ce0b1ac200e79741c7c2688e4d29c791ec3e1da5738cf12036c68fe599",
+    "src/modules/admissions/admissions.controller.ts": "561799d97d30f5d085d2447b6d5ad1378ea36fd07fb8b77fdbbadfdc9a087d79",
+    "src/modules/admissions/dto/admission-response.dto.ts": "f6c87dbdf35efe1c280dcf8c29e62e598a5e12bb807603d8df7ce1cd6cd622b9",
+    "dist/src/modules/admissions/admissions.controller.js": "df446db8db73b9046d67759cb19dc77e56a41a7076a191dec2f3dade8e09f096",
+    "test-real-postgres/department-summary-check.mjs": "b7114e10c6ba94e8b58bdb7ce6605f95a1f4f550951da702c62f18b386851320",
+    "src/modules/departments/departments.controller.ts": "81077e8ae14e669c72b52e5e27e4119e8f3da685b328f6d0540a3ac5c8b76587",
+    "src/modules/departments/departments.service.ts": "5242d2e518e1c6636ddc23297c731cb574d06f02f2e337784111b80a10cf6399",
+    "src/modules/departments/dto/department-summary-response.dto.ts": "26eafe6e136b77b195f2b1f26013c44d8405e587efc71980955e483dbe788781",
+    "dist/src/modules/departments/departments.controller.js": "e4cd78f76beeccf4fed501e7b61f43a841aecfbf54fb864b81e737a752573fae",
+    "dist/src/modules/departments/departments.service.js": "80eacfb417fafecd6190d0fbfdf29da021b4b0ae591cf7c2b5576a4245bc45c2",
+    "test-real-postgres/setup-response-check.mjs": "15ac6baa4627c84174c757e02152de63af8ea5d63617529717165a83bd2aa088",
+    "src/modules/departments/department-setup.controller.ts": "f21c0cbfe9191186410efb64b9c49bc31636aa1095b73f6d7bb92b5473590242",
+    "src/modules/departments/dto/setup-response.dto.ts": "dd4a6b253f10d13ce2bd635cf1921a325042ab925478b8536ac2889e81c7b4cc",
+    "dist/src/modules/departments/department-setup.controller.js": "94c0c2802da413a5ae03070e304b79fd7a7ab1a0769033f295cdb1210a54f607",
+    "dist/src/modules/departments/department-setup.service.js": "5663b2126dd332ab6e292cdba8883dfb6bd4c6ea5c219c1073be09ae8c026db1",
+    "test-real-postgres/appointment-write-response-check.mjs": "1c5b6ac95ef5448761b890a4d18c5515af3e70d9101085e089944564359ab1b4",
+    "src/modules/appointments/appointments.controller.ts": "0e83ade3bdb58a0f764bd4447652a611a614a1cda257ec6ba65bae439ca32f4a",
+    "src/modules/appointments/appointments.service.ts": "5f14d63b63f1b0af42c5489763cb397b4cf07812c24aadf415c6c511c31f0f32",
+    "src/modules/appointments/dto/appointment-response.dto.ts": "6c0f4ebcfb1a8e7f70fa30117859753e6ceed0b63d4114e17a82e52abc0068a0",
+    "dist/src/modules/appointments/appointments.controller.js": "2ccfa905f059114bd4ab498d5a22a60c66adef1a49e179a4a42897dcd1d0d278",
+    "dist/src/modules/appointments/appointments.service.js": "176a581dd1a6a806ab6b463381e255ed98e277f0664cbdc94b683dddb4895097",
+    "../frontend/dist/assets/index-BYUGBfJ3.js": "c97ab91720396874361cb9e4782285f56bc59c9a219da1f599876c7956fcc24f",
+    "../frontend/dist/assets/mui-DWIpFKtc.js": "23282e4e98191c017c2737a30bf0eeefc3ad982d149cbe59ab9d43774bef57df",
+    "../frontend/dist/assets/vendor-BHKary94.js": "702dc1fe813458ef1a0ad87eef59346165b40a9217680717fda34c60cf9268dd",
+    "dist/src/modules/waitlist/waitlist.service.js": "8c20881490cb4d1b4d56a4667c1c89d8236c3d42d24e65cec09dace5fa4f7010",
+    "dist/src/modules/admissions/admissions.service.js": "60f0db0d993e08a0e5ef8fe66d984aeffa30896682c6930264b089602eb1b772",
+    "../frontend/dist/index.html": "9880015b311d152f38ba4ab1e9f4056cb1d0586cafcd0608616717df29d6c7df"
+  },
+  "runtime": {
+    "role": "hms_runtime_waitlist",
+    "superuser": false,
+    "bypassRls": false,
+    "auditMutationsDenied": 3
+  },
+  "clinicalResponseContracts": {
+    "checkedHttpResponses": 22,
+    "scope": "Existing encounter/prescription/nested record/test-order/pending identity/result payloads and current auth/error/isolation/deletion semantics, no new clinical behavior"
+  },
+  "responseContracts": {
+    "checkedHttpResponses": 17,
+    "scope": "Existing patient scalar/billing identity and waitlist list/write success plus error envelopes; no serializer or audience change"
+  },
+  "pharmacyResponseContracts": {
+    "checkedHttpResponses": 53,
+    "namedCases": [
+      {
+        "name": "create scalar",
+        "status": 201
+      },
+      {
+        "name": "inventory list",
+        "status": 200
+      },
+      {
+        "name": "low stock list",
+        "status": 200
+      },
+      {
+        "name": "reason omitted",
+        "status": 200
+      },
+      {
+        "name": "reason null",
+        "status": 200
+      },
+      {
+        "name": "reason string",
+        "status": 200
+      },
+      {
+        "name": "pending nested projection",
+        "status": 200
+      },
+      {
+        "name": "insufficient stock conflict",
+        "status": 409
+      },
+      {
+        "name": "dispensed scalar",
+        "status": 201
+      },
+      {
+        "name": "dispensed absent from pending",
+        "status": 200
+      },
+      {
+        "name": "processed conflict",
+        "status": 409
+      },
+      {
+        "name": "anonymous inventory",
+        "status": 401
+      },
+      {
+        "name": "invalid zero stock delta",
+        "status": 400
+      },
+      {
+        "name": "missing medication",
+        "status": 404
+      },
+      {
+        "name": "receptionist forbidden get /medications",
+        "status": 403
+      },
+      {
+        "name": "receptionist forbidden get /medications/low-stock",
+        "status": 403
+      },
+      {
+        "name": "receptionist forbidden get /prescriptions/pending",
+        "status": 403
+      },
+      {
+        "name": "receptionist forbidden post /medications",
+        "status": 403
+      },
+      {
+        "name": "receptionist forbidden patch /medications/{id}/stock",
+        "status": 403
+      },
+      {
+        "name": "receptionist forbidden post /prescriptions/{id}/dispense",
+        "status": 403
+      },
+      {
+        "name": "doctor forbidden get /medications",
+        "status": 403
+      },
+      {
+        "name": "doctor forbidden get /medications/low-stock",
+        "status": 403
+      },
+      {
+        "name": "doctor forbidden get /prescriptions/pending",
+        "status": 403
+      },
+      {
+        "name": "doctor forbidden post /medications",
+        "status": 403
+      },
+      {
+        "name": "doctor forbidden patch /medications/{id}/stock",
+        "status": 403
+      },
+      {
+        "name": "doctor forbidden post /prescriptions/{id}/dispense",
+        "status": 403
+      },
+      {
+        "name": "nurse forbidden get /medications",
+        "status": 403
+      },
+      {
+        "name": "nurse forbidden get /medications/low-stock",
+        "status": 403
+      },
+      {
+        "name": "nurse forbidden get /prescriptions/pending",
+        "status": 403
+      },
+      {
+        "name": "nurse forbidden post /medications",
+        "status": 403
+      },
+      {
+        "name": "nurse forbidden patch /medications/{id}/stock",
+        "status": 403
+      },
+      {
+        "name": "nurse forbidden post /prescriptions/{id}/dispense",
+        "status": 403
+      },
+      {
+        "name": "manager forbidden get /medications",
+        "status": 403
+      },
+      {
+        "name": "manager forbidden get /medications/low-stock",
+        "status": 403
+      },
+      {
+        "name": "manager forbidden get /prescriptions/pending",
+        "status": 403
+      },
+      {
+        "name": "manager forbidden post /medications",
+        "status": 403
+      },
+      {
+        "name": "manager forbidden patch /medications/{id}/stock",
+        "status": 403
+      },
+      {
+        "name": "manager forbidden post /prescriptions/{id}/dispense",
+        "status": 403
+      },
+      {
+        "name": "lab_tech forbidden get /medications",
+        "status": 403
+      },
+      {
+        "name": "lab_tech forbidden get /medications/low-stock",
+        "status": 403
+      },
+      {
+        "name": "lab_tech forbidden get /prescriptions/pending",
+        "status": 403
+      },
+      {
+        "name": "lab_tech forbidden post /medications",
+        "status": 403
+      },
+      {
+        "name": "lab_tech forbidden patch /medications/{id}/stock",
+        "status": 403
+      },
+      {
+        "name": "lab_tech forbidden post /prescriptions/{id}/dispense",
+        "status": 403
+      },
+      {
+        "name": "billing_clerk forbidden get /medications",
+        "status": 403
+      },
+      {
+        "name": "billing_clerk forbidden get /medications/low-stock",
+        "status": 403
+      },
+      {
+        "name": "billing_clerk forbidden get /prescriptions/pending",
+        "status": 403
+      },
+      {
+        "name": "billing_clerk forbidden post /medications",
+        "status": 403
+      },
+      {
+        "name": "billing_clerk forbidden patch /medications/{id}/stock",
+        "status": 403
+      },
+      {
+        "name": "billing_clerk forbidden post /prescriptions/{id}/dispense",
+        "status": 403
+      },
+      {
+        "name": "foreign inventory isolated",
+        "status": 200
+      },
+      {
+        "name": "foreign stock not found",
+        "status": 404
+      },
+      {
+        "name": "foreign prescription not found",
+        "status": 404
+      }
+    ],
+    "scope": "Existing six pharmacy response payloads, optional null/omitted echoed reason, projections, auth/errors/isolation and stock semantics. No new workflow."
+  },
+  "admissionResponseContracts": {
+    "checkedHttpResponses": 33,
+    "namedCases": [
+      {
+        "name": "create before omitted",
+        "status": 201
+      },
+      {
+        "name": "occupied conflict omitted",
+        "status": 409
+      },
+      {
+        "name": "discharge notes omitted",
+        "status": 201
+      },
+      {
+        "name": "already discharged omitted",
+        "status": 409
+      },
+      {
+        "name": "create before null",
+        "status": 201
+      },
+      {
+        "name": "occupied conflict null",
+        "status": 409
+      },
+      {
+        "name": "discharge notes null",
+        "status": 201
+      },
+      {
+        "name": "already discharged null",
+        "status": 409
+      },
+      {
+        "name": "create before string",
+        "status": 201
+      },
+      {
+        "name": "occupied conflict string",
+        "status": 409
+      },
+      {
+        "name": "discharge notes string",
+        "status": 201
+      },
+      {
+        "name": "already discharged string",
+        "status": 409
+      },
+      {
+        "name": "anonymous create",
+        "status": 401
+      },
+      {
+        "name": "invalid patient",
+        "status": 400
+      },
+      {
+        "name": "missing patient",
+        "status": 404
+      },
+      {
+        "name": "missing bed",
+        "status": 404
+      },
+      {
+        "name": "missing admission",
+        "status": 404
+      },
+      {
+        "name": "receptionist create forbidden",
+        "status": 403
+      },
+      {
+        "name": "receptionist discharge forbidden",
+        "status": 403
+      },
+      {
+        "name": "admin create forbidden",
+        "status": 403
+      },
+      {
+        "name": "admin discharge forbidden",
+        "status": 403
+      },
+      {
+        "name": "manager create forbidden",
+        "status": 403
+      },
+      {
+        "name": "manager discharge forbidden",
+        "status": 403
+      },
+      {
+        "name": "pharmacist create forbidden",
+        "status": 403
+      },
+      {
+        "name": "pharmacist discharge forbidden",
+        "status": 403
+      },
+      {
+        "name": "lab_tech create forbidden",
+        "status": 403
+      },
+      {
+        "name": "lab_tech discharge forbidden",
+        "status": 403
+      },
+      {
+        "name": "billing_clerk create forbidden",
+        "status": 403
+      },
+      {
+        "name": "billing_clerk discharge forbidden",
+        "status": 403
+      },
+      {
+        "name": "create for isolation",
+        "status": 201
+      },
+      {
+        "name": "foreign create not found",
+        "status": 404
+      },
+      {
+        "name": "foreign discharge not found",
+        "status": 404
+      },
+      {
+        "name": "original discharge after isolation rejection",
+        "status": 201
+      }
+    ],
+    "scope": "Existing admission scalar create/discharge, nullable notes three forms, current conflicts/auth/errors. No workflow change; no new audit-failure injection."
+  },
+  "departmentSummaryContracts": {
+    "checkedHttpResponses": 50,
+    "namedCases": [
+      {
+        "name": "anonymous /departments",
+        "status": 401
+      },
+      {
+        "name": "receptionist /departments",
+        "status": 200
+      },
+      {
+        "name": "admin /departments",
+        "status": 200
+      },
+      {
+        "name": "doctor /departments",
+        "status": 200
+      },
+      {
+        "name": "nurse /departments",
+        "status": 200
+      },
+      {
+        "name": "manager /departments",
+        "status": 200
+      },
+      {
+        "name": "pharmacist /departments",
+        "status": 403
+      },
+      {
+        "name": "lab_tech /departments",
+        "status": 403
+      },
+      {
+        "name": "billing_clerk /departments",
+        "status": 403
+      },
+      {
+        "name": "anonymous /departments/overview",
+        "status": 401
+      },
+      {
+        "name": "receptionist /departments/overview",
+        "status": 403
+      },
+      {
+        "name": "admin /departments/overview",
+        "status": 200
+      },
+      {
+        "name": "doctor /departments/overview",
+        "status": 403
+      },
+      {
+        "name": "nurse /departments/overview",
+        "status": 403
+      },
+      {
+        "name": "manager /departments/overview",
+        "status": 200
+      },
+      {
+        "name": "pharmacist /departments/overview",
+        "status": 403
+      },
+      {
+        "name": "lab_tech /departments/overview",
+        "status": 403
+      },
+      {
+        "name": "billing_clerk /departments/overview",
+        "status": 403
+      },
+      {
+        "name": "anonymous /departments/{id}/beds/summary",
+        "status": 401
+      },
+      {
+        "name": "receptionist /departments/{id}/beds/summary",
+        "status": 403
+      },
+      {
+        "name": "admin /departments/{id}/beds/summary",
+        "status": 200
+      },
+      {
+        "name": "doctor /departments/{id}/beds/summary",
+        "status": 403
+      },
+      {
+        "name": "nurse /departments/{id}/beds/summary",
+        "status": 403
+      },
+      {
+        "name": "manager /departments/{id}/beds/summary",
+        "status": 200
+      },
+      {
+        "name": "pharmacist /departments/{id}/beds/summary",
+        "status": 403
+      },
+      {
+        "name": "lab_tech /departments/{id}/beds/summary",
+        "status": 403
+      },
+      {
+        "name": "billing_clerk /departments/{id}/beds/summary",
+        "status": 403
+      },
+      {
+        "name": "initial counts",
+        "status": 200
+      },
+      {
+        "name": "list identity only",
+        "status": 200
+      },
+      {
+        "name": "offset normalized overview",
+        "status": 200
+      },
+      {
+        "name": "invalid range ",
+        "status": 400
+      },
+      {
+        "name": "invalid range ?start=bad&end=bad",
+        "status": 400
+      },
+      {
+        "name": "invalid range ?start=2026-11-28&end=2026-11-29",
+        "status": 400
+      },
+      {
+        "name": "invalid range ?start=2026-11-28T00:00:00Z&end=2026-11-28T00:00:00Z",
+        "status": 400
+      },
+      {
+        "name": "invalid range ?start=2026-11-29T00:00:00Z&end=2026-11-28T00:00:00Z",
+        "status": 400
+      },
+      {
+        "name": "invalid range ?start=2026-11-28T00:00:00Z&end=2026-11-29T02:00:00.001Z",
+        "status": 400
+      },
+      {
+        "name": "invalid range ?start=2026-11-28T00:00:00Z&end=2026-11-29T00:00:00Z&extra=true",
+        "status": 400
+      },
+      {
+        "name": "exact26hour maximum",
+        "status": 200
+      },
+      {
+        "name": "bad department UUID",
+        "status": 400
+      },
+      {
+        "name": "missing department",
+        "status": 404
+      },
+      {
+        "name": "empty summary",
+        "status": 200
+      },
+      {
+        "name": "available summary",
+        "status": 200
+      },
+      {
+        "name": "maintenance summary",
+        "status": 200
+      },
+      {
+        "name": "occupied summary",
+        "status": 200
+      },
+      {
+        "name": "occupied overview",
+        "status": 200
+      },
+      {
+        "name": "foreign department list",
+        "status": 200
+      },
+      {
+        "name": "foreign clinical summary role denied",
+        "status": 403
+      },
+      {
+        "name": "foreign manager scoped summary404",
+        "status": 404
+      },
+      {
+        "name": "foreign aggregate excludes departments",
+        "status": 200
+      },
+      {
+        "name": "discharged summary",
+        "status": 200
+      }
+    ],
+    "scope": "Three existing department read projections, role matrix, range boundaries, count transitions, workspace isolation. Setup/admission writes are fictional fixture preparation, not new contract or audit/concurrency proof. Lists remain unbounded."
+  },
+  "appointmentWriteResponseContracts": {
+    "checkedHttpResponses": 68,
+    "namedCases": [
+      {
+        "name": "receptionist create",
+        "status": 201
+      },
+      {
+        "name": "admin update",
+        "status": 200
+      },
+      {
+        "name": "receptionist empty update",
+        "status": 200
+      },
+      {
+        "name": "prepare cancel undefined",
+        "status": 201
+      },
+      {
+        "name": "cancel undefined",
+        "status": 201
+      },
+      {
+        "name": "prepare cancel null",
+        "status": 201
+      },
+      {
+        "name": "cancel null",
+        "status": 201
+      },
+      {
+        "name": "prepare cancel Fictional cancellation contract",
+        "status": 201
+      },
+      {
+        "name": "cancel Fictional cancellation contract",
+        "status": 201
+      },
+      {
+        "name": "prepare attendance completed",
+        "status": 201
+      },
+      {
+        "name": "manual attendance completed",
+        "status": 201
+      },
+      {
+        "name": "final conflict completed/attendance",
+        "status": 409
+      },
+      {
+        "name": "final conflict completed",
+        "status": 409
+      },
+      {
+        "name": "final conflict completed/cancel",
+        "status": 409
+      },
+      {
+        "name": "prepare attendance no_show",
+        "status": 201
+      },
+      {
+        "name": "manual attendance no_show",
+        "status": 201
+      },
+      {
+        "name": "final conflict no_show/attendance",
+        "status": 409
+      },
+      {
+        "name": "final conflict no_show",
+        "status": 409
+      },
+      {
+        "name": "final conflict no_show/cancel",
+        "status": 409
+      },
+      {
+        "name": "anonymous /appointments",
+        "status": 401
+      },
+      {
+        "name": "doctor denied /appointments",
+        "status": 403
+      },
+      {
+        "name": "nurse denied /appointments",
+        "status": 403
+      },
+      {
+        "name": "manager denied /appointments",
+        "status": 403
+      },
+      {
+        "name": "pharmacist denied /appointments",
+        "status": 403
+      },
+      {
+        "name": "lab_tech denied /appointments",
+        "status": 403
+      },
+      {
+        "name": "billing_clerk denied /appointments",
+        "status": 403
+      },
+      {
+        "name": "anonymous /appointments/{id}",
+        "status": 401
+      },
+      {
+        "name": "doctor denied /appointments/{id}",
+        "status": 403
+      },
+      {
+        "name": "nurse denied /appointments/{id}",
+        "status": 403
+      },
+      {
+        "name": "manager denied /appointments/{id}",
+        "status": 403
+      },
+      {
+        "name": "pharmacist denied /appointments/{id}",
+        "status": 403
+      },
+      {
+        "name": "lab_tech denied /appointments/{id}",
+        "status": 403
+      },
+      {
+        "name": "billing_clerk denied /appointments/{id}",
+        "status": 403
+      },
+      {
+        "name": "anonymous /appointments/{id}/cancel",
+        "status": 401
+      },
+      {
+        "name": "doctor denied /appointments/{id}/cancel",
+        "status": 403
+      },
+      {
+        "name": "nurse denied /appointments/{id}/cancel",
+        "status": 403
+      },
+      {
+        "name": "manager denied /appointments/{id}/cancel",
+        "status": 403
+      },
+      {
+        "name": "pharmacist denied /appointments/{id}/cancel",
+        "status": 403
+      },
+      {
+        "name": "lab_tech denied /appointments/{id}/cancel",
+        "status": 403
+      },
+      {
+        "name": "billing_clerk denied /appointments/{id}/cancel",
+        "status": 403
+      },
+      {
+        "name": "anonymous /appointments/{id}/attendance",
+        "status": 401
+      },
+      {
+        "name": "doctor denied /appointments/{id}/attendance",
+        "status": 403
+      },
+      {
+        "name": "nurse denied /appointments/{id}/attendance",
+        "status": 403
+      },
+      {
+        "name": "manager denied /appointments/{id}/attendance",
+        "status": 403
+      },
+      {
+        "name": "pharmacist denied /appointments/{id}/attendance",
+        "status": 403
+      },
+      {
+        "name": "lab_tech denied /appointments/{id}/attendance",
+        "status": 403
+      },
+      {
+        "name": "billing_clerk denied /appointments/{id}/attendance",
+        "status": 403
+      },
+      {
+        "name": "missing /appointments/{id}",
+        "status": 404
+      },
+      {
+        "name": "foreign /appointments/{id}",
+        "status": 404
+      },
+      {
+        "name": "missing /appointments/{id}/cancel",
+        "status": 404
+      },
+      {
+        "name": "foreign /appointments/{id}/cancel",
+        "status": 404
+      },
+      {
+        "name": "missing /appointments/{id}/attendance",
+        "status": 404
+      },
+      {
+        "name": "foreign /appointments/{id}/attendance",
+        "status": 404
+      },
+      {
+        "name": "invalid create 53",
+        "status": 400
+      },
+      {
+        "name": "invalid create 54",
+        "status": 400
+      },
+      {
+        "name": "invalid create 55",
+        "status": 400
+      },
+      {
+        "name": "invalid create 56",
+        "status": 400
+      },
+      {
+        "name": "invalid update",
+        "status": 400
+      },
+      {
+        "name": "invalid cancel",
+        "status": 400
+      },
+      {
+        "name": "invalid attendance 59",
+        "status": 400
+      },
+      {
+        "name": "invalid attendance 60",
+        "status": 400
+      },
+      {
+        "name": "invalid attendance 61",
+        "status": 400
+      },
+      {
+        "name": "invalid attendance 62",
+        "status": 400
+      },
+      {
+        "name": "bad attendance UUID",
+        "status": 400
+      },
+      {
+        "name": "missing create patientId",
+        "status": 404
+      },
+      {
+        "name": "missing create doctorId",
+        "status": 404
+      },
+      {
+        "name": "missing create departmentId",
+        "status": 404
+      },
+      {
+        "name": "foreign doctor create",
+        "status": 404
+      }
+    ],
+    "scope": "Four existing scalar writes only. Preserved roles/states/null reason/current error envelopes. Not new audit/concurrency injection, universal UUID validation, or GET nested projection proof."
+  },
+  "setupResponseContracts": {
+    "checkedHttpResponses": 88,
+    "namedCases": [
+      {
+        "name": "create department",
+        "status": 201
+      },
+      {
+        "name": "create bed",
+        "status": 201
+      },
+      {
+        "name": "rename department",
+        "status": 200
+      },
+      {
+        "name": "rename bed",
+        "status": 200
+      },
+      {
+        "name": "maintenance bed",
+        "status": 200
+      },
+      {
+        "name": "available bed",
+        "status": 200
+      },
+      {
+        "name": "anonymous /departmentsPOST",
+        "status": 401
+      },
+      {
+        "name": "receptionist denied /departmentsPOST",
+        "status": 403
+      },
+      {
+        "name": "doctor denied /departmentsPOST",
+        "status": 403
+      },
+      {
+        "name": "nurse denied /departmentsPOST",
+        "status": 403
+      },
+      {
+        "name": "manager denied /departmentsPOST",
+        "status": 403
+      },
+      {
+        "name": "pharmacist denied /departmentsPOST",
+        "status": 403
+      },
+      {
+        "name": "lab_tech denied /departmentsPOST",
+        "status": 403
+      },
+      {
+        "name": "billing_clerk denied /departmentsPOST",
+        "status": 403
+      },
+      {
+        "name": "anonymous /departments/{id}PATCH",
+        "status": 401
+      },
+      {
+        "name": "receptionist denied /departments/{id}PATCH",
+        "status": 403
+      },
+      {
+        "name": "doctor denied /departments/{id}PATCH",
+        "status": 403
+      },
+      {
+        "name": "nurse denied /departments/{id}PATCH",
+        "status": 403
+      },
+      {
+        "name": "manager denied /departments/{id}PATCH",
+        "status": 403
+      },
+      {
+        "name": "pharmacist denied /departments/{id}PATCH",
+        "status": 403
+      },
+      {
+        "name": "lab_tech denied /departments/{id}PATCH",
+        "status": 403
+      },
+      {
+        "name": "billing_clerk denied /departments/{id}PATCH",
+        "status": 403
+      },
+      {
+        "name": "anonymous /departments/{id}DELETE",
+        "status": 401
+      },
+      {
+        "name": "receptionist denied /departments/{id}DELETE",
+        "status": 403
+      },
+      {
+        "name": "doctor denied /departments/{id}DELETE",
+        "status": 403
+      },
+      {
+        "name": "nurse denied /departments/{id}DELETE",
+        "status": 403
+      },
+      {
+        "name": "manager denied /departments/{id}DELETE",
+        "status": 403
+      },
+      {
+        "name": "pharmacist denied /departments/{id}DELETE",
+        "status": 403
+      },
+      {
+        "name": "lab_tech denied /departments/{id}DELETE",
+        "status": 403
+      },
+      {
+        "name": "billing_clerk denied /departments/{id}DELETE",
+        "status": 403
+      },
+      {
+        "name": "anonymous /departments/{id}/bedsPOST",
+        "status": 401
+      },
+      {
+        "name": "receptionist denied /departments/{id}/bedsPOST",
+        "status": 403
+      },
+      {
+        "name": "doctor denied /departments/{id}/bedsPOST",
+        "status": 403
+      },
+      {
+        "name": "nurse denied /departments/{id}/bedsPOST",
+        "status": 403
+      },
+      {
+        "name": "manager denied /departments/{id}/bedsPOST",
+        "status": 403
+      },
+      {
+        "name": "pharmacist denied /departments/{id}/bedsPOST",
+        "status": 403
+      },
+      {
+        "name": "lab_tech denied /departments/{id}/bedsPOST",
+        "status": 403
+      },
+      {
+        "name": "billing_clerk denied /departments/{id}/bedsPOST",
+        "status": 403
+      },
+      {
+        "name": "anonymous /departments/{id}/beds/{bedId}PATCH",
+        "status": 401
+      },
+      {
+        "name": "receptionist denied /departments/{id}/beds/{bedId}PATCH",
+        "status": 403
+      },
+      {
+        "name": "doctor denied /departments/{id}/beds/{bedId}PATCH",
+        "status": 403
+      },
+      {
+        "name": "nurse denied /departments/{id}/beds/{bedId}PATCH",
+        "status": 403
+      },
+      {
+        "name": "manager denied /departments/{id}/beds/{bedId}PATCH",
+        "status": 403
+      },
+      {
+        "name": "pharmacist denied /departments/{id}/beds/{bedId}PATCH",
+        "status": 403
+      },
+      {
+        "name": "lab_tech denied /departments/{id}/beds/{bedId}PATCH",
+        "status": 403
+      },
+      {
+        "name": "billing_clerk denied /departments/{id}/beds/{bedId}PATCH",
+        "status": 403
+      },
+      {
+        "name": "anonymous /departments/{id}/beds/{bedId}/maintenancePATCH",
+        "status": 401
+      },
+      {
+        "name": "receptionist denied /departments/{id}/beds/{bedId}/maintenancePATCH",
+        "status": 403
+      },
+      {
+        "name": "doctor denied /departments/{id}/beds/{bedId}/maintenancePATCH",
+        "status": 403
+      },
+      {
+        "name": "nurse denied /departments/{id}/beds/{bedId}/maintenancePATCH",
+        "status": 403
+      },
+      {
+        "name": "manager denied /departments/{id}/beds/{bedId}/maintenancePATCH",
+        "status": 403
+      },
+      {
+        "name": "pharmacist denied /departments/{id}/beds/{bedId}/maintenancePATCH",
+        "status": 403
+      },
+      {
+        "name": "lab_tech denied /departments/{id}/beds/{bedId}/maintenancePATCH",
+        "status": 403
+      },
+      {
+        "name": "billing_clerk denied /departments/{id}/beds/{bedId}/maintenancePATCH",
+        "status": 403
+      },
+      {
+        "name": "anonymous /departments/{id}/beds/{bedId}DELETE",
+        "status": 401
+      },
+      {
+        "name": "receptionist denied /departments/{id}/beds/{bedId}DELETE",
+        "status": 403
+      },
+      {
+        "name": "doctor denied /departments/{id}/beds/{bedId}DELETE",
+        "status": 403
+      },
+      {
+        "name": "nurse denied /departments/{id}/beds/{bedId}DELETE",
+        "status": 403
+      },
+      {
+        "name": "manager denied /departments/{id}/beds/{bedId}DELETE",
+        "status": 403
+      },
+      {
+        "name": "pharmacist denied /departments/{id}/beds/{bedId}DELETE",
+        "status": 403
+      },
+      {
+        "name": "lab_tech denied /departments/{id}/beds/{bedId}DELETE",
+        "status": 403
+      },
+      {
+        "name": "billing_clerk denied /departments/{id}/beds/{bedId}DELETE",
+        "status": 403
+      },
+      {
+        "name": "invalid department",
+        "status": 400
+      },
+      {
+        "name": "bad department UUID",
+        "status": 400
+      },
+      {
+        "name": "invalid bed",
+        "status": 400
+      },
+      {
+        "name": "invalid maintenance",
+        "status": 400
+      },
+      {
+        "name": "duplicate bed",
+        "status": 409
+      },
+      {
+        "name": "missing /departments/{id}PATCH",
+        "status": 404
+      },
+      {
+        "name": "missing /departments/{id}DELETE",
+        "status": 404
+      },
+      {
+        "name": "missing /departments/{id}/bedsPOST",
+        "status": 404
+      },
+      {
+        "name": "missing /departments/{id}/beds/{bedId}PATCH",
+        "status": 404
+      },
+      {
+        "name": "missing /departments/{id}/beds/{bedId}/maintenancePATCH",
+        "status": 404
+      },
+      {
+        "name": "missing /departments/{id}/beds/{bedId}DELETE",
+        "status": 404
+      },
+      {
+        "name": "foreign /departments/{id}PATCH",
+        "status": 404
+      },
+      {
+        "name": "foreign /departments/{id}DELETE",
+        "status": 404
+      },
+      {
+        "name": "foreign /departments/{id}/bedsPOST",
+        "status": 404
+      },
+      {
+        "name": "foreign /departments/{id}/beds/{bedId}PATCH",
+        "status": 404
+      },
+      {
+        "name": "foreign /departments/{id}/beds/{bedId}/maintenancePATCH",
+        "status": 404
+      },
+      {
+        "name": "foreign /departments/{id}/beds/{bedId}DELETE",
+        "status": 404
+      },
+      {
+        "name": "occupied maintenance",
+        "status": 409
+      },
+      {
+        "name": "occupied delete",
+        "status": 409
+      },
+      {
+        "name": "occupied relabel preserved",
+        "status": 200
+      },
+      {
+        "name": "history bed delete",
+        "status": 409
+      },
+      {
+        "name": "linked department delete",
+        "status": 409
+      },
+      {
+        "name": "create unused bed",
+        "status": 201
+      },
+      {
+        "name": "delete unused bed",
+        "status": 200
+      },
+      {
+        "name": "create empty department",
+        "status": 201
+      },
+      {
+        "name": "delete empty department",
+        "status": 200
+      }
+    ],
+    "scope": "Seven existing Admin setup success projections and current auth/error/isolation. Literal true deletion asserted in HTTP; native schema is boolean. No service/schema/role/policy change or new audit/concurrency claim."
+  },
+  "patientDuplicateRace": {
+    "namedCases": [
+      {
+        "name": "synchronized exact name+DOB unforced registration pair",
+        "statuses": [
+          201,
+          409
+        ],
+        "expected": [
+          201,
+          409
+        ],
+        "patientRows": 1,
+        "successAuditRows": 1
+      },
+      {
+        "name": "explicit force override registration pair",
+        "statuses": [
+          201,
+          201
+        ],
+        "expected": [
+          201,
+          201
+        ],
+        "uniqueMrns": 2
+      },
+      {
+        "name": "audit insert failure then retry",
+        "failureStatus": 503,
+        "rolledBackRows": 0,
+        "retryStatus": 201
+      }
+    ],
+    "defaultIsolation": "read committed",
+    "synchronizedUnforcedStatuses": [
+      201,
+      409
+    ],
+    "forcedStatuses": [
+      201,
+      201
+    ],
+    "uniqueForcedMrns": 2,
+    "oneWinnerAudit": true,
+    "foreignWorkspaceIndependent": true,
+    "distinctNameOrDobAllowed": true,
+    "forbiddenRoles": 6,
+    "anonymous401": true,
+    "auditFailure503RollbackAndRetry": true,
+    "scope": "Existing exact name+DOB only, no national-ID normalization or unique-patient constraint"
+  },
+  "finishedAt": "2026-11-28T06:22:46.400Z"
+}

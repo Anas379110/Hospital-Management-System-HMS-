@@ -1,3 +1,5 @@
+import { EncounterResponseDto, EncounterWithPrescriptionsResponseDto, PrescriptionResponseDto } from './dto/clinical-response.dto';
+import { ApiOperation, ApiResponse, ApiExtension } from '@nestjs/swagger';
 import { Body, Controller, Delete, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
@@ -24,13 +26,29 @@ export class EncountersController {
   // FR-4.1: طبيب فقط يسجل زيارة
   @Post()
   @Roles(Role.doctor)
-  @Audit('ENCOUNTER_CREATED', 'Encounter')
+  @Audit('ENCOUNTER_CREATED', 'Encounter', true)
+  @ApiOperation({"summary": "EncountersController.create", "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization."})
+  @ApiExtension('x-roles', ["doctor"])
+  @ApiExtension('x-auth', 'roles')
+  @ApiResponse({ status: 201, type: EncounterResponseDto, description: 'Existing service payload. No serialization, role or data selection change.' })
+  @ApiResponse({"status": 400, "description": "Invalid request"})
+  @ApiResponse({"status": 401, "description": "Missing/expired token, inactive current user, or invalid/expired workspace"})
+  @ApiResponse({"status": 403, "description": "Current persisted role is not permitted"})
+  @ApiResponse({"status": 429, "description": "Rate limit exceeded"})
   create(@Body() dto: CreateEncounterDto, @Req() req: AuthedRequest) {
     return this.encountersService.create(dto, req.user.userId);
   }
 
   @Get(':id')
   @Roles(Role.doctor, Role.nurse, Role.admin)
+  @ApiOperation({"summary": "EncountersController.findOne", "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization."})
+  @ApiExtension('x-roles', ["doctor", "nurse", "admin"])
+  @ApiExtension('x-auth', 'roles')
+  @ApiResponse({ status: 200, type: EncounterWithPrescriptionsResponseDto, description: 'Existing service payload. No serialization, role or data selection change.' })
+  @ApiResponse({"status": 400, "description": "Invalid request"})
+  @ApiResponse({"status": 401, "description": "Missing/expired token, inactive current user, or invalid/expired workspace"})
+  @ApiResponse({"status": 403, "description": "Current persisted role is not permitted"})
+  @ApiResponse({"status": 429, "description": "Rate limit exceeded"})
   findOne(@Param('id') id: string) {
     return this.encountersService.findOne(id);
   }
@@ -38,15 +56,31 @@ export class EncountersController {
   // FR-4.2
   @Post(':id/prescriptions')
   @Roles(Role.doctor)
-  @Audit('PRESCRIPTION_ADDED', 'Prescription')
-  addPrescription(@Param('id') id: string, @Body() dto: CreatePrescriptionDto) {
-    return this.encountersService.addPrescription(id, dto);
+  @Audit('PRESCRIPTION_ADDED', 'Prescription', true)
+  @ApiOperation({"summary": "EncountersController.addPrescription", "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization."})
+  @ApiExtension('x-roles', ["doctor"])
+  @ApiExtension('x-auth', 'roles')
+  @ApiResponse({ status: 201, type: PrescriptionResponseDto, description: 'Existing service payload. No serialization, role or data selection change.' })
+  @ApiResponse({"status": 400, "description": "Invalid request"})
+  @ApiResponse({"status": 401, "description": "Missing/expired token, inactive current user, or invalid/expired workspace"})
+  @ApiResponse({"status": 403, "description": "Current persisted role is not permitted"})
+  @ApiResponse({"status": 429, "description": "Rate limit exceeded"})
+  addPrescription(@Param('id') id: string, @Body() dto: CreatePrescriptionDto, @Req() req: AuthedRequest) {
+    return this.encountersService.addPrescription(id, dto, req.user.userId);
   }
 
   // FR-4.4: حذف منطقي فقط، لصاحب السجل أو Admin (يُفرض داخل Service)
   @Delete(':id')
   @Roles(Role.doctor, Role.admin)
-  @Audit('ENCOUNTER_SOFT_DELETED', 'Encounter')
+  @Audit('ENCOUNTER_SOFT_DELETED', 'Encounter', true)
+  @ApiOperation({"summary": "EncountersController.softDelete", "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization."})
+  @ApiExtension('x-roles', ["doctor", "admin"])
+  @ApiExtension('x-auth', 'roles')
+  @ApiResponse({ status: 200, type: EncounterResponseDto, description: 'Existing service payload. No serialization, role or data selection change.' })
+  @ApiResponse({"status": 400, "description": "Invalid request"})
+  @ApiResponse({"status": 401, "description": "Missing/expired token, inactive current user, or invalid/expired workspace"})
+  @ApiResponse({"status": 403, "description": "Current persisted role is not permitted"})
+  @ApiResponse({"status": 429, "description": "Rate limit exceeded"})
   softDelete(@Param('id') id: string, @Body() dto: DeleteEncounterDto, @Req() req: AuthedRequest) {
     return this.encountersService.softDelete(id, dto.reason, req.user);
   }

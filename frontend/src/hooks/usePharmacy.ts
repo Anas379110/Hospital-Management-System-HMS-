@@ -1,3 +1,7 @@
+import { lowStockQueryKey, readLowStock } from './lowStockQuery';
+import { sendMedicationCreate } from '../api/medicationCreateWrite';
+import { type CreateMedicationInput } from '../components/medicationCreate';
+import { responseIsCurrent } from '../api/sessionIsolation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../api/client';
 import type { Medication, PendingPrescription } from '../types/pharmacy';
@@ -40,4 +44,25 @@ export function useDispensePrescription() {
       queryClient.invalidateQueries({ queryKey: ['medications'] });
     },
   });
+}
+
+export function useAdjustStock() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...data }: { id: string; delta: number; reasonCode: 'restock' | 'correction' | 'disposal' }) => (await apiClient.patch(`/medications/${id}/stock`, data)).data,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['medications'] }),
+  });
+}
+
+export function useCreateMedication() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    retry: false,
+    mutationFn: (request: { input: CreateMedicationInput; userId: string; epoch: number }) => sendMedicationCreate(request),
+    onSuccess: medication => { if (responseIsCurrent(medication)) void queryClient.invalidateQueries({ queryKey: ['medications'] }); },
+  });
+}
+
+export function useLowStock() {
+  return useQuery({ queryKey: lowStockQueryKey, queryFn: ({ signal }) => readLowStock(signal) });
 }

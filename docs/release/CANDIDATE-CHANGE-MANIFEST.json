@@ -1,0 +1,371 @@
+{
+  "status": "historical isolation-candidate manifest captured at the timestamp below, not current readiness; native docs head1d9e146 exact CI46051142614 passed PG17/18, no deployment; later null-update remediation has separate source/tests/CI evidence",
+  "capturedAt": "2026-11-27T01:17:22.297064+00:00",
+  "comparedWith": "frozen118source-transfer baseline; no source changes to frozen tree",
+  "changedFiles": [
+    {
+      "path": ".env.example",
+      "sha256": "6082edb858b610d2e887ae0f1cc665b31546978b5ace167e986077d8e9277dff",
+      "bytes": 538
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "sha256": "9caa38f3cefa993026d716a4971afce54ef4473b2367c44cd0fed6bc3370b3ee",
+      "bytes": 5614
+    },
+    {
+      "path": "backend/prisma/demo/grants.sql",
+      "sha256": "a4a9226195ce7485355e58c8a57b9b01ad219614890dbfbf7d28827fca25cf7d",
+      "bytes": 1488
+    },
+    {
+      "path": "backend/prisma/migrations/20261127003000_demo_workspace_isolation/migration.sql",
+      "sha256": "40a134d838fbb0d58222e188d2232ba694bb112207e6f3a47280bdbe8f4a590d",
+      "bytes": 24538
+    },
+    {
+      "path": "backend/prisma/schema.prisma",
+      "sha256": "293886e34ebe9a6d97f128116ecd5b913a8cfd07bb2428f7634c184df2d0bd57",
+      "bytes": 12899
+    },
+    {
+      "path": "backend/prisma/seed.ts",
+      "sha256": "bab9fba6605673be5b5ce36fdea64564f970df0b626496d232548e5c945988e4",
+      "bytes": 125
+    },
+    {
+      "path": "backend/src/app.factory.ts",
+      "sha256": "f4878023c5582353d58d30e3dfb18a3e19152a87b11f48a69fb5587f07101f53",
+      "bytes": 1624
+    },
+    {
+      "path": "backend/src/app.module.ts",
+      "sha256": "708c398eeca9afe67db5b37191f99c0886d6655552570dc821d97ed2c2af9afd",
+      "bytes": 2170
+    },
+    {
+      "path": "backend/src/common/trusted-proxies.ts",
+      "sha256": "53769040652be73a419e5f6be23017be377eb511b87ea079160e10b393b1b012",
+      "bytes": 690
+    },
+    {
+      "path": "backend/src/modules/admissions/admissions.service.ts",
+      "sha256": "2feacb520ca1471d80c022fbebf26d63d027983883826f98be5f120b17b1fcf8",
+      "bytes": 5304
+    },
+    {
+      "path": "backend/src/modules/appointments/appointments.service.ts",
+      "sha256": "2d531136dc01298b6f4fe5265d398394f436a7c38ff5be3bf732a07bfe9e8f03",
+      "bytes": 8955
+    },
+    {
+      "path": "backend/src/modules/auth/auth.module.ts",
+      "sha256": "e459264cf9691e8977dd0fe4d00f1be0bb5a32250da73f28efa41efbbab82154",
+      "bytes": 1152
+    },
+    {
+      "path": "backend/src/modules/auth/auth.service.ts",
+      "sha256": "ec21de8644dddb32e93db753da8a7206f895433d6696a13e8a20e9acd8c68782",
+      "bytes": 2915
+    },
+    {
+      "path": "backend/src/modules/auth/demo.controller.ts",
+      "sha256": "965bcdab877e2d95c2a61f862febd65dfa7df3097dfac14097a8e2536d29e668",
+      "bytes": 973
+    },
+    {
+      "path": "backend/src/modules/auth/demo.service.ts",
+      "sha256": "35bc24226c8ba0d4f0499c7944bbbd085bb02c23d3710892adfbcfcbdcdd3553",
+      "bytes": 2459
+    },
+    {
+      "path": "backend/src/modules/auth/strategies/jwt.strategy.ts",
+      "sha256": "7799dd2afda50e0cfb7e233ee4f326cf8a49618c5b0cdda5913531752562f7cb",
+      "bytes": 1922
+    },
+    {
+      "path": "backend/src/modules/departments/departments.controller.ts",
+      "sha256": "3355920e77846ddf095ebf3efa34a641bfb35ac598f6d293c9aa338b007f504d",
+      "bytes": 1738
+    },
+    {
+      "path": "backend/src/modules/departments/departments.service.ts",
+      "sha256": "5242d2e518e1c6636ddc23297c731cb574d06f02f2e337784111b80a10cf6399",
+      "bytes": 2935
+    },
+    {
+      "path": "backend/src/modules/patients/patients.controller.ts",
+      "sha256": "4f810d262f683e627e698e706b484fd519f6c4a07d527d0d977779834521a166",
+      "bytes": 2294
+    },
+    {
+      "path": "backend/src/modules/patients/patients.service.ts",
+      "sha256": "e15f109f19abcd401d94540dd9d53131aecef063d166e555b3c94dbcd1b6704b",
+      "bytes": 5727
+    },
+    {
+      "path": "backend/src/modules/users/users.service.ts",
+      "sha256": "4f3399a0c83d7f92f59bb8c2a12386f8bb5f5a0956c458c73ac24a3499c06093",
+      "bytes": 3230
+    },
+    {
+      "path": "backend/src/prisma/prisma.service.ts",
+      "sha256": "872fd76f9e48fc8af3c6026d3105a9f09fb11d77bc34152bf0f2d040edb0a073",
+      "bytes": 3867
+    },
+    {
+      "path": "backend/src/prisma/workspace-context.ts",
+      "sha256": "fd6c8a40b1cd188024b1180ce597b0f1e0a5d6c116d301009580fa79f46a0564",
+      "bytes": 189
+    },
+    {
+      "path": "backend/src/prisma/workspace.interceptor.ts",
+      "sha256": "637985e71e2e6cbe56b2078bf06c8380615edeb35484cee329074f9638f897f7",
+      "bytes": 779
+    },
+    {
+      "path": "backend/test/e2e/auth.e2e-spec.ts",
+      "sha256": "51dedc50f5cc31eb6d45a0861f00bfe196b9bdf5e056c5b07866c3e5a068d45c",
+      "bytes": 1941
+    },
+    {
+      "path": "backend/test/e2e/users.e2e-spec.ts",
+      "sha256": "4de648294d26a13dabd3484d15c41d58e5319842b76caab6dd5a6c46fc6c0064",
+      "bytes": 5203
+    },
+    {
+      "path": "backend/test/unit/auth.service.spec.ts",
+      "sha256": "e57988c77a86620d416bda9205f17f59a08390355acd3e9959a97b754769a284",
+      "bytes": 3265
+    },
+    {
+      "path": "backend/test/unit/overview.spec.ts",
+      "sha256": "604ff5ec263795320335917d7de17f62834b308d2848192dbdbc191061a055b3",
+      "bytes": 1807
+    },
+    {
+      "path": "backend/test/unit/trusted-proxies.spec.ts",
+      "sha256": "e0c40e204192bc4f91e8aa2bd5169658f3b1a41282749943f79493a905422b20",
+      "bytes": 575
+    },
+    {
+      "path": "backend/test-real-postgres/concurrency.mjs",
+      "sha256": "3cbd6ab874ca86b25d675bd2b68fdcde80449d231e7f88b3e8ec51133ce94649",
+      "bytes": 87462
+    },
+    {
+      "path": "docs/quality/MANAGER-SCHEDULE-ACCEPTANCE-PLAN.md",
+      "sha256": "45738a6268ab8d7be74f67db51827d444ef22e79ca34c0bf84daac97dc556065",
+      "bytes": 5493
+    },
+    {
+      "path": "docs/release/ISOLATED-DEMO-OPERATIONS.md",
+      "sha256": "12f6890fdc93a33f049679adae50370da992ddda14f27e737d8ad64da3d7876c",
+      "bytes": 7884
+    },
+    {
+      "path": "docs/release/ISOLATION-IMPLEMENTATION-PLAN.md",
+      "sha256": "08e77b5d15597a372f3ed05d99a8172436cf6ab6d7baa3ef7f507dd1f916e07c",
+      "bytes": 7893
+    },
+    {
+      "path": "frontend/package-lock.json",
+      "sha256": "186c7afea38a060695f616545bf411241133466c7d82122c0eb98e51870cfe9c",
+      "bytes": 186555
+    },
+    {
+      "path": "frontend/package.json",
+      "sha256": "32966df30bc73a465a5a46bb4b69fcbfb8f816ce0b1f164aa5d9c10496cac36c",
+      "bytes": 1261
+    },
+    {
+      "path": "frontend/src/App.tsx",
+      "sha256": "10c52f258d93b9c25073b28eedb9f0d54440b7a9b77f22f5500875e904a3c7ea",
+      "bytes": 2523
+    },
+    {
+      "path": "frontend/src/auth/permissions.test.ts",
+      "sha256": "be9d980a8e2f62b98794ae8a4de479b823989411ad6f94aa3cb78a29fb35d448",
+      "bytes": 2438
+    },
+    {
+      "path": "frontend/src/auth/permissions.ts",
+      "sha256": "b355fba7f29b5bac98d3746ff351597fcb94a51614509513b9d78f002b320be4",
+      "bytes": 1783
+    },
+    {
+      "path": "frontend/src/components/AppLayout.tsx",
+      "sha256": "343ac735b024165e3c327ae442de9f701780a4b0401d0c6e6b853a0612d2a021",
+      "bytes": 5862
+    },
+    {
+      "path": "frontend/src/components/LocaleButton.tsx",
+      "sha256": "a70cd8e10279391ad994664b306e6b3a970a77d82eff2b8e40ecb841bf5211f4",
+      "bytes": 418
+    },
+    {
+      "path": "frontend/src/components/RetentionNotice.tsx",
+      "sha256": "bc3389da097969d6399360da4f8f3fc44206c574a5e541169e3afdd7cf2937ac",
+      "bytes": 583
+    },
+    {
+      "path": "frontend/src/hooks/appointmentRange.test.ts",
+      "sha256": "e31495b5b4f988b69595dcfc668fa04364319687478fe69bd26b4bf9de9745a0",
+      "bytes": 1554
+    },
+    {
+      "path": "frontend/src/hooks/appointmentRange.ts",
+      "sha256": "8db73ca449536f1702f4f07c2aee3537577db2b0d9ea4bd4ccb61f957d26ce48",
+      "bytes": 246
+    },
+    {
+      "path": "frontend/src/hooks/useAppointments.ts",
+      "sha256": "32e9d14b2a0fec52aa7a99d4ba60dc390f1a7aad08c3d1c22ab0b9857ac17d29",
+      "bytes": 2336
+    },
+    {
+      "path": "frontend/src/hooks/useAuth.tsx",
+      "sha256": "7c1b1b107cbadacf5aaf78721ebbf47c114ba6e5961c09ae48dc7e1bfdd52398",
+      "bytes": 2411
+    },
+    {
+      "path": "frontend/src/i18n/ar.json",
+      "sha256": "c2bbd9d4251fe966beecd817748430d59d36f94fa2e439a1e9750524e728b6c0",
+      "bytes": 17319
+    },
+    {
+      "path": "frontend/src/i18n/en.json",
+      "sha256": "5d19e8b667dc76d832a7bc29f1600e5ec13275b3d2453d5d3ec4185209cc1eaa",
+      "bytes": 13483
+    },
+    {
+      "path": "frontend/src/pages/AppointmentsPage.tsx",
+      "sha256": "f588c4a8576615f07f4a335fc19a9f559ee850fba2d6b6415b4034eb264baf38",
+      "bytes": 14251
+    },
+    {
+      "path": "frontend/src/pages/AuditPage.tsx",
+      "sha256": "3a71a5910d51ccfe559f9553bb7b2d85485aafe2f3354d3cf712a6807969ea53",
+      "bytes": 1987
+    },
+    {
+      "path": "frontend/src/pages/BillingPage.tsx",
+      "sha256": "c1d1bea1987758f0ffdda0dcd5b41024e2bd18556cf4438cb2fb4e07e05ec689",
+      "bytes": 16042
+    },
+    {
+      "path": "frontend/src/pages/LoginPage.tsx",
+      "sha256": "bb4463f923ee9db38abd251800e9f2515195e736fa6859ce831dd3bb2ca7515d",
+      "bytes": 3348
+    },
+    {
+      "path": "frontend/src/pages/OverviewPage.tsx",
+      "sha256": "ca62fb2de6efa1add0af3dd72b92fea554ba5c65f952b83bfda20a0aa9a2d9ae",
+      "bytes": 3876
+    },
+    {
+      "path": "frontend/src/vite-env.d.ts",
+      "sha256": "65996936fbb042915f7b74a200fcdde7e410f32a669b1ab9597cfaa4b0faddb5",
+      "bytes": 38
+    },
+    {
+      "path": "frontend/test-real-browser/README.md",
+      "sha256": "33b8d53d9afce5c7570dce2a170ffb8db13d69fa626d1543531706a611575025",
+      "bytes": 2904
+    },
+    {
+      "path": "frontend/test-real-browser/appointments.mjs",
+      "sha256": "f41a95a0711ea5cc3f7e4bc82465de6a0949b9d49d6cd8514db08dcc2e49fa2c",
+      "bytes": 13153
+    },
+    {
+      "path": "frontend/test-real-browser/billing.mjs",
+      "sha256": "1c3f58198d0ccdec85cd19ee402b4bb88519e25942ce7f84deec6fae264c6a1c",
+      "bytes": 16460
+    },
+    {
+      "path": "frontend/test-real-browser/clinical.mjs",
+      "sha256": "456816ec55a6974ad707e13fe96b97b4eb0e869c4ff164fb6a0b8456d875637a",
+      "bytes": 11062
+    },
+    {
+      "path": "frontend/test-real-browser/isolation.mjs",
+      "sha256": "1a0c8db529901220eab35ffadcdbcc3006d13f8179b547fe9b75c9d9ef6f7364",
+      "bytes": 40633
+    },
+    {
+      "path": "frontend/test-real-browser/public-appointments.mjs",
+      "sha256": "0620a71df811b494556ae2d5708fb4151efc6df926335139782e197dab38f57b",
+      "bytes": 14831
+    },
+    {
+      "path": "frontend/test-real-browser/public-billing.mjs",
+      "sha256": "07530beeb62940c727e170b54f86a6a53a897bbfa3e0fb9b1d5baa2f999f12fd",
+      "bytes": 18054
+    },
+    {
+      "path": "frontend/test-real-browser/public-clinical.mjs",
+      "sha256": "0e441ab61341f6c32b1b04fd313a55bb8bd795ad6048a0a4cc63f024e4b38879",
+      "bytes": 12432
+    },
+    {
+      "path": "frontend/test-real-browser/public-stock.mjs",
+      "sha256": "2bc11fb4c93ce0dacd0a948b000dd5705f3fe3cf538addfaa78c727d1a443730",
+      "bytes": 7685
+    },
+    {
+      "path": "frontend/test-real-browser/public-users.mjs",
+      "sha256": "0cc76fdd9b8f39516d4db1f56c380e7c9270ad52e82860d630125bf4d3e6cb5f",
+      "bytes": 17343
+    },
+    {
+      "path": "frontend/test-real-browser/public-workflows.mjs",
+      "sha256": "be7a1ae52fa6218e7dbddbb11a20abd0218c30b5ea90ce1d38e4e4a27ee0902c",
+      "bytes": 9996
+    },
+    {
+      "path": "frontend/test-real-browser/stock.mjs",
+      "sha256": "2fe01ad42714ab5146330991e816f2bdb9d4732525325a7d993f115e9ede8cb1",
+      "bytes": 6066
+    },
+    {
+      "path": "frontend/test-real-browser/users.mjs",
+      "sha256": "b538f7d0bf1ac629e33c700f2b88a8b65f9dd35217721ea90fa465eb520995fb",
+      "bytes": 15508
+    },
+    {
+      "path": "frontend/test-real-browser/workflows.mjs",
+      "sha256": "902606015ef01526d2a1efbdc17cb6387dd2c8d45bd91b720599ca1d3f26d91b",
+      "bytes": 8342
+    },
+    {
+      "path": "functions/cleanup.test.ts",
+      "sha256": "c0f82e0a85d6ffa16641e596f9da90876fb46d718bbde8b69e88bc41c3ba6a4c",
+      "bytes": 1459
+    },
+    {
+      "path": "functions/cleanup.ts",
+      "sha256": "a5a0626e7b1330d3d72b0407e852cfe46ea6d5c978284479e6c34f3a240b623a",
+      "bytes": 547
+    },
+    {
+      "path": "functions/handler.ts",
+      "sha256": "05d0f197eeac79b1dbb5667a01c826f4ef6ddedf479c0f8b35cdae90a9b64270",
+      "bytes": 554
+    },
+    {
+      "path": "functions/package-lock.json",
+      "sha256": "d39ea48405f43d2e37f3892aa3a9a2ad24f56306f3d5b2dd2194e6190e047e3f",
+      "bytes": 21834
+    },
+    {
+      "path": "functions/package.json",
+      "sha256": "bfa3b5b2b9d5743240434b55aae2b15474db72ea060c4fc19e43d296e4a7b191",
+      "bytes": 445
+    }
+  ],
+  "excludedGeneratedEvidence": [
+    "backend/postgres-regression.json"
+  ],
+  "scopeNote": "Listed hashes are historical captured bytes and are not a current-tree checksum manifest. Use per-delta export manifests for current changes."
+}

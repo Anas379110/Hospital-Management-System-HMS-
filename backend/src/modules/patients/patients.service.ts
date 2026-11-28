@@ -1,25 +1,38 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
+import { PATIENT_WRITE_ROLES, requireActor, writeEntityAudit } from '../../common/transaction-audit';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreatePatientDto } from './dto/create-patient.dto';
 import { UpdatePatientDto } from './dto/update-patient.dto';
 
 const MAX_MRN_RETRIES = 3;
 
+// Literal national-ID equality is an extra warning, never a unique constraint.
+// trim() decides only whether an ID is blank; the original value is queried/stored.
+function duplicateWhere(fullName: string, dateOfBirth: string, nationalId?: string): Prisma.PatientWhereInput {
+  const nameAndDob = { fullName, dateOfBirth: new Date(dateOfBirth) };
+  return typeof nationalId === 'string' && nationalId.trim().length > 0
+    ? { OR: [nameAndDob, { nationalId }] }
+    : nameAndDob;
+}
+
 @Injectable()
 export class PatientsService {
   constructor(private readonly prisma: PrismaService) {}
 
   /** FR-2.2: MRN فريد بصيغة HMS-000001 يُولَّد تلقائياً */
-  private async generateMrn(): Promise<string> {
-    const count = await this.prisma.patient.count();
-    const next = count + 1;
-    return `HMS-${String(next).padStart(6, '0')}`;
+  private async generateMrn(tx: Prisma.TransactionClient): Promise<string> {
+    // Caller holds the registration lock through duplicate check and allocation.
+    // Count is insufficient after deletions/imports; use the highest conforming suffix.
+    const rows = await tx.$queryRaw<{ next: bigint }[]>`SELECT COALESCE(MAX(SUBSTRING(mrn FROM 5)::bigint), 0) + 1 AS next FROM patients WHERE mrn ~ '^HMS-[0-9]{1,15}$'`;
+    const next = rows[0].next.toString();
+    return `HMS-${next.padStart(6, '0')}`;
   }
 
   /** FR-2.5: تحقق من احتمال وجود المريض مسبقاً — تنبيه لا حجب */
-  async findPotentialDuplicate(fullName: string, dateOfBirth: string) {
+  async findPotentialDuplicate(fullName: string, dateOfBirth: string, nationalId?: string) {
     return this.prisma.patient.findFirst({
-      where: { fullName, dateOfBirth: new Date(dateOfBirth) },
+      where: duplicateWhere(fullName, dateOfBirth, nationalId),
     });
   }
 
@@ -30,8 +43,14 @@ export class PatientsService {
    * force=true: يتجاوز التنبيه ويُنشئ السجل مباشرة (قرار الموظف بعد رؤية التنبيه).
    */
   async create(dto: CreatePatientDto, createdBy: string, force = false) {
+    for (let attempt = 0; attempt < MAX_MRN_RETRIES; attempt++) {
+      try { return await this.prisma.$transaction(async tx => {
+    await requireActor(tx, createdBy, PATIENT_WRITE_ROLES);
+    // At READ COMMITTED, the following lookup sees the preceding holder commit.
+    // Keep the existing allocation lock until registration and audit both commit.
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(18472931)`;
     if (!force) {
-      const duplicate = await this.findPotentialDuplicate(dto.fullName, dto.dateOfBirth);
+      const duplicate = await tx.patient.findFirst({ where: duplicateWhere(dto.fullName, dto.dateOfBirth, dto.nationalId) });
       if (duplicate) {
         throw new ConflictException({
           error: {
@@ -43,11 +62,8 @@ export class PatientsService {
       }
     }
 
-    // إعادة محاولة بسيطة عند تعارض نادر على MRN بسبب تزامن طلبين (Race Condition)
-    for (let attempt = 0; attempt < MAX_MRN_RETRIES; attempt++) {
-      try {
-        const mrn = await this.generateMrn();
-        return await this.prisma.patient.create({
+        const mrn = await this.generateMrn(tx);
+        const patient = await tx.patient.create({
           data: {
             mrn,
             fullName: dto.fullName,
@@ -61,16 +77,14 @@ export class PatientsService {
             createdBy,
           },
         });
-      } catch (err: unknown) {
-        // فحص "duck-typed" لخطأ Prisma P2002 (unique constraint) بدل الاعتماد على
-        // instanceof Prisma.PrismaClientKnownRequestError لتقليل الترابط مع تفاصيل توليد العميل.
-        const prismaErr = err as { code?: string; meta?: { target?: string[] } };
-        const isUniqueMrnClash =
-          prismaErr?.code === 'P2002' && prismaErr.meta?.target?.includes('mrn');
-        if (!isUniqueMrnClash || attempt === MAX_MRN_RETRIES - 1) throw err;
+        await writeEntityAudit(tx, createdBy, 'PATIENT_CREATED', 'Patient', null, patient);
+        return patient;
+      }); } catch (err: unknown) {
+        const error = err as { code?: string; meta?: { target?: string[] } };
+        if (error.code !== 'P2002' || !error.meta?.target?.includes('mrn') || attempt === MAX_MRN_RETRIES - 1) throw err;
       }
     }
-    throw new Error('تعذَّر توليد رقم ملف طبي فريد بعد عدة محاولات');
+    throw new Error('MRN retry limit reached');
   }
 
   async search(query: string) {
@@ -86,6 +100,12 @@ export class PatientsService {
     });
   }
 
+  async billingLookup(query: string) {
+    const search=query.trim().slice(0,80);
+    if (search.length<2) return [];
+    return this.prisma.patient.findMany({where:{OR:[{mrn:{contains:search,mode:'insensitive'}},{fullName:{contains:search,mode:'insensitive'}}]},take:20,select:{id:true,mrn:true,fullName:true}});
+  }
+
   async findOne(id: string) {
     const patient = await this.prisma.patient.findUnique({ where: { id } });
     if (!patient) {
@@ -96,9 +116,16 @@ export class PatientsService {
     return patient;
   }
 
-  async update(id: string, dto: UpdatePatientDto) {
-    await this.findOne(id); // يرمي 404 إن لم يوجد
-    return this.prisma.patient.update({ where: { id }, data: dto });
+  async update(id: string, dto: UpdatePatientDto, actor: string) {
+    return this.prisma.$transaction(async tx => {
+      await requireActor(tx, actor, PATIENT_WRITE_ROLES);
+      await tx.$queryRaw(Prisma.sql`SELECT id FROM patients WHERE id = ${id} FOR UPDATE`);
+      const before = await tx.patient.findUnique({ where: { id } });
+      if (!before) throw new NotFoundException({ error: { code: 'PATIENT_NOT_FOUND', message: 'المريض غير موجود', details: [] } });
+      const after = await tx.patient.update({ where: { id }, data: dto });
+      await writeEntityAudit(tx, actor, 'PATIENT_UPDATED', 'Patient', before, after);
+      return after;
+    });
   }
 
   /** FR-4.3: السجل الطبي الكامل — قراءة فقط، مرتَّب زمنياً من الأحدث للأقدم */

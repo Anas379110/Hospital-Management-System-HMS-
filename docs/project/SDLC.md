@@ -1,3 +1,5 @@
+> Historical SDLC snapshot, not current completion evidence. See [verification](../../VERIFICATION.md) and [current requirement gaps](../requirements/TRACEABILITY.md). Original targets remain unchanged; old complete-stage/module claims below are not current acceptance.
+
 # SDLC.md — نموذج دورة حياة التطوير المعتمد
 
 ## النموذج المختار

@@ -1,0 +1,11 @@
+# Literal national ID duplicate warning
+
+Owner approved28November11:43:51 the07:55policy question. This candidate is based on released performance commit e9d2d67; final exact CI and review are required before publication.
+
+Plan: preserve registration lock, workspace RLS, atomic audit, name+DOB warning and explicitforce=true manual override. Add original-string nationalID equality as an OR warning only for nonblank strings. Whitespace-only, null, empty and missing IDs do not participate. trim decides only blankness; it never changes query/stored values. Spaces, case, leading zeros and digit scripts remain distinct. No schema/index/constraint/data rewrite, no update-route policy change. Warning details remain existingpatientID/MRN, not nationalID. Existing rows retain original values.
+
+Qualification: unit blank/literal/error-shape tests and realHTTP synchronized differentname/DOB sameID collision with201/409, onepatient/audit, override201, literal variants and foreignworkspace independence. Existing name+DOB/race/force/role/auditrollback checks remain. Independent review, exactbothPGCI, privatechanged/newexports, then actualhostedEN/AR UI warning/cancel/force checks required before completion. DOB/gender/zero-invoice choices remain separate.
+
+Expanded local qualification: PostgreSQL17 and18 real HTTP suites passed with two different-name/DOB registrations for each missing/null/empty/whitespace-only ID, plus an input matching one patient by name+DOB and another by ID. Either genuine matching patient can be returned with minimal ID/MRN details; no precedence policy added. Both local databases used C collation and text national_id without a column override; case/padding/digit-script equality probes returned false. This is local evidence, not verification of hosted database collation.
+
+Release-tree qualification: all244 unit tests/27suites, backend build/lint and frontend build passed. Fresh full HTTP suites recorded actual server versions17.12 (170012) and18.7 (180007). Read-only hosted check observed PostgreSQL17.12, en_US.UTF-8 default collation, text national_id without a column override, and false equality for case, surrounding spaces, Arabic/ASCII digits and leading-zero variants. The hosted check read no patient rows and changed no persistent state.

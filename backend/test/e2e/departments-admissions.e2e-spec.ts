@@ -1,3 +1,4 @@
+import { withCurrentSessions } from '../helpers/current-session-fixture';
 import { Test } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
@@ -11,8 +12,13 @@ describe('Departments & Admissions (e2e)', () => {
   let jwtService: JwtService;
 
   const txMock = {
-    bed: { findUnique: jest.fn(), update: jest.fn() },
-    admission: { create: jest.fn(), findUnique: jest.fn(), update: jest.fn() },
+    $queryRaw: jest.fn().mockResolvedValue([]),
+    waitlistRequest: { findFirst: jest.fn().mockResolvedValue(null), update: jest.fn() },
+    patient: { findUnique: jest.fn().mockResolvedValue({ id: "patient-1" }) },
+    user: { findUnique: jest.fn().mockResolvedValue({ id: "u3", role: "nurse", isActive: true }) },
+    auditLog: { create: jest.fn().mockResolvedValue({}) },
+    bed: { findUnique: jest.fn(), update: jest.fn(), updateMany: jest.fn().mockResolvedValue({ count: 1 }) },
+    admission: { create: jest.fn(), findUnique: jest.fn(), update: jest.fn(), updateMany: jest.fn().mockResolvedValue({ count: 1 }) },
   };
 
   const prismaMock = {
@@ -26,7 +32,7 @@ describe('Departments & Admissions (e2e)', () => {
     process.env.JWT_SECRET = 'test-secret-key-for-e2e-only';
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
       .overrideProvider(PrismaService)
-      .useValue(prismaMock)
+      .useValue(withCurrentSessions(prismaMock, {"u1": "nurse", "u2": "manager", "u3": "nurse"}))
       .compile();
 
     app = moduleRef.createNestApplication();
@@ -44,19 +50,19 @@ describe('Departments & Admissions (e2e)', () => {
   it('GET /departments/{id}/beds/summary بدور nurse (غير مخوَّل — Manager/Admin فقط) → 403', async () => {
     const token = await jwtService.signAsync({ sub: 'u1', username: 'n1', role: 'nurse' });
     const res = await request(app.getHttpServer())
-      .get('/api/v1/departments/dept-1/beds/summary')
+      .get('/api/v1/departments/00000000-0000-4000-a000-000000000001/beds/summary')
       .set('Authorization', `Bearer ${token}`);
 
     expect(res.status).toBe(403);
   });
 
   it('GET /departments/{id}/beds/summary بدور manager → 200', async () => {
-    prismaMock.department.findUnique.mockResolvedValue({ id: 'dept-1' });
+    prismaMock.department.findUnique.mockResolvedValue({ id: '00000000-0000-4000-a000-000000000001' });
     prismaMock.bed.findMany.mockResolvedValue([{ status: 'available' }, { status: 'occupied' }]);
     const token = await jwtService.signAsync({ sub: 'u2', username: 'mgr1', role: 'manager' });
 
     const res = await request(app.getHttpServer())
-      .get('/api/v1/departments/dept-1/beds/summary')
+      .get('/api/v1/departments/00000000-0000-4000-a000-000000000001/beds/summary')
       .set('Authorization', `Bearer ${token}`);
 
     expect(res.status).toBe(200);
@@ -64,27 +70,27 @@ describe('Departments & Admissions (e2e)', () => {
   });
 
   it('POST /admissions على سرير مشغول (UC-1 Alternative Flow) → 409', async () => {
-    txMock.bed.findUnique.mockResolvedValue({ id: 'bed-1', status: 'occupied' });
+    txMock.bed.findUnique.mockResolvedValue({ id: '7f74ce8f-d350-5596-8d50-4298b0254b6c', status: 'occupied' });
     const token = await jwtService.signAsync({ sub: 'u3', username: 'nurse1', role: 'nurse' });
 
     const res = await request(app.getHttpServer())
       .post('/api/v1/admissions')
       .set('Authorization', `Bearer ${token}`)
-      .send({ patientId: 'p1', bedId: 'bed-1' });
+      .send({ patientId: 'efb8a802-7a25-5450-b223-5e81e4ec0e19', bedId: '7f74ce8f-d350-5596-8d50-4298b0254b6c' });
 
     expect(res.status).toBe(409);
     expect(res.body.error.code).toBe('BED_NOT_AVAILABLE');
   });
 
   it('POST /admissions على سرير متاح → 201', async () => {
-    txMock.bed.findUnique.mockResolvedValue({ id: 'bed-2', status: 'available' });
-    txMock.admission.create.mockResolvedValue({ id: 'adm-1', patientId: 'p1', bedId: 'bed-2' });
+    txMock.bed.findUnique.mockResolvedValue({ id: 'b85f9c7d-fddf-5139-a031-8b30e589e8d7', status: 'available' });
+    txMock.admission.create.mockResolvedValue({ id: 'adm-1', patientId: 'efb8a802-7a25-5450-b223-5e81e4ec0e19', bedId: 'b85f9c7d-fddf-5139-a031-8b30e589e8d7' });
     const token = await jwtService.signAsync({ sub: 'u3', username: 'nurse1', role: 'nurse' });
 
     const res = await request(app.getHttpServer())
       .post('/api/v1/admissions')
       .set('Authorization', `Bearer ${token}`)
-      .send({ patientId: 'p1', bedId: 'bed-2' });
+      .send({ patientId: 'efb8a802-7a25-5450-b223-5e81e4ec0e19', bedId: 'b85f9c7d-fddf-5139-a031-8b30e589e8d7' });
 
     expect(res.status).toBe(201);
   });

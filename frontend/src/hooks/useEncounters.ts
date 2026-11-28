@@ -1,15 +1,19 @@
+import type { EncounterAppointmentSelection } from '../api/encounterAppointment';
+import { sendPrescriptionCreate, type PrescriptionRequest } from '../api/prescriptionCreateWrite';
+import { sendEncounterCreate, type EncounterIdentity } from '../api/encounterCreateWrite';
+import { responseIsCurrent } from '../api/sessionIsolation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../api/client';
 import type { Encounter } from '../types/emr';
 
-export function usePatientRecords(patientId: string | undefined) {
+export function usePatientRecords(patientId: string | undefined, enabled = true) {
   return useQuery({
     queryKey: ['patients', patientId, 'records'],
     queryFn: async () => {
       const res = await apiClient.get<Encounter[]>(`/patients/${patientId}/records`);
       return res.data;
     },
-    enabled: !!patientId,
+    enabled: !!patientId && enabled,
   });
 }
 
@@ -18,18 +22,15 @@ export interface CreateEncounterInput {
   chiefComplaint: string;
   diagnosis: string;
   notes?: string;
+  appointmentId?: string;
 }
 
 export function useCreateEncounter() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (input: CreateEncounterInput) => {
-      const res = await apiClient.post<Encounter>('/encounters', input);
-      return res.data;
-    },
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['patients', variables.patientId, 'records'] });
-    },
+    retry: false,
+    mutationFn: (request: EncounterIdentity & { input: CreateEncounterInput; appointmentSelection?: EncounterAppointmentSelection }) => sendEncounterCreate(request),
+    onSuccess: (data, variables) => { if (responseIsCurrent(data)) void queryClient.invalidateQueries({ queryKey: ['patients', variables.patientId, 'records'] }); },
   });
 }
 
@@ -44,12 +45,8 @@ export interface CreatePrescriptionInput {
 export function useAddPrescription() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ encounterId, ...input }: CreatePrescriptionInput) => {
-      const res = await apiClient.post(`/encounters/${encounterId}/prescriptions`, input);
-      return res.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['patients'] });
-    },
+    retry: false,
+    mutationFn: (request: PrescriptionRequest) => sendPrescriptionCreate(request),
+    onSuccess: (data, request) => { if (responseIsCurrent(data)) void queryClient.invalidateQueries({ queryKey: ['patients', request.patientId, 'records'] }); },
   });
 }

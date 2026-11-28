@@ -11,9 +11,12 @@ export interface Encounter {
   id: string;
   patientId: string;
   doctorId: string;
+  appointmentId?: string | null;
   chiefComplaint: string;
   diagnosis: string;
   notes?: string | null;
   encounterDate: string;
+  deletedAt?: string | null;
+  deleteReason?: string | null;
   prescriptions: Prescription[];
 }

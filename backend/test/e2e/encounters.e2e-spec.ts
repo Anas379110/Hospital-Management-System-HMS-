@@ -1,3 +1,4 @@
+import { withCurrentSessions } from '../helpers/current-session-fixture';
 import { Test } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
@@ -11,6 +12,9 @@ describe('Encounters (e2e)', () => {
   let jwtService: JwtService;
 
   const prismaMock = {
+    $transaction: jest.fn((callback: (tx: unknown) => unknown): unknown => callback(prismaMock)), $queryRaw: jest.fn().mockResolvedValue([]),
+    user: { findUnique: jest.fn().mockResolvedValue({ id: "u1", role: "doctor", isActive: true }) },
+    patient: { findUnique: jest.fn().mockResolvedValue({ id: "p1" }) },
     encounter: {
       create: jest.fn().mockImplementation(({ data }) => Promise.resolve({ id: 'enc-1', ...data })),
       findUnique: jest.fn(),
@@ -24,7 +28,7 @@ describe('Encounters (e2e)', () => {
     process.env.JWT_SECRET = 'test-secret-key-for-e2e-only';
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
       .overrideProvider(PrismaService)
-      .useValue(prismaMock)
+      .useValue(withCurrentSessions(prismaMock, {"u1": "nurse", "doc-1": "doctor", "doc-other": "doctor"}))
       .compile();
 
     app = moduleRef.createNestApplication();
@@ -39,7 +43,7 @@ describe('Encounters (e2e)', () => {
     await app.close();
   });
 
-  const validEncounter = { patientId: 'p1', chiefComplaint: 'صداع', diagnosis: 'شقيقة' };
+  const validEncounter = { patientId: 'efb8a802-7a25-5450-b223-5e81e4ec0e19', chiefComplaint: 'صداع', diagnosis: 'شقيقة' };
 
   it('POST /encounters بدور nurse (غير مخوَّل) → 403', async () => {
     const token = await jwtService.signAsync({ sub: 'u1', username: 'n1', role: 'nurse' });

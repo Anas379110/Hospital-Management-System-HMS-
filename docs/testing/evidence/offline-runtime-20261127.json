@@ -1,0 +1,52 @@
+{
+  "scriptSha256": "84ad902daf426e857330132d5ed4f78ea087ef8bcaa9af0b925ee33931e563c1",
+  "scope": "Chromium external HTTP(S)/WebSocket routing denied, production frontend/backend local and existing restored disposable DB, not a machine-wide air-gap",
+  "startedAt": "2026-11-27T19:19:54.848Z",
+  "complete": true,
+  "externalAttempts": [],
+  "pageErrors": [],
+  "checks": [
+    "Compiled production frontend loaded from local Nest static middleware",
+    "Demo bootstrap via API201 plus token injection, patientsearchresults/appointmentlist/directory headings used local API",
+    "Native Swagger loaded locally with44operations",
+    "No external browser HTTP(S)/WebSocket attempted in measured paths",
+    "Zero pageerrors"
+  ],
+  "effectiveRuntime": {
+    "current_user": "hms_runtime",
+    "session_user": "hms_runtime"
+  },
+  "dbIdentity": [
+    {
+      "database": "hms_test_perf_backup_restore"
+    }
+  ],
+  "requestPaths": [
+    "/api/docs/",
+    "/api/docs/docs/swagger-ui-bundle.js",
+    "/api/docs/docs/swagger-ui-init.js",
+    "/api/docs/docs/swagger-ui-standalone-preset.js",
+    "/api/docs/docs/swagger-ui.css",
+    "/api/v1/appointments",
+    "/api/v1/appointments/options",
+    "/api/v1/demo/start",
+    "/api/v1/departments",
+    "/api/v1/patients",
+    "/appointments",
+    "/assets/index-CULZSRLz.js",
+    "/assets/mui-D4cNk77F.js",
+    "/assets/vendor-CBmOeYcj.js",
+    "/departments",
+    "/login",
+    "/patients"
+  ],
+  "finishedAt": "2026-11-27T19:19:58.892Z",
+  "limitations": [
+    "Browser route guard is not OS-level packet capture or network namespace isolation",
+    "Node/database external network not blocked by this smoke; source inventory is separate",
+    "Requires preinstalled dependencies and local PostgreSQL; clean offline installation not established",
+    "Selected pages/bootstrap/docs only, no exhaustive workflow/offline queued write test",
+    "App intentionally unavailable when LAN/API/DB is down; no serviceworker/offline-cache or offline-write promise",
+    "Existing local cluster role password reset for test then actual hms_runtime login verified, not independent-host global-role reconstruction"
+  ]
+}

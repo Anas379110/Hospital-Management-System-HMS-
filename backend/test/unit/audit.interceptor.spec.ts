@@ -19,7 +19,7 @@ function buildContext(user?: { userId: string }): ExecutionContext {
   } as unknown as ExecutionContext;
 }
 
-describe('AuditInterceptor — Finding #4 (RESOLVED)', () => {
+describe('AuditInterceptor persistence and fallback', () => {
   let interceptor: AuditInterceptor;
   let prisma: { auditLog: { create: jest.Mock } };
   let reflector: { getAllAndOverride: jest.Mock };
@@ -69,7 +69,7 @@ describe('AuditInterceptor — Finding #4 (RESOLVED)', () => {
     });
   });
 
-  it('Finding #4 (RESOLVED): يكتب سجلاً احتياطياً محلياً عند فشل قاعدة البيانات — لا فقدان صامت', (done) => {
+  it('Fallback: يكتب سجلاً احتياطياً محلياً عند فشل قاعدة البيانات — لا فقدان صامت', (done) => {
     prisma.auditLog.create.mockRejectedValue(new Error('DB connection lost'));
 
     interceptor.intercept(buildContext({ userId: 'user-1' }), nextHandler).subscribe(() => {
@@ -80,7 +80,8 @@ describe('AuditInterceptor — Finding #4 (RESOLVED)', () => {
         const record = JSON.parse(content.trim());
         expect(record.action).toBe('TEST_ACTION');
         expect(record.entityId).toBe('entity-1');
-        expect(record.dbError).toContain('DB connection lost');
+        expect(record.failureCode).toBe('AUDIT_DB_WRITE_FAILED');
+        expect(content).not.toContain('DB connection lost');
         done();
       }, 50);
     });

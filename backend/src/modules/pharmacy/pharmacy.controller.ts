@@ -1,3 +1,6 @@
+import { MedicationResponseDto, StockAdjustmentResponseDto, PendingPrescriptionResponseDto } from './dto/pharmacy-response.dto';
+import { PrescriptionResponseDto } from '../encounters/dto/clinical-response.dto';
+import { ApiOperation, ApiResponse, ApiExtension } from '@nestjs/swagger';
 import { Body, Controller, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
@@ -23,39 +26,87 @@ export class PharmacyController {
 
   @Post('medications')
   @Roles(Role.pharmacist, Role.admin)
-  @Audit('MEDICATION_CREATED', 'Medication')
-  createMedication(@Body() dto: CreateMedicationDto) {
-    return this.pharmacyService.createMedication(dto);
+  @Audit('MEDICATION_CREATED', 'Medication', true)
+  @ApiOperation({"summary": "PharmacyController.createMedication", "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization."})
+  @ApiExtension('x-roles', ["pharmacist", "admin"])
+  @ApiExtension('x-auth', 'roles')
+  @ApiResponse({"status": 201, type: MedicationResponseDto, description: 'Existing service payload; lists remain unbounded where applicable.'})
+  @ApiResponse({"status": 400, "description": "Invalid request"})
+  @ApiResponse({"status": 401, "description": "Missing/expired token, inactive current user, or invalid/expired workspace"})
+  @ApiResponse({"status": 403, "description": "Current persisted role is not permitted"})
+  @ApiResponse({"status": 429, "description": "Rate limit exceeded"})
+  createMedication(@Body() dto: CreateMedicationDto, @Req() req: AuthedRequest) {
+    return this.pharmacyService.createMedication(dto, req.user.userId);
   }
 
   @Get('medications')
   @Roles(Role.pharmacist, Role.admin)
+  @ApiOperation({"summary": "PharmacyController.listMedications", "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization."})
+  @ApiExtension('x-roles', ["pharmacist", "admin"])
+  @ApiExtension('x-auth', 'roles')
+  @ApiResponse({"status": 200, type: MedicationResponseDto, isArray: true, description: 'Existing service payload; lists remain unbounded where applicable.'})
+  @ApiResponse({"status": 400, "description": "Invalid request"})
+  @ApiResponse({"status": 401, "description": "Missing/expired token, inactive current user, or invalid/expired workspace"})
+  @ApiResponse({"status": 403, "description": "Current persisted role is not permitted"})
+  @ApiResponse({"status": 429, "description": "Rate limit exceeded"})
   listMedications() {
     return this.pharmacyService.listMedications();
   }
 
   @Get('medications/low-stock')
   @Roles(Role.pharmacist, Role.admin)
+  @ApiOperation({"summary": "PharmacyController.lowStock", "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization."})
+  @ApiExtension('x-roles', ["pharmacist", "admin"])
+  @ApiExtension('x-auth', 'roles')
+  @ApiResponse({"status": 200, type: MedicationResponseDto, isArray: true, description: 'Existing service payload; lists remain unbounded where applicable.'})
+  @ApiResponse({"status": 400, "description": "Invalid request"})
+  @ApiResponse({"status": 401, "description": "Missing/expired token, inactive current user, or invalid/expired workspace"})
+  @ApiResponse({"status": 403, "description": "Current persisted role is not permitted"})
+  @ApiResponse({"status": 429, "description": "Rate limit exceeded"})
   lowStock() {
     return this.pharmacyService.lowStock();
   }
 
   @Patch('medications/:id/stock')
   @Roles(Role.pharmacist, Role.admin)
-  @Audit('MEDICATION_STOCK_ADJUSTED', 'Medication')
-  adjustStock(@Param('id') id: string, @Body() dto: AdjustStockDto) {
-    return this.pharmacyService.adjustStock(id, dto.delta, dto.reason);
+  @Audit('MEDICATION_STOCK_ADJUSTED', 'Medication', true)
+  @ApiOperation({"summary": "PharmacyController.adjustStock", "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization."})
+  @ApiExtension('x-roles', ["pharmacist", "admin"])
+  @ApiExtension('x-auth', 'roles')
+  @ApiResponse({"status": 200, type: StockAdjustmentResponseDto, description: 'Existing service payload; lists remain unbounded where applicable.'})
+  @ApiResponse({"status": 400, "description": "Invalid request"})
+  @ApiResponse({"status": 401, "description": "Missing/expired token, inactive current user, or invalid/expired workspace"})
+  @ApiResponse({"status": 403, "description": "Current persisted role is not permitted"})
+  @ApiResponse({"status": 429, "description": "Rate limit exceeded"})
+  adjustStock(@Param('id') id: string, @Body() dto: AdjustStockDto, @Req() req: AuthedRequest) {
+    return this.pharmacyService.adjustStock(id, dto.delta, dto.reason, req.user.userId, dto.reasonCode);
   }
 
   @Get('prescriptions/pending')
   @Roles(Role.pharmacist, Role.admin)
+  @ApiOperation({"summary": "PharmacyController.pendingPrescriptions", "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization."})
+  @ApiExtension('x-roles', ["pharmacist", "admin"])
+  @ApiExtension('x-auth', 'roles')
+  @ApiResponse({"status": 200, type: PendingPrescriptionResponseDto, isArray: true, description: 'Existing service payload; lists remain unbounded where applicable.'})
+  @ApiResponse({"status": 400, "description": "Invalid request"})
+  @ApiResponse({"status": 401, "description": "Missing/expired token, inactive current user, or invalid/expired workspace"})
+  @ApiResponse({"status": 403, "description": "Current persisted role is not permitted"})
+  @ApiResponse({"status": 429, "description": "Rate limit exceeded"})
   pendingPrescriptions() {
     return this.pharmacyService.pendingPrescriptions();
   }
 
   @Post('prescriptions/:id/dispense')
   @Roles(Role.pharmacist, Role.admin)
-  @Audit('PRESCRIPTION_DISPENSED', 'Prescription')
+  @Audit('PRESCRIPTION_DISPENSED', 'Prescription', true)
+  @ApiOperation({"summary": "PharmacyController.dispense", "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization."})
+  @ApiExtension('x-roles', ["pharmacist", "admin"])
+  @ApiExtension('x-auth', 'roles')
+  @ApiResponse({"status": 201, type: PrescriptionResponseDto, description: 'Existing service payload; lists remain unbounded where applicable.'})
+  @ApiResponse({"status": 400, "description": "Invalid request"})
+  @ApiResponse({"status": 401, "description": "Missing/expired token, inactive current user, or invalid/expired workspace"})
+  @ApiResponse({"status": 403, "description": "Current persisted role is not permitted"})
+  @ApiResponse({"status": 429, "description": "Rate limit exceeded"})
   dispense(
     @Param('id') id: string,
     @Body() dto: DispensePrescriptionDto,

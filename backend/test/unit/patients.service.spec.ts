@@ -6,6 +6,11 @@ import { PrismaService } from '../../src/prisma/prisma.service';
 describe('PatientsService', () => {
   let service: PatientsService;
   let prisma: {
+    $transaction: jest.Mock;
+    $executeRaw: jest.Mock;
+    $queryRaw: jest.Mock;
+    user: { findUnique: jest.Mock };
+    auditLog: { create: jest.Mock };
     patient: {
       count: jest.Mock;
       findFirst: jest.Mock;
@@ -18,6 +23,11 @@ describe('PatientsService', () => {
 
   beforeEach(async () => {
     prisma = {
+      $transaction: jest.fn(callback => callback(prisma)),
+      $executeRaw: jest.fn().mockResolvedValue(1),
+      $queryRaw: jest.fn().mockImplementation(async () => [{ next: BigInt((await prisma.patient.count()) + 1) }]),
+      user: { findUnique: jest.fn().mockResolvedValue({ id: "user-1", role: "receptionist", isActive: true }) },
+      auditLog: { create: jest.fn().mockResolvedValue({}) },
       patient: {
         count: jest.fn(),
         findFirst: jest.fn(),
@@ -69,6 +79,49 @@ describe('PatientsService', () => {
 
     expect(result.mrn).toBe('HMS-000003');
     expect(prisma.patient.create).toHaveBeenCalledTimes(1);
+  });
+
+  it('locks before duplicate lookup and MRN allocation, with one shared lock', async () => {
+    prisma.patient.count.mockResolvedValue(0);
+    prisma.patient.findFirst.mockResolvedValue(null);
+    prisma.patient.create.mockImplementation(({ data }) => Promise.resolve({ id: 'p1', ...data }));
+    await service.create(baseDto, 'user-1');
+    expect(prisma.$executeRaw).toHaveBeenCalledTimes(1);
+    expect(prisma.user.findUnique.mock.invocationCallOrder[0]).toBeLessThan(prisma.$executeRaw.mock.invocationCallOrder[0]);
+    expect(prisma.$executeRaw.mock.invocationCallOrder[0]).toBeLessThan(prisma.patient.findFirst.mock.invocationCallOrder[0]);
+    expect(prisma.patient.findFirst.mock.invocationCallOrder[0]).toBeLessThan(prisma.$queryRaw.mock.invocationCallOrder[0]);
+  });
+
+  it('explicit override still acquires the same lock without checking duplicates', async () => {
+    prisma.patient.count.mockResolvedValue(0);
+    prisma.patient.create.mockImplementation(({ data }) => Promise.resolve({ id: 'p1', ...data }));
+    await service.create(baseDto, 'user-1', true);
+    expect(prisma.$executeRaw).toHaveBeenCalledTimes(1);
+    expect(prisma.patient.findFirst).not.toHaveBeenCalled();
+  });
+
+  it.each([undefined, null, '', '   ', '\t\n'])('ignores blank national ID %p without changing name+DOB warning', async nationalId => {
+    prisma.patient.findFirst.mockResolvedValue(null);
+    prisma.patient.count.mockResolvedValue(0);
+    prisma.patient.create.mockImplementation(({ data }) => Promise.resolve({ id: 'p1', ...data }));
+    await service.create({ ...baseDto, nationalId } as unknown as Parameters<PatientsService['create']>[0], 'user-1');
+    expect(prisma.patient.findFirst).toHaveBeenCalledWith({ where: { fullName: baseDto.fullName, dateOfBirth: new Date(baseDto.dateOfBirth) } });
+  });
+
+  it.each(['ID-001', ' ID-001 ', '١٢٣', '123'])('queries and stores original nonblank ID bytes %p', async nationalId => {
+    prisma.patient.findFirst.mockResolvedValue(null);
+    prisma.patient.count.mockResolvedValue(0);
+    prisma.patient.create.mockImplementation(({ data }) => Promise.resolve({ id: 'p1', ...data }));
+    const row = await service.create({ ...baseDto, nationalId }, 'user-1');
+    expect(prisma.patient.findFirst).toHaveBeenCalledWith({ where: { OR: [{ fullName: baseDto.fullName, dateOfBirth: new Date(baseDto.dateOfBirth) }, { nationalId }] } });
+    expect(row.nationalId).toBe(nationalId);
+  });
+
+  it('keeps national-ID warning details minimal and override unchanged', async () => {
+    prisma.patient.findFirst.mockResolvedValue({ id: 'existing-id', mrn: 'HMS-000002', nationalId: 'SECRET-ID' });
+    try { await service.create({ ...baseDto, nationalId: 'SECRET-ID' }, 'user-1'); throw new Error('Expected duplicate warning'); }
+    catch (error) { expect((error as ConflictException).getResponse()).toEqual({ error: { code: 'POSSIBLE_DUPLICATE_PATIENT', message: expect.any(String), details: [{ existingPatientId: 'existing-id', mrn: 'HMS-000002' }] } }); }
+    expect(prisma.patient.create).not.toHaveBeenCalled();
   });
 
   it('يرمي NotFoundException عند البحث عن مريض غير موجود', async () => {

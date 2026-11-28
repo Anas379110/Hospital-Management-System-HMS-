@@ -7,11 +7,11 @@ import { PrismaService } from '../../src/prisma/prisma.service';
 
 describe('AuthService', () => {
   let service: AuthService;
-  let prisma: { user: { findUnique: jest.Mock } };
+  let prisma: { user: { findFirst: jest.Mock } };
   let jwtService: { signAsync: jest.Mock };
 
   beforeEach(async () => {
-    prisma = { user: { findUnique: jest.fn() } };
+    prisma = { user: { findFirst: jest.fn() } };
     jwtService = { signAsync: jest.fn().mockResolvedValue('signed.jwt.token') };
 
     const moduleRef = await Test.createTestingModule({
@@ -27,7 +27,7 @@ describe('AuthService', () => {
 
   it('login: ينجح ببيانات صحيحة ويعيد accessToken بلا passwordHash', async () => {
     const passwordHash = await bcrypt.hash('correct-password', 4); // rounds منخفضة لتسريع الاختبار فقط
-    prisma.user.findUnique.mockResolvedValue({
+    prisma.user.findFirst.mockResolvedValue({
       id: 'u1',
       username: 'dr1',
       passwordHash,
@@ -45,7 +45,7 @@ describe('AuthService', () => {
 
   it('login: يرفض بـ401 لكلمة مرور خاطئة، برسالة موحَّدة لا تكشف السبب', async () => {
     const passwordHash = await bcrypt.hash('correct-password', 4);
-    prisma.user.findUnique.mockResolvedValue({
+    prisma.user.findFirst.mockResolvedValue({
       id: 'u1',
       username: 'dr1',
       passwordHash,
@@ -56,7 +56,7 @@ describe('AuthService', () => {
   });
 
   it('login: يرفض بـ401 لمستخدم غير موجود، بنفس رسالة كلمة المرور الخاطئة (Finding #1)', async () => {
-    prisma.user.findUnique.mockResolvedValue(null);
+    prisma.user.findFirst.mockResolvedValue(null);
 
     try {
       await service.login('ghost-user', 'any-password');
@@ -72,7 +72,7 @@ describe('AuthService', () => {
 
   it('login: يرفض بـ401 لمستخدم معطَّل (isActive=false) حتى ببيانات صحيحة', async () => {
     const passwordHash = await bcrypt.hash('correct-password', 4);
-    prisma.user.findUnique.mockResolvedValue({
+    prisma.user.findFirst.mockResolvedValue({
       id: 'u1',
       username: 'dr1',
       passwordHash,

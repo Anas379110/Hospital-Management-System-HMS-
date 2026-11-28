@@ -30,13 +30,22 @@ export class AllExceptionsFilter implements ExceptionFilter {
       status = exception.getStatus();
       const res = exception.getResponse();
 
-      if (typeof res === 'object' && res !== null && 'error' in res) {
+      if (typeof res === 'string') {
+        code = HttpStatus[status] ?? 'ERROR';
+        message = res;
+      } else if (
+        typeof res === 'object' &&
+        res !== null &&
+        'error' in res &&
+        typeof res.error === 'object' &&
+        res.error !== null
+      ) {
         // الاستثناء مُنسَّق مسبقاً بصيغتنا الموحدة (مثال: من RolesGuard)
         const errObj = (res as { error: { code?: string; message?: string; details?: unknown[] } })
           .error;
-        code = errObj.code ?? code;
-        message = errObj.message ?? message;
-        details = errObj.details ?? [];
+        code = typeof errObj.code === 'string' ? errObj.code : code;
+        message = typeof errObj.message === 'string' ? errObj.message : message;
+        details = Array.isArray(errObj.details) ? errObj.details : [];
       } else if (typeof res === 'object' && res !== null && 'message' in res) {
         // استثناءات NestJS الافتراضية (مثال: ValidationPipe)
         const resObj = res as { message?: string | string[] };
@@ -46,11 +55,25 @@ export class AllExceptionsFilter implements ExceptionFilter {
           : (resObj.message ?? message);
         details = Array.isArray(resObj.message) ? resObj.message : [];
       }
+    } else if (exception instanceof Error && 'status' in exception &&
+      (['entity.parse.failed', 'entity.too.large', 'encoding.unsupported', 'charset.unsupported', 'request.aborted', 'request.size.invalid'].includes(String('type' in exception ? exception.type : '')) || ('code' in exception && exception.code === 'Z_DATA_ERROR')) &&
+      [400, 413, 415].includes(Number(exception.status))) {
+      status = Number(exception.status);
+      code = HttpStatus[status] ?? 'BAD_REQUEST';
+      message = 'Invalid request body';
+    } else if (process.env.HMS_PUBLIC_DEMO === 'true' && typeof exception === 'object' && exception !== null && 'code' in exception && exception.code === 'P2010' && 'meta' in exception && (exception.meta as {code?:string;message?:string})?.code === 'P0001' && (exception.meta as {message?:string}).message?.includes('Demo cleanup pending')) {
+      status = 503; code = 'DEMO_CLEANUP_PENDING'; message = 'Demo temporarily paused for maintenance. Try again later.';
+    } else if (process.env.HMS_PUBLIC_DEMO === 'true' && exception instanceof Error && 'code' in exception && (String(exception.code) === 'P2024' || (String(exception.code) === 'P2028' && exception.message === 'Transaction API error: Unable to start a transaction in the given time.'))) {
+      status = HttpStatus.SERVICE_UNAVAILABLE;
+      code = 'DEMO_BUSY';
+      message = 'Demo is busy. Try again shortly.';
+      response.setHeader('Retry-After', '5');
     } else {
       // خطأ غير متوقع — لا نُظهر تفاصيله للمستخدم، فقط نسجله داخلياً
-      this.logger.error(exception instanceof Error ? exception.stack : String(exception));
+      this.logger.error({ code: 'UNHANDLED_REQUEST_ERROR' });
     }
 
+    if (status === 503 && ['DEMO_BUSY','DEMO_CLEANUP_PENDING'].includes(code)) response.setHeader('Retry-After', '5');
     response.status(status).json({ error: { code, message, details } });
   }
 }

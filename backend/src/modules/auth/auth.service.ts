@@ -1,3 +1,4 @@
+import { demoMode } from '../../prisma/workspace-context';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -16,7 +17,7 @@ export class AuthService {
   ) {}
 
   async validateUser(username: string, password: string) {
-    const user = await this.prisma.user.findUnique({ where: { username } });
+    const user = await this.prisma.user.findFirst({ where: { username } });
 
     if (!user || !user.isActive) {
       // نقارن مقابل هاش وهمي لتوحيد زمن الاستجابة مع حالة "كلمة مرور خاطئة"
@@ -45,6 +46,7 @@ export class AuthService {
   }
 
   async login(username: string, password: string) {
+    if (demoMode()) throw new UnauthorizedException('Public demo password login is disabled');
     const user = await this.validateUser(username, password);
 
     const payload = { sub: user.id, username: user.username, role: user.role };

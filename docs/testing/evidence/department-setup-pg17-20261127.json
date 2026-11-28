@@ -1,0 +1,27 @@
+{
+  "scope": "Disposable actual HTTP manual setup, fictional data only",
+  "mode": "local cluster identity checked",
+  "complete": true,
+  "checks": [
+    "7setupendpoints401/all7forbiddenroles403",
+    "DTOmissing/null/extra/blank400, UUID400, crossworkspace404",
+    "Admincreate/rename/maintenance/unuseddelete with redactedatomic audit",
+    "Occupiedmaintenancedelete409, historicaladmissiondelete409, departmentappointmenthistory409",
+    "Actualauditfailure503rollbackbedandcachedcount",
+    "Concurrentduplicatelabel201+409, maintenance/admissionrace has onecommit",
+    "ActualcountmatchescachedtotalBeds; EN1280/AR390UIcreate+addbed+maintenance+deletecancel passed",
+    "Concurrentdelete/admission protects history",
+    "ActualUI404closesstaledialog/refetch, networkabortandproxy502unknownexactmessage/onlyonePOST",
+    "Occupiedrelabel200retainsoccupied; malformedbedGET400; createfieldsblank",
+    "Actualappointmentinsert/departmentdelete race safe404or409 not500"
+  ],
+  "scriptSha256": "34b41337b2fbd602622e1d1c177ebf1533b21072f2bba0c127d153c37c43a102",
+  "startedAt": "2026-11-27T20:37:45.769Z",
+  "runtime": {
+    "role": "hms_runtime_setup",
+    "superuser": false,
+    "bypassRls": false,
+    "auditMutationsDenied": 3
+  },
+  "finishedAt": "2026-11-27T20:38:07.823Z"
+}

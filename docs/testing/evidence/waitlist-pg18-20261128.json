@@ -1,0 +1,47 @@
+{
+  "scope": "Disposable PostgreSQL waitlist and HTTP/browser, fictional data only",
+  "mode": "local cluster identity checked",
+  "complete": true,
+  "checks": [
+    "Clean migration and restricted nonowner runtime",
+    "3endpoints401andallnonclinicalroles403, invalidDTO/UUID/page400, missing404",
+    "CrossworkspaceHTTP404, runtime0foreignrows and compositeFKreject",
+    "Duplicatependingrace201+409, retainedcancelhistory409onsecondclose",
+    "Actualcancel/admission auditfailure503fullrollback includingbed andqueue",
+    "Same-departmentcloseatomic, otherdepartmentuntouched, no reopening ondischarge",
+    "Add/admit and cancel/admit races serialized",
+    "101tiedrequests deterministicFIFO andtwo-pageHTTPcoverage",
+    "ENdesktop/AR390UIadd/cancelconfirm/pagination andunknownnetworkwriteonePOST",
+    "Queueauditnophysicalidentity, cleanupcascadeshistory withnoDELETERuntime"
+  ],
+  "scriptSha256": "a8f572042a126d2b65bef55a91a7b1b404a690445a0ce98668e7e81df44b8bf6",
+  "startedAt": "2026-11-27T21:57:31.465Z",
+  "inputSha256": {
+    "prisma/demo/supabase-normalize.sql": "834bb3171b26a3accbc29334047e4b2d898060b5a7485ef79fbfb8dc578cfad3",
+    "prisma/schema.prisma": "3d4c557752dde410162c2f41fa1e7934e509ad251fd91cc71a2687416f871e9c",
+    "prisma/migrations/20261128005000_department_waitlist/migration.sql": "dae1aaa83bfaa9c87dec396ec692ad5d6347f99923a797bfda8b550de8980a8f",
+    "prisma/demo/waitlist-grants.sql": "524a43d1c8d65c462f1b45557afd867c3acee602e9b02b87a379facdd8e19874",
+    "prisma/demo/grants.sql": "09ecc660b16652302c05d6ba3c0acdef211401581253b50c5a6d42e3f915a2f3",
+    "prisma/demo/supabase-audit.sql": "78e908bf299217c5cbddca7f501d19b235802644462248b825d11cccde37f8f0",
+    "src/modules/waitlist/waitlist.service.ts": "853582e0c525e2b183e8b7c09ad7d7cf2f63c2e1d009d5d9932c9baed94387ff",
+    "src/modules/waitlist/waitlist.controller.ts": "180d11cef96fe93b7d68b03470172a372ae84e33a8ca98c87c16d1cc27c13c7e",
+    "src/modules/admissions/admissions.service.ts": "8f58e8fb7602f5b62c37d1700e9552021408ff8e788d68652b5e2cd3533b49e7",
+    "src/modules/departments/department-setup.service.ts": "0493e68b63bb8e6391b578086cb79ddea45229c396739bdb07789fcdc1477005",
+    "src/common/transaction-audit.ts": "bffaf20720393c9ca12a89353433414399fd3474e4623fe53843264fe1a54c5e",
+    "../frontend/src/components/DepartmentWaitlist.tsx": "d49448d8a52dd213f92b0539cb6c1b3275ef5d6b90d6dbbc8284cf193a322de6",
+    "../frontend/src/hooks/useWaitlist.ts": "b8a958e7a7927e9fc091be65fcd113f8ee8fa174ca203b1dde6d979620134d20",
+    "../frontend/dist/assets/index-BYUGBfJ3.js": "c97ab91720396874361cb9e4782285f56bc59c9a219da1f599876c7956fcc24f",
+    "../frontend/dist/assets/mui-DWIpFKtc.js": "23282e4e98191c017c2737a30bf0eeefc3ad982d149cbe59ab9d43774bef57df",
+    "../frontend/dist/assets/vendor-BHKary94.js": "702dc1fe813458ef1a0ad87eef59346165b40a9217680717fda34c60cf9268dd",
+    "dist/src/modules/waitlist/waitlist.service.js": "8c20881490cb4d1b4d56a4667c1c89d8236c3d42d24e65cec09dace5fa4f7010",
+    "dist/src/modules/admissions/admissions.service.js": "60f0db0d993e08a0e5ef8fe66d984aeffa30896682c6930264b089602eb1b772",
+    "../frontend/dist/index.html": "9880015b311d152f38ba4ab1e9f4056cb1d0586cafcd0608616717df29d6c7df"
+  },
+  "runtime": {
+    "role": "hms_runtime_waitlist",
+    "superuser": false,
+    "bypassRls": false,
+    "auditMutationsDenied": 3
+  },
+  "finishedAt": "2026-11-27T21:57:43.857Z"
+}

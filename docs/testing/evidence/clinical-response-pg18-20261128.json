@@ -1,0 +1,71 @@
+{
+  "scope": "Disposable PostgreSQL waitlist and HTTP/browser, fictional data only",
+  "mode": "local cluster identity checked",
+  "complete": true,
+  "checks": [
+    "Clean migration and restricted nonowner runtime",
+    "3endpoints401andallnonclinicalroles403, invalidDTO/UUID/page400, missing404",
+    "CrossworkspaceHTTP404, runtime0foreignrows and compositeFKreject",
+    "Duplicatependingrace201+409, retainedcancelhistory409onsecondclose",
+    "Actualcancel/admission auditfailure503fullrollback includingbed andqueue",
+    "Same-departmentcloseatomic, otherdepartmentuntouched, no reopening ondischarge",
+    "Add/admit and cancel/admit races serialized",
+    "101tiedrequests deterministicFIFO andtwo-pageHTTPcoverage",
+    "ENdesktop/AR390UIadd/cancelconfirm/pagination andunknownnetworkwriteonePOST",
+    "Queueauditnophysicalidentity, cleanupcascadeshistory withnoDELETERuntime"
+  ],
+  "scriptSha256": "26d708c6d0c3512b7cb256899b081e3ba45af2b0646d25426bf4c6d052e6fdeb",
+  "startedAt": "2026-11-27T23:00:07.168Z",
+  "inputSha256": {
+    "prisma/demo/supabase-normalize.sql": "834bb3171b26a3accbc29334047e4b2d898060b5a7485ef79fbfb8dc578cfad3",
+    "prisma/schema.prisma": "3d4c557752dde410162c2f41fa1e7934e509ad251fd91cc71a2687416f871e9c",
+    "prisma/migrations/20261128005000_department_waitlist/migration.sql": "dae1aaa83bfaa9c87dec396ec692ad5d6347f99923a797bfda8b550de8980a8f",
+    "prisma/demo/waitlist-grants.sql": "524a43d1c8d65c462f1b45557afd867c3acee602e9b02b87a379facdd8e19874",
+    "prisma/demo/grants.sql": "09ecc660b16652302c05d6ba3c0acdef211401581253b50c5a6d42e3f915a2f3",
+    "prisma/demo/supabase-audit.sql": "78e908bf299217c5cbddca7f501d19b235802644462248b825d11cccde37f8f0",
+    "src/modules/waitlist/waitlist.service.ts": "853582e0c525e2b183e8b7c09ad7d7cf2f63c2e1d009d5d9932c9baed94387ff",
+    "src/modules/waitlist/waitlist.controller.ts": "7f93aca2ec6cd2e2b41f105c2a64dcb900e2bd8bd7435792250edc8c9694020e",
+    "src/modules/admissions/admissions.service.ts": "8f58e8fb7602f5b62c37d1700e9552021408ff8e788d68652b5e2cd3533b49e7",
+    "src/modules/departments/department-setup.service.ts": "0493e68b63bb8e6391b578086cb79ddea45229c396739bdb07789fcdc1477005",
+    "src/common/transaction-audit.ts": "bffaf20720393c9ca12a89353433414399fd3474e4623fe53843264fe1a54c5e",
+    "src/common/dto/api-error-response.dto.ts": "c76302ecb666f225762fa0de156c1e5b23077e6548d7d4b7ae4b5be04a5a5e90",
+    "src/modules/patients/dto/patient-response.dto.ts": "21305b49680496ddebcbc0a96466967c91c1780a7c4d7e44a38dd1b7d8f15468",
+    "src/modules/waitlist/dto/waitlist-response.dto.ts": "2356e19f3fcb7a15219082de20c8186b036f6bf113e643a76e6aa2198ddf5cc3",
+    "src/modules/patients/patients.controller.ts": "2b720c0b796f3f651cc04d59c0f799899cd21f0bd2d2361fd9eb4cc32333adef",
+    "test-real-postgres/response-contract-check.mjs": "a46ca116bba50beb045a9a756c7832d9b989f03a079f9b81e9955bc9b6c93691",
+    "test-real-postgres/clinical-response-check.mjs": "07a80d68725ed7035c9905b523f86433e9c8e2547f7fc803a4e352e43b3a8f64",
+    "src/modules/encounters/encounters.controller.ts": "ff22178c66320cc1dff98ddfc3579aec50a5b68fd45a9cbbf69215d168ed9b78",
+    "src/modules/encounters/dto/clinical-response.dto.ts": "4670c7a677663564d5631d1145b45a795f3ed87f378705b704ed15d7b077354a",
+    "src/modules/lab/lab.controller.ts": "e9a53fa997a1d5e5da1cc574666a519504467e7c84dc1050e3a5bc6b21cec624",
+    "src/modules/lab/dto/test-order-response.dto.ts": "960e4627c99f3b740f89ef1dd1e990530ecee24b4534da3c5ea75477064fa1a3",
+    "src/modules/encounters/encounters.service.ts": "18b415b0856a4e95e6651c866b5a84177e26e95d5aebfd6a52d90e833fc37be2",
+    "src/modules/lab/lab.service.ts": "926b3bab6fcdd082b73854f4a1c4889e39245e3bd20788480f682860c82acafd",
+    "src/modules/patients/patients.service.ts": "e15f109f19abcd401d94540dd9d53131aecef063d166e555b3c94dbcd1b6704b",
+    "src/common/filters/http-exception.filter.ts": "a778b7dfe002016acb86e4d6ca210cbfaec266e9b82677f52ead168189f0d4a2",
+    "dist/src/modules/encounters/encounters.controller.js": "348cdedf6a738d00965b89f35490bd4dac748e92c2b1d81ea93122e7cc087842",
+    "dist/src/modules/lab/lab.controller.js": "18d8919deb3852525d0255cbd7317396a82807b62ef426e8f42c667bb600b4df",
+    "../frontend/src/components/DepartmentWaitlist.tsx": "d49448d8a52dd213f92b0539cb6c1b3275ef5d6b90d6dbbc8284cf193a322de6",
+    "../frontend/src/hooks/useWaitlist.ts": "b8a958e7a7927e9fc091be65fcd113f8ee8fa174ca203b1dde6d979620134d20",
+    "../frontend/dist/assets/index-BYUGBfJ3.js": "c97ab91720396874361cb9e4782285f56bc59c9a219da1f599876c7956fcc24f",
+    "../frontend/dist/assets/mui-DWIpFKtc.js": "23282e4e98191c017c2737a30bf0eeefc3ad982d149cbe59ab9d43774bef57df",
+    "../frontend/dist/assets/vendor-BHKary94.js": "702dc1fe813458ef1a0ad87eef59346165b40a9217680717fda34c60cf9268dd",
+    "dist/src/modules/waitlist/waitlist.service.js": "8c20881490cb4d1b4d56a4667c1c89d8236c3d42d24e65cec09dace5fa4f7010",
+    "dist/src/modules/admissions/admissions.service.js": "60f0db0d993e08a0e5ef8fe66d984aeffa30896682c6930264b089602eb1b772",
+    "../frontend/dist/index.html": "9880015b311d152f38ba4ab1e9f4056cb1d0586cafcd0608616717df29d6c7df"
+  },
+  "runtime": {
+    "role": "hms_runtime_waitlist",
+    "superuser": false,
+    "bypassRls": false,
+    "auditMutationsDenied": 3
+  },
+  "clinicalResponseContracts": {
+    "checkedHttpResponses": 22,
+    "scope": "Existing encounter/prescription/nested record/test-order/pending identity/result payloads and current auth/error/isolation/deletion semantics, no new clinical behavior"
+  },
+  "responseContracts": {
+    "checkedHttpResponses": 17,
+    "scope": "Existing patient scalar/billing identity and waitlist list/write success plus error envelopes; no serializer or audience change"
+  },
+  "finishedAt": "2026-11-27T23:00:28.451Z"
+}

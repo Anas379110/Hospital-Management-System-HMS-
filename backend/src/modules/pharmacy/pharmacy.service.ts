@@ -1,6 +1,8 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { requireActor, writeCombinedAudit, writeEntityAudit } from '../../common/transaction-audit';
+import { Prisma, Role } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
+import { StockReasonCode } from './dto/adjust-stock.dto';
 import { CreateMedicationDto } from './dto/create-medication.dto';
 import { DispensePrescriptionDto } from './dto/dispense-prescription.dto';
 
@@ -9,14 +11,19 @@ export class PharmacyService {
   constructor(private readonly prisma: PrismaService) {}
 
   // FR-6.1
-  async createMedication(dto: CreateMedicationDto) {
-    return this.prisma.medication.create({
+  async createMedication(dto: CreateMedicationDto, actor: string) {
+    return this.prisma.$transaction(async tx => {
+    await requireActor(tx, actor, [Role.pharmacist, Role.admin]);
+    const medication = await tx.medication.create({
       data: {
         name: dto.name,
         unit: dto.unit,
         currentStock: dto.currentStock,
         reorderThreshold: dto.reorderThreshold ?? 10,
       },
+    });
+    await writeEntityAudit(tx, actor, 'MEDICATION_CREATED', 'Medication', null, medication);
+    return medication;
     });
   }
 
@@ -42,9 +49,15 @@ export class PharmacyService {
     return medication;
   }
 
-  async adjustStock(id: string, delta: number, reason: string) {
-    const medication = await this.findMedicationOrThrow(id);
+  async adjustStock(id: string, delta: number, reason: string | undefined, actor: string, reasonCode: StockReasonCode = 'correction') {
+    return this.prisma.$transaction(async tx => {
+    await requireActor(tx, actor, [Role.pharmacist, Role.admin]);
+    await tx.$queryRaw(Prisma.sql`SELECT id FROM medications WHERE id = ${id} FOR UPDATE`);
+    const medication = await tx.medication.findUnique({ where: { id } });
+    if (!medication) throw new NotFoundException({ error: { code: 'MEDICATION_NOT_FOUND', message: 'الدواء غير موجود بالمخزون', details: [] } });
+    if ((reasonCode === 'restock' && delta <= 0) || (reasonCode === 'disposal' && delta >= 0)) throw new ConflictException({ error: { code: 'STOCK_REASON_DIRECTION', message: 'اتجاه الكمية لا يطابق سبب التعديل', details: [] } });
     const newStock = medication.currentStock + delta;
+    if (!Number.isSafeInteger(delta) || delta === 0 || !Number.isSafeInteger(newStock) || newStock > 2147483647) throw new ConflictException({ error: { code: 'STOCK_OUT_OF_RANGE', message: 'الكمية خارج حدود التخزين المدعومة', details: [] } });
     if (newStock < 0) {
       throw new ConflictException({
         error: {
@@ -54,32 +67,39 @@ export class PharmacyService {
         },
       });
     }
-    const updated = await this.prisma.medication.update({ where: { id }, data: { currentStock: newStock } });
-    // إصلاح حقيقي (راجع SECURITY-REVIEW.md Finding #8): سبب التعديل كان يُتحقَّق
-    // منه بالـ DTO لكن لا يُخزَّن بأي مكان — فجوة تدقيق حقيقية بمخزون دواء
-    // (تعديلات المخزون اليدوية قناة محتملة لتسريب/سرقة أدوية بلا أثر واضح).
-    // نُرفقه ضمن نتيجة الـ Endpoint بحيث يلتقطه AuditInterceptor تلقائياً
-    // كجزء من newValue بسجل audit_logs، دون حاجة لتعديل Schema (Expand لاحقاً
-    // بحقل مخصص لو استدعت الحاجة تقارير مفصَّلة لاحقاً).
+    const updated = await tx.medication.update({ where: { id }, data: { currentStock: newStock } });
+    await writeCombinedAudit(tx, actor, 'MEDICATION_STOCK_ADJUSTED', 'Medication', id, [{ type: 'Medication', before: medication, after: updated }], { adjustmentDelta: delta, reasonCode, adjustmentReason: reason ? '[REDACTED]' : null });
+    // Structured stock reason retained, optional free text never copied into audit.
     return { ...updated, adjustmentReason: reason, adjustmentDelta: delta };
+    });
   }
 
   // FR-6.2
   async pendingPrescriptions() {
-    return this.prisma.prescription.findMany({
-      where: { status: 'pending' },
-      include: { encounter: { include: { patient: true, doctor: true } } },
-      orderBy: { createdAt: 'asc' },
-    });
+    return this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      const ids = await tx.$queryRaw<{ id: string }[]>(Prisma.sql`
+        SELECT id FROM prescriptions
+        WHERE status = 'pending'::"PrescriptionStatus"
+        ORDER BY created_at ASC
+      `);
+      if (ids.length === 0) return [];
+      return tx.prescription.findMany({
+        where: { id: { in: ids.map(row => row.id) } },
+        include: { encounter: { select: { patient: { select: { fullName: true, mrn: true } }, doctor: { select: { fullName: true } } } } },
+        orderBy: { createdAt: 'asc' },
+      });
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead });
   }
 
   /**
    * FR-6.3/FR-6.4: صرف وصفة — خصم المخزون وتحديث حالة الوصفة ضمن Transaction
-   * ذرية واحدة، بنفس نمط AdmissionsService (راجع ARCHITECTURE.md §4).
-   * لا خصم جزئي عند نقص المخزون أو أي فشل بمنتصف العملية.
+   * ذرية واحدة، بنفس نمط AdmissionsService.
+   * تراجع المعاملة عند نقص المخزون أو فشل كتابة سجل التدقيق.
    */
   async dispense(prescriptionId: string, dto: DispensePrescriptionDto, dispensedBy: string) {
     return this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      await requireActor(tx, dispensedBy, [Role.pharmacist, Role.admin]);
+      await tx.$queryRaw(Prisma.sql`SELECT id FROM prescriptions WHERE id = ${prescriptionId} FOR UPDATE`);
       const prescription = await tx.prescription.findUnique({ where: { id: prescriptionId } });
       if (!prescription) {
         throw new NotFoundException({
@@ -96,6 +116,7 @@ export class PharmacyService {
         });
       }
 
+      await tx.$queryRaw(Prisma.sql`SELECT id FROM medications WHERE id = ${dto.medicationId} FOR UPDATE`);
       const medication = await tx.medication.findUnique({ where: { id: dto.medicationId } });
       if (!medication) {
         throw new NotFoundException({
@@ -114,12 +135,12 @@ export class PharmacyService {
         });
       }
 
-      await tx.medication.update({
+      const medicationAfter = await tx.medication.update({
         where: { id: dto.medicationId },
         data: { currentStock: medication.currentStock - dto.quantityDispensed },
       });
 
-      return tx.prescription.update({
+      const prescriptionAfter = await tx.prescription.update({
         where: { id: prescriptionId },
         data: {
           status: 'dispensed',
@@ -129,6 +150,8 @@ export class PharmacyService {
           dispensedBy,
         },
       });
+      await writeCombinedAudit(tx, dispensedBy, 'PRESCRIPTION_DISPENSED', 'Prescription', prescriptionId, [{ type: 'Prescription', before: prescription, after: prescriptionAfter }, { type: 'Medication', before: medication, after: medicationAfter }]);
+      return prescriptionAfter;
     });
   }
 }

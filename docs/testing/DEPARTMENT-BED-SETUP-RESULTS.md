@@ -1,0 +1,16 @@
+# Department/bed setup local candidate, November27
+
+Not yet independently reviewed, published or deployed. Current live release remains b584561. No schema/migration/grants/provider changes in this candidate.
+
+-213unit,62mockedHTTP,56frontend,18contract/security tests pass; backend/frontend builds and lint pass.
+-Actual disposable PostgreSQL17 and18 nonowner runtime tests pass with RLS/non-superuser/audit-update-delete-truncate denial verified. Seven setup endpoints401 and every non-admin403; strict DTO/UUID400 and cross-workspace404.
+-Create/rename/maintenance/unused deletion pass with transactional redacted audit. Occupied maintenance/delete409, historical admission deletion409, appointment-linked department deletion409. Injected audit trigger503 rolls back bed and cached count.
+-Actual duplicate-label race201+409. Maintenance/admission and delete/admission races retain one safe commit, no contradictory historical state. Deletion winner can produce404 or409 for losing admission depending on initial read timing. Tests first incorrectly excluded safe delete200/admission409; corrected assertion, implementation unchanged, then reran both clean disposable clusters.
+-EN1280 and AR390 actual browser create department/add bed/maintenance/delete-cancel pass. Actual pixels inspected. Initial screenshot captured confirm before React update; added readiness check and recaptured enabled confirmation. Backend/UI unchanged by this evidence correction.
+-Independent generated controller contract now52ops and native27schemas/reference30schemas, validator fields/roles/responses matched. ApiExtension class metadata did not reach methods; added per-method annotations. Path parameter array order compared by name, preserving exact schema equality.
+
+Remaining gates: independent security/code review, exact-head hosted CI (including new dedicated empty setup DB), publication/actual hosted verification. Waitlist and freshness remain open; waitlist needs separate schema/live DB review. Full dependency risk inventory unchanged, no new dependency.
+
+Review remediation: create fields blank even with a selected department; occupied relabeling allowed, maintenance still blocked; malformed bed GET UUID400; appointment reference P2003 mapped409. API stale no-setup statement corrected. Extracted setupError classifier tested16 cases including network/timeouts, proxy502/504 code-less bodies, clean4xx, audit503 and explicit conflict/auth/validation. Actual UI404 closes/refetches and abort gives unknown warning with one POST, no retry. Added actual appointment-insert/department-delete race and reran both PG17/18. Duplicate label uniqueness uses app locks only, not a new DB uniqueness constraint; bounded races are not exhaustive scheduling proof. No migration introduced.
+
+V2 independent static reviewer found no remaining code blockers after fixes. Exact English unknown-write warning verified in actual browser for both aborted network and HTML502, each exactly one POST. Reran actual clean PG17/18 after this test strengthening. Labels are deliberately redacted in audit, so changed field/stable ID/status are retained, not past label text. Occupied relabeling keeps stable identity/department/admissions and does not change occupancy; original Admin setup approval only excludes occupied maintenance and history-linked deletion.

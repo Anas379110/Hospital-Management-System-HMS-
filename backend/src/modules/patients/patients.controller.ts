@@ -1,6 +1,11 @@
+import { EncounterWithPrescriptionsResponseDto } from '../encounters/dto/clinical-response.dto';
+import { ApiErrorResponseDto } from '../../common/dto/api-error-response.dto';
+import { PatientIdentityResponseDto, PatientResponseDto } from './dto/patient-response.dto';
+import { ApiOperation, ApiResponse, ApiQuery, ApiExtension } from '@nestjs/swagger';
 import { Body, Controller, Get, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
+import { PATIENT_WRITE_ROLES } from '../../common/transaction-audit';
 import { PatientsService } from './patients.service';
 import { CreatePatientDto } from './dto/create-patient.dto';
 import { UpdatePatientDto } from './dto/update-patient.dto';
@@ -22,8 +27,19 @@ export class PatientsController {
 
   // FR-2.1
   @Post()
-  @Roles(Role.receptionist, Role.admin)
-  @Audit('PATIENT_CREATED', 'Patient')
+  @Roles(...PATIENT_WRITE_ROLES)
+  @Audit('PATIENT_CREATED', 'Patient', true)
+  @ApiOperation({"summary": "PatientsController.create", "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization."})
+  @ApiExtension('x-roles', ["admin", "receptionist"])
+  @ApiExtension('x-auth', 'roles')
+  @ApiQuery({"name": "force", "required": false, "schema": {"type": "string"}})
+  @ApiResponse({ status: 201, type: PatientResponseDto, description: 'Created patient, existing complete scalar row.' })
+  @ApiResponse({ status: 400, type: ApiErrorResponseDto, "description": "Invalid request"})
+  @ApiResponse({ status: 401, type: ApiErrorResponseDto, "description": "Missing/expired token, inactive current user, or invalid/expired workspace"})
+  @ApiResponse({ status: 403, type: ApiErrorResponseDto, "description": "Current persisted role is not permitted"})
+  @ApiResponse({ status: 429, type: ApiErrorResponseDto, "description": "Rate limit exceeded"})
+  @ApiResponse({ status: 409, type: ApiErrorResponseDto, description: 'Possible duplicate warning; authorized staff may explicitly confirm with force=true.' })
+  @ApiResponse({ status: 503, type: ApiErrorResponseDto, description: 'Audit persistence failed and mutation rolled back, or demo unavailable.' })
   create(
     @Body() dto: CreatePatientDto,
     @Query('force') force: string,
@@ -35,27 +51,76 @@ export class PatientsController {
   // FR-2.3
   @Get()
   @Roles(Role.receptionist, Role.doctor, Role.nurse, Role.admin, Role.manager)
+  @ApiOperation({"summary": "PatientsController.search", "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization."})
+  @ApiExtension('x-roles', ["receptionist", "doctor", "nurse", "admin", "manager"])
+  @ApiExtension('x-auth', 'roles')
+  @ApiQuery({"name": "search", "required": false, "schema": {"type": "string"}})
+  @ApiResponse({ status: 200, type: [PatientResponseDto], description: 'At most20 matches, existing complete scalar rows. This is not a full paginated listing.' })
+  @ApiResponse({ status: 400, type: ApiErrorResponseDto, "description": "Invalid request"})
+  @ApiResponse({ status: 401, type: ApiErrorResponseDto, "description": "Missing/expired token, inactive current user, or invalid/expired workspace"})
+  @ApiResponse({ status: 403, type: ApiErrorResponseDto, "description": "Current persisted role is not permitted"})
+  @ApiResponse({ status: 429, type: ApiErrorResponseDto, "description": "Rate limit exceeded"})
   search(@Query('search') search = '') {
     return this.patientsService.search(search);
   }
 
+  @Get('billing-lookup')
+  @Roles(Role.billing_clerk, Role.admin)
+  @ApiOperation({"summary": "PatientsController.billingLookup", "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization."})
+  @ApiExtension('x-roles', ["billing_clerk", "admin"])
+  @ApiExtension('x-auth', 'roles')
+  @ApiQuery({"name": "search", "required": false, "schema": {"type": "string"}})
+  @ApiResponse({ status: 200, type: [PatientIdentityResponseDto], description: 'At most20 minimal billing matches, or empty below2 trimmed characters. No phone, birth date or clinical data.' })
+  @ApiResponse({ status: 400, type: ApiErrorResponseDto, "description": "Invalid request"})
+  @ApiResponse({ status: 401, type: ApiErrorResponseDto, "description": "Missing/expired token, inactive current user, or invalid/expired workspace"})
+  @ApiResponse({ status: 403, type: ApiErrorResponseDto, "description": "Current persisted role is not permitted"})
+  @ApiResponse({ status: 429, type: ApiErrorResponseDto, "description": "Rate limit exceeded"})
+  billingLookup(@Query('search') search = '') { return this.patientsService.billingLookup(search); }
+
   @Get(':id')
   @Roles(Role.receptionist, Role.doctor, Role.nurse, Role.admin, Role.manager)
+  @ApiOperation({"summary": "PatientsController.findOne", "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization."})
+  @ApiExtension('x-roles', ["receptionist", "doctor", "nurse", "admin", "manager"])
+  @ApiExtension('x-auth', 'roles')
+  @ApiResponse({ status: 200, type: PatientResponseDto, description: 'Patient in the current workspace, existing complete scalar row.' })
+  @ApiResponse({ status: 400, type: ApiErrorResponseDto, "description": "Invalid request"})
+  @ApiResponse({ status: 401, type: ApiErrorResponseDto, "description": "Missing/expired token, inactive current user, or invalid/expired workspace"})
+  @ApiResponse({ status: 403, type: ApiErrorResponseDto, "description": "Current persisted role is not permitted"})
+  @ApiResponse({ status: 429, type: ApiErrorResponseDto, "description": "Rate limit exceeded"})
+  @ApiResponse({ status: 404, type: ApiErrorResponseDto, description: 'Patient not found in the current workspace.' })
   findOne(@Param('id') id: string) {
     return this.patientsService.findOne(id);
   }
 
   // FR-2.4
   @Patch(':id')
-  @Roles(Role.receptionist, Role.admin)
-  @Audit('PATIENT_UPDATED', 'Patient')
-  update(@Param('id') id: string, @Body() dto: UpdatePatientDto) {
-    return this.patientsService.update(id, dto);
+  @Roles(...PATIENT_WRITE_ROLES)
+  @Audit('PATIENT_UPDATED', 'Patient', true)
+  @ApiOperation({"summary": "PatientsController.update", "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization."})
+  @ApiExtension('x-roles', ["admin", "receptionist"])
+  @ApiExtension('x-auth', 'roles')
+  @ApiResponse({ status: 200, type: PatientResponseDto, description: 'Updated patient, existing complete scalar row.' })
+  @ApiResponse({ status: 400, type: ApiErrorResponseDto, "description": "Invalid request"})
+  @ApiResponse({ status: 401, type: ApiErrorResponseDto, "description": "Missing/expired token, inactive current user, or invalid/expired workspace"})
+  @ApiResponse({ status: 403, type: ApiErrorResponseDto, "description": "Current persisted role is not permitted"})
+  @ApiResponse({ status: 429, type: ApiErrorResponseDto, "description": "Rate limit exceeded"})
+  @ApiResponse({ status: 404, type: ApiErrorResponseDto, description: 'Patient not found in the current workspace.' })
+  @ApiResponse({ status: 503, type: ApiErrorResponseDto, description: 'Audit persistence failed and mutation rolled back, or demo unavailable.' })
+  update(@Param('id') id: string, @Body() dto: UpdatePatientDto, @Req() req: AuthedRequest) {
+    return this.patientsService.update(id, dto, req.user.userId);
   }
 
   // FR-4.3
   @Get(':id/records')
   @Roles(Role.doctor, Role.nurse, Role.admin)
+  @ApiOperation({"summary": "PatientsController.getMedicalRecords", "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization."})
+  @ApiExtension('x-roles', ["doctor", "nurse", "admin"])
+  @ApiExtension('x-auth', 'roles')
+  @ApiResponse({ status: 200, type: [EncounterWithPrescriptionsResponseDto], description: 'Current non-deleted encounters, newest encounterDate first, each with existing prescriptions. Not a paginated or combined activity timeline.' })
+  @ApiResponse({ status: 400, type: ApiErrorResponseDto, "description": "Invalid request"})
+  @ApiResponse({ status: 401, type: ApiErrorResponseDto, "description": "Missing/expired token, inactive current user, or invalid/expired workspace"})
+  @ApiResponse({ status: 403, type: ApiErrorResponseDto, "description": "Current persisted role is not permitted"})
+  @ApiResponse({ status: 429, type: ApiErrorResponseDto, "description": "Rate limit exceeded"})
   getMedicalRecords(@Param('id') id: string) {
     return this.patientsService.getMedicalRecords(id);
   }

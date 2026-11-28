@@ -1,0 +1,15 @@
+{
+  "complete": true,
+  "actualFreshLocalCluster": true,
+  "mismatchedActualDataDirectoryRejected": true,
+  "afterMismatch": {
+    "tables": 0,
+    "hms_roles": 0
+  },
+  "performanceMissingPortRejected": true,
+  "crashMissingPortRejected": true,
+  "noMigrationOrRoleEffects": true,
+  "finishedAt": "2026-11-27T17:51:29.886Z",
+  "evidenceKind": "manual one-off execution summary, not a checked-in reproducible test runner",
+  "reproductionBoundary": "Performed with a separate local wrapper not included in source; do not treat as automatically reproduced by CI"
+}

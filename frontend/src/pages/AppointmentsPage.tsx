@@ -1,202 +1,156 @@
+import { Link } from 'react-router-dom';
+import { canAccessPage } from '../auth/permissions';
+import type { Appointment } from '../types/appointments';
 import { useState } from 'react';
-import {
-  Alert,
-  Box,
-  Button,
-  Chip,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Card, CardContent, Autocomplete, MenuItem, Alert, Box, Button, Chip, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import {
-  useAppointments,
-  useCreateAppointment,
-  useCancelAppointment,
-} from '../hooks/useAppointments';
-import { getApiErrorMessage } from '../api/client';
+import { useAppointments, useCreateAppointment, useCancelAppointment, useAppointmentOptions, useUpdateAppointment, useRecordAttendance } from '../hooks/useAppointments';
+import { getApiErrorCode, getApiErrorMessage } from '../api/client';
+import { usePatientsSearch } from '../hooks/usePatients';
+import type { Patient } from '../types/api';
+import { useAuth } from '../hooks/useAuth';
+import { canManageAppointments } from '../auth/permissions';
 
-const statusColor: Record<string, 'default' | 'success' | 'error' | 'warning'> = {
-  scheduled: 'default',
-  completed: 'success',
-  no_show: 'warning',
-  cancelled: 'error',
-};
+const statusColor: Record<string, 'default' | 'success' | 'error' | 'warning'> = { scheduled: 'default', completed: 'success', no_show: 'warning', cancelled: 'error' };
+
 
 export default function AppointmentsPage() {
-  const { i18n } = useTranslation();
-  const today = new Date().toISOString().slice(0, 10);
-
-  const [date, setDate] = useState(today);
+  const { t, i18n } = useTranslation();
+  const { user } = useAuth();
+  const writable = !!user && canManageAppointments(user.role);
+  const [date, setDate] = useState(() => { const now = new Date(); return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`; });
   const [doctorId, setDoctorId] = useState('');
-  const { data: appointments, isLoading } = useAppointments(doctorId || undefined, date);
-
+  const [page, setPage] = useState(1);
+  const [days, setDays] = useState(1);
+  const appointments = useAppointments(doctorId || undefined, date, page, days);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
-  const [patientId, setPatientId] = useState('');
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [attendanceNotice, setAttendanceNotice] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [patientSearch, setPatientSearch] = useState('');
+  const patients = usePatientsSearch(patientSearch);
+  const options = useAppointmentOptions();
+  const patientId = selectedPatient?.id ?? ''; 
   const [formDoctorId, setFormDoctorId] = useState('');
   const [departmentId, setDepartmentId] = useState('');
   const [scheduledAt, setScheduledAt] = useState('');
-
+  const [cancelTarget, setCancelTarget] = useState<string | null>(null);
+  const [reason, setReason] = useState('');
   const createAppointment = useCreateAppointment();
+  const updateAppointment = useUpdateAppointment();
+  const [editing, setEditing] = useState<Appointment | null>(null);
+  const pendingSave = createAppointment.isPending || updateAppointment.isPending;
   const cancelAppointment = useCancelAppointment();
-
-  const locale = i18n.language === 'ar' ? 'ar-SY' : 'en-US';
-
+  const attendance = useRecordAttendance();
+  const [attendanceTarget, setAttendanceTarget] = useState<{id:string;status:'completed'|'no_show'}|null>(null);
+  const locale = i18n.language === 'ar' ? 'ar-SY-u-nu-latn' : 'en-US';
+  const formatDay = (value: string) => new Date(value).toLocaleDateString(locale, { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' });
+  const scheduleDate = new Date(date + 'T00:00:00');
+  const displayDate = Number.isFinite(scheduleDate.getTime()) ? formatDay(scheduleDate.toISOString()) : '';
+  const groups = Object.entries((appointments.data ?? []).reduce<Record<string, Appointment[]>>((acc, appointment) => { const key = formatDay(appointment.scheduledAt); (acc[key] ??= []).push(appointment); return acc; }, {}));
+  const errorMessage = (error: unknown) => {
+    const code = getApiErrorCode(error);
+    if (code === 'AUDIT_PERSISTENCE_FAILED') return t('departments.auditFailure');
+    if (code === 'APPOINTMENT_RANGE_TOO_LARGE') return t('appointments.tooMany');
+    if (code === 'APPOINTMENT_FINAL' || code === 'APPOINTMENT_HAS_ENCOUNTER') return t('appointments.attendanceConflict');
+    if (code === 'APPOINTMENT_LOCKED') return t('appointments.locked');
+    if (code === 'APPOINTMENT_CONFLICT') return t('appointments.conflict');
+    return getApiErrorMessage(error, t('errors.generic'));
+  };
   async function handleCreate() {
-    setFormError(null);
+    setFormError(null); setSuccess(null);
     try {
-      await createAppointment.mutateAsync({
-        patientId,
-        doctorId: formDoctorId,
-        departmentId,
-        scheduledAt: new Date(scheduledAt).toISOString(),
-      });
-      setDialogOpen(false);
-      setPatientId('');
-      setFormDoctorId('');
-      setDepartmentId('');
-      setScheduledAt('');
-    } catch (err) {
-      // FR-3.2: رسالة واضحة عند تعارض الحجز (409) — راجع API.md
-      setFormError(getApiErrorMessage(err, 'تعذَّر حجز الموعد'));
-    }
+      if (editing) await updateAppointment.mutateAsync({ id: editing.id, departmentId, scheduledAt: new Date(scheduledAt).toISOString() });
+      else await createAppointment.mutateAsync({ patientId: patientId.trim(), doctorId: formDoctorId.trim(), departmentId: departmentId.trim(), scheduledAt: new Date(scheduledAt).toISOString() });
+      setSuccess(t('appointments.created', { time: new Date(scheduledAt).toLocaleString(locale) }));
+      setDialogOpen(false); setSelectedPatient(null); setPatientSearch(''); setFormDoctorId(''); setDepartmentId(''); setScheduledAt('');
+    } catch (error) { setFormError(errorMessage(error)); }
   }
-
-  return (
-    <Box p={4}>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h5" fontWeight={700}>
-          المواعيد
-        </Typography>
-        <Button variant="contained" onClick={() => setDialogOpen(true)}>
-          حجز موعد جديد
-        </Button>
-      </Box>
-
-      <Box display="flex" gap={2} mb={3}>
-        <TextField
-          type="date"
-          label="اليوم"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          InputLabelProps={{ shrink: true }}
-        />
-        {/* ملاحظة MVP: فلترة بمعرف الطبيب مباشرة — لا توجد بعد شاشة قائمة أطباء منفصلة (خارج نطاق Slice 3) */}
-        <TextField
-          label="معرّف الطبيب (اختياري)"
-          value={doctorId}
-          onChange={(e) => setDoctorId(e.target.value)}
-        />
-      </Box>
-
-      {isLoading && (
-        <Box display="flex" justifyContent="center" py={4}>
-          <CircularProgress />
+  async function handleCancel() {
+    if (!cancelTarget) return;
+    setActionError(null); setSuccess(null);
+    try {
+      await cancelAppointment.mutateAsync({ id: cancelTarget, reason: reason.trim() || undefined });
+      setCancelTarget(null); setReason(''); setSuccess(t('appointments.cancelledSuccess'));
+    } catch (error) { setActionError(errorMessage(error)); }
+  }
+  const validDate = scheduledAt && Number.isFinite(new Date(scheduledAt).getTime());
+  return <Box sx={{ p: { xs: 2, sm: 4 } }} maxWidth={1100} mx="auto">
+    <Stack direction={{ xs: 'column', sm: 'row' }} gap={2} justifyContent="space-between" mb={3}>
+      <Typography variant="h5" component="h1" fontWeight={700}>{t('appointments.title')}</Typography>
+      {writable && <Button variant="contained" onClick={() => { setEditing(null); setDialogOpen(true); setFormError(null); setSelectedPatient(null); setPatientSearch(''); setFormDoctorId(''); setDepartmentId(''); setScheduledAt(''); }}>{t('appointments.new')}</Button>}
+    </Stack>
+    <Stack direction={{ xs: 'column', sm: 'row' }} gap={2} mb={2}>
+      <TextField id="schedule-range" SelectProps={{ inputProps: { 'aria-label': t('appointments.range') } }} select label={t('appointments.range')} value={days} onChange={e => { setDays(Number(e.target.value)); setPage(1); }}><MenuItem value={1}>{t('appointments.daily')}</MenuItem><MenuItem value={7}>{t('appointments.weekly')}</MenuItem></TextField>
+      <TextField type="date" label={t('appointments.day')} value={date} onChange={e => { setDate(e.target.value); setPage(1); }} InputLabelProps={{ shrink: true }} />
+      <TextField id="schedule-doctor" SelectProps={{ displayEmpty: true }} InputLabelProps={{ shrink: true }} select sx={{ minWidth: 220 }} label={t('appointments.filterDoctor')} value={doctorId} onChange={e => { setDoctorId(e.target.value); setPage(1); }}><MenuItem value="">{t('appointments.allDoctors')}</MenuItem>{options.data?.doctors.map(doctor => <MenuItem key={doctor.id} value={doctor.id}>{doctor.fullName}</MenuItem>)}</TextField>
+    </Stack>
+    <Typography sx={{ mb: 1 }}>{t(days === 7 ? 'appointments.sevenFrom' : 'appointments.dayFrom', { date: displayDate })}</Typography>
+    <Typography variant="body2" color="text.secondary" mb={2}>{t('appointments.timezone', { zone: Intl.DateTimeFormat().resolvedOptions().timeZone })}</Typography>
+    {attendanceNotice && <Alert severity="warning" role="alert" sx={{ mb: 2 }} action={<Button onClick={() => void appointments.refetch()}>{t('appointments.retry')}</Button>}>{attendanceNotice}</Alert>}
+    {success && <Alert severity="success" role="status" sx={{ mb: 2 }}>{success}</Alert>}
+    {appointments.isLoading && <CircularProgress aria-label={t('appointments.loading')} />}
+    {appointments.isError && <Alert severity="error" action={<Button onClick={() => void appointments.refetch()}>{t('appointments.retry')}</Button>}>{getApiErrorCode(appointments.error) === 'APPOINTMENT_RANGE_TOO_LARGE' ? t('appointments.tooMany') : t('appointments.loadError')}</Alert>}
+    {!appointments.isLoading && !appointments.isError && appointments.data?.length === 0 && <Typography color="text.secondary">{t('appointments.empty')}</Typography>}
+    <Stack gap={3}>{groups.map(([day, items]) => <Box key={day}><Typography component="h2" variant="h6" mb={1}>{day} ({items.length})</Typography><Stack gap={2}>{items.map(appt => <Card key={appt.id}><CardContent>
+      <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" gap={2}>
+        <Box sx={{ minWidth: 0, overflowWrap: 'anywhere' }}>
+          <Typography variant="h6">{appt.patient?.fullName ?? t('appointments.patientId')}</Typography>
+          <Typography variant="body2">{appt.patient?.mrn}</Typography>
+          <Typography>{new Date(appt.scheduledAt).toLocaleString(locale, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</Typography>
+          <Typography variant="body2">{t('appointments.doctorId')}: {appt.doctor?.fullName}</Typography>
+          <Typography variant="body2">{t('appointments.departmentId')}: {i18n.language === 'ar' ? appt.department?.nameAr : appt.department?.nameEn}</Typography>
         </Box>
-      )}
-
-      {!isLoading && appointments && appointments.length === 0 && (
-        <Typography color="text.secondary">لا توجد مواعيد بهذا اليوم</Typography>
-      )}
-
-      {!isLoading && appointments && appointments.length > 0 && (
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>الوقت</TableCell>
-                <TableCell>الحالة</TableCell>
-                <TableCell></TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {appointments.map((appt) => (
-                <TableRow key={appt.id}>
-                  <TableCell>
-                    {new Date(appt.scheduledAt).toLocaleTimeString(locale, {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </TableCell>
-                  <TableCell>
-                    <Chip label={appt.status} size="small" color={statusColor[appt.status]} />
-                  </TableCell>
-                  <TableCell>
-                    {appt.status === 'scheduled' && (
-                      <Button
-                        size="small"
-                        color="error"
-                        onClick={() => cancelAppointment.mutate({ id: appt.id })}
-                      >
-                        إلغاء
-                      </Button>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      )}
-
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullWidth maxWidth="sm">
-        <DialogTitle>حجز موعد جديد</DialogTitle>
-        <DialogContent>
-          <TextField
-            fullWidth
-            margin="normal"
-            label="معرّف المريض"
-            value={patientId}
-            onChange={(e) => setPatientId(e.target.value)}
-          />
-          <TextField
-            fullWidth
-            margin="normal"
-            label="معرّف الطبيب"
-            value={formDoctorId}
-            onChange={(e) => setFormDoctorId(e.target.value)}
-          />
-          <TextField
-            fullWidth
-            margin="normal"
-            label="معرّف القسم"
-            value={departmentId}
-            onChange={(e) => setDepartmentId(e.target.value)}
-          />
-          <TextField
-            fullWidth
-            margin="normal"
-            type="datetime-local"
-            label="الموعد"
-            value={scheduledAt}
-            onChange={(e) => setScheduledAt(e.target.value)}
-            InputLabelProps={{ shrink: true }}
-          />
-          {formError && (
-            <Alert severity="error" sx={{ mt: 2 }}>
-              {formError}
-            </Alert>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDialogOpen(false)}>إلغاء</Button>
-          <Button variant="contained" onClick={handleCreate} disabled={createAppointment.isPending}>
-            حجز
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
-  );
+        <Stack alignItems="flex-start" gap={1}>
+          {user && canAccessPage(user.role, 'patients') && <Button variant="outlined" component={Link} to={`/patients/${appt.patientId}`} sx={{ minHeight: 44, textTransform: 'none' }}>{t('appointments.openPatient')}</Button>}
+          <Chip label={t(`appointments.states.${appt.status}`)} size="small" color={statusColor[appt.status]} />
+          {user?.role==='doctor' && appt.doctorId===user.userId && ['scheduled','completed'].includes(appt.status) && !appt.encounter && <Button component={Link} to={`/patients/${appt.patientId}?${new URLSearchParams({appointment:appt.id,appointmentAt:appt.scheduledAt})}`} variant="contained">{t('emr.startAppointment')}</Button>}
+          {appt.encounter && <Typography variant="caption">{t('appointments.linked')}</Typography>}
+          {writable && appt.status === 'scheduled' && !appt.encounter && <Button sx={{ textTransform: 'none' }} onClick={() => { setEditing(appt); setFormError(null); setDepartmentId(appt.departmentId); setFormDoctorId(appt.doctorId); const time = new Date(appt.scheduledAt); setScheduledAt(new Date(time.getTime() - time.getTimezoneOffset() * 60000).toISOString().slice(0,16)); setDialogOpen(true); }}>{t('appointments.edit')}</Button>}
+          {writable && appt.status === 'scheduled' && <Button onClick={() => {setAttendanceTarget({id:appt.id,status:'completed'});setActionError(null);}}>{t('appointments.markAttended')}</Button>}
+          {writable && appt.status === 'scheduled' && !appt.encounter && <Button onClick={() => {setAttendanceTarget({id:appt.id,status:'no_show'});setActionError(null);}}>{t('appointments.markNoShow')}</Button>}
+          {writable && appt.status === 'scheduled' && !appt.encounter && <Button sx={{ textTransform: 'none' }} size="small" color="error" onClick={() => { setCancelTarget(appt.id); setActionError(null); setReason(''); }}>{t('appointments.cancelAppointment')}</Button>}
+        </Stack>
+      </Stack>
+    </CardContent></Card>)}</Stack></Box>)}</Stack>
+    <Stack direction="row" gap={2} alignItems="center" justifyContent="center" sx={{ my: 2 }}>
+      <Button disabled={page === 1 || appointments.isFetching} onClick={() => setPage(value => value - 1)}>{t('appointments.previous')}</Button>
+      <Typography>{t('appointments.page', { page })}</Typography>
+      <Button disabled={appointments.isFetching || (appointments.data?.length ?? 0) < 100} onClick={() => setPage(value => value + 1)}>{t('appointments.next')}</Button>
+    </Stack>
+    <Dialog open={!!attendanceTarget} onClose={() => {if(!attendance.isPending)setAttendanceTarget(null);}} aria-labelledby="attendance-title">
+      <DialogTitle id="attendance-title">{t('appointments.attendanceTitle')}</DialogTitle>
+      <DialogContent><Typography>{t(attendanceTarget?.status==='completed'?'appointments.markAttended':'appointments.markNoShow')}</Typography><Typography>{t('appointments.attendanceFinal')}</Typography>{actionError && <Alert severity="error">{actionError}</Alert>}</DialogContent>
+      <DialogActions><Button disabled={attendance.isPending} onClick={()=>setAttendanceTarget(null)}>{t('appointments.cancelAction')}</Button><Button disabled={attendance.isPending} onClick={async()=>{if(!attendanceTarget)return;setActionError(null);try{setAttendanceNotice(null);setSuccess(null);await attendance.mutateAsync(attendanceTarget);setAttendanceTarget(null);setSuccess(t('appointments.attendanceSaved'));}catch(error){const code=getApiErrorCode(error);if(code==='APPOINTMENT_FINAL'||code==='APPOINTMENT_HAS_ENCOUNTER'||code==='APPOINTMENT_NOT_FOUND'){setAttendanceTarget(null);setAttendanceNotice(t('appointments.attendanceConflict'));void appointments.refetch();}else setActionError(errorMessage(error));}}}>{t('appointments.confirmAttendance')}</Button></DialogActions>
+    </Dialog>
+    <Dialog open={dialogOpen} onClose={() => { if (!pendingSave) setDialogOpen(false); }} fullWidth maxWidth="sm">
+      <DialogTitle>{t(editing ? 'appointments.edit' : 'appointments.new')}</DialogTitle><DialogContent>
+        {options.isError && <Alert severity="error" action={<Button onClick={() => void options.refetch()}>{t('appointments.retry')}</Button>}>{t('appointments.optionsError')}</Alert>}
+        {patients.isError && <Alert severity="error">{t('appointments.patientError')}</Alert>}
+        {!editing && <Autocomplete options={patients.data ?? []} value={selectedPatient} onChange={(_, value) => setSelectedPatient(value)} onInputChange={(_, value) => setPatientSearch(value)} filterOptions={values => values} getOptionLabel={patient => `${patient.fullName} (${patient.mrn})`} isOptionEqualToValue={(a,b) => a.id === b.id} loading={patients.isFetching} disabled={pendingSave} noOptionsText={t('appointments.searchHint')} renderInput={params => <TextField {...params} fullWidth margin="normal" label={t('appointments.patientId')} />} />}
+        {editing && <Typography sx={{ overflowWrap: 'anywhere' }}>{editing.patient?.fullName} ({editing.patient?.mrn})</Typography>}
+        {selectedPatient && <Typography variant="body2" sx={{ overflowWrap: 'anywhere', mt: 1 }}>{selectedPatient.fullName} ({selectedPatient.mrn})</Typography>}
+        <TextField id="appointment-doctor" select fullWidth margin="normal" label={t('appointments.doctorId')} value={formDoctorId} onChange={e => setFormDoctorId(e.target.value)} disabled={!!editing || pendingSave || options.isLoading}>{options.data?.doctors.map(doctor => <MenuItem key={doctor.id} value={doctor.id}>{doctor.fullName}</MenuItem>)}</TextField>
+        <TextField id="appointment-department" select fullWidth margin="normal" label={t('appointments.departmentId')} value={departmentId} onChange={e => setDepartmentId(e.target.value)} disabled={pendingSave || options.isLoading}>{options.data?.departments.map(department => <MenuItem key={department.id} value={department.id}>{i18n.language === 'ar' ? department.nameAr : department.nameEn}</MenuItem>)}</TextField>
+        <TextField fullWidth margin="normal" type="datetime-local" label={t('appointments.time')} value={scheduledAt} onChange={e => setScheduledAt(e.target.value)} InputLabelProps={{ shrink: true }} disabled={pendingSave} />
+        <Typography variant="body2">{t('appointments.timezone', { zone: Intl.DateTimeFormat().resolvedOptions().timeZone })}</Typography>
+        {formError && <Alert severity="error" sx={{ mt: 2 }}>{formError}</Alert>}
+      </DialogContent><DialogActions>
+        <Button onClick={() => setDialogOpen(false)} disabled={pendingSave}>{t('appointments.close')}</Button>
+        <Button variant="contained" onClick={handleCreate} disabled={pendingSave || (!editing && !patientId.trim()) || !formDoctorId.trim() || !departmentId.trim() || !validDate}>{t(editing ? 'appointments.save' : 'appointments.book')}</Button>
+      </DialogActions>
+    </Dialog>
+    <Dialog open={!!cancelTarget} onClose={() => { if (!cancelAppointment.isPending) setCancelTarget(null); }} fullWidth maxWidth="sm">
+      <DialogTitle>{t('appointments.cancelAppointment')}</DialogTitle><DialogContent>
+        <Typography>{t('appointments.cancelConfirm')}</Typography>
+        <TextField fullWidth margin="normal" label={t('appointments.reason')} value={reason} onChange={e => setReason(e.target.value)} disabled={cancelAppointment.isPending} inputProps={{ maxLength: 500 }} />
+        {actionError && <Alert severity="error">{actionError}</Alert>}
+      </DialogContent><DialogActions>
+        <Button disabled={cancelAppointment.isPending} onClick={() => setCancelTarget(null)}>{t('appointments.close')}</Button>
+        <Button disabled={cancelAppointment.isPending} color="error" variant="contained" onClick={handleCancel}>{t('appointments.confirmCancel')}</Button>
+      </DialogActions>
+    </Dialog>
+  </Box>;
 }

@@ -7,6 +7,7 @@ import { TestTypeDto } from '../../src/modules/lab/dto/create-test-order.dto';
 describe('LabService', () => {
   let service: LabService;
   let prisma: {
+    $transaction: jest.Mock; $queryRaw: jest.Mock; user: { findUnique: jest.Mock }; auditLog: { create: jest.Mock };
     testOrder: {
       create: jest.Mock;
       findMany: jest.Mock;
@@ -18,6 +19,7 @@ describe('LabService', () => {
 
   beforeEach(async () => {
     prisma = {
+      $transaction: jest.fn(callback => callback(prisma)), $queryRaw: jest.fn().mockResolvedValue([]), user: { findUnique: jest.fn().mockImplementation(({where}) => Promise.resolve({ isActive: true, role: where.id.includes("tech") ? "lab_tech" : "doctor" })) }, auditLog: { create: jest.fn().mockResolvedValue({}) },
       testOrder: {
         create: jest.fn(),
         findMany: jest.fn(),
@@ -42,7 +44,7 @@ describe('LabService', () => {
   };
 
   it('FR-7.1: ينشئ طلب فحص مرتبطاً بالطبيب الطالب عندما تتطابق الزيارة والمريض', async () => {
-    prisma.encounter.findUnique.mockResolvedValue({ id: 'enc-1', patientId: 'patient-1' });
+    prisma.encounter.findUnique.mockResolvedValue({ id: 'enc-1', doctorId: 'doc-1', patientId: 'patient-1' });
     prisma.testOrder.create.mockResolvedValue({ id: 'order-1', orderedBy: 'doc-1', ...createDto });
 
     const result = (await service.createOrder(createDto, 'doc-1')) as { orderedBy: string };
@@ -50,8 +52,8 @@ describe('LabService', () => {
     expect(result.orderedBy).toBe('doc-1');
   });
 
-  it('Finding #7 (RESOLVED): يرفض بـ400 عندما لا تخص الزيارة المريض المُحدَّد', async () => {
-    prisma.encounter.findUnique.mockResolvedValue({ id: 'enc-1', patientId: 'someone-else' });
+  it('rejects a test order when encounter belongs to another patient', async () => {
+    prisma.encounter.findUnique.mockResolvedValue({ id: 'enc-1', doctorId: 'doc-1', patientId: 'someone-else' });
 
     await expect(service.createOrder(createDto, 'doc-1')).rejects.toThrow(BadRequestException);
     expect(prisma.testOrder.create).not.toHaveBeenCalled();
@@ -106,4 +108,11 @@ describe('LabService', () => {
       expect.objectContaining({ where: { patientId: 'patient-1', status: 'completed' } }),
     );
   });
+  it('rejects another doctor encounter before order or audit mutation', async () => {
+    prisma.encounter.findUnique.mockResolvedValue({ id: 'enc-1', patientId: 'patient-1', doctorId: 'another-doctor' });
+    await expect(service.createOrder(createDto, 'doc-1')).rejects.toMatchObject({ response: { error: { code: 'FORBIDDEN_ENCOUNTER_WRITE' } } });
+    expect(prisma.testOrder.create).not.toHaveBeenCalled();
+    expect(prisma.auditLog.create).not.toHaveBeenCalled();
+  });
+
 });

@@ -1,0 +1,11 @@
+# Existing patient warning race
+
+CONFIRMED exact name+DOB warning currently reads before the existing MRN transaction advisory lock. Concurrent unforced registrations can both miss it. Preserve exact case/space/date matching, current actor roles,409 warning envelope and explicit force override. National-ID and demographic/billing policies stay undecided.
+
+Move existing registration advisory lock before duplicate query, keep requireActor first, reuse same lock through MRN allocation/create/audit. No new lock key, DB migration, index or settings. Review READ COMMITTED fresh statement visibility and transaction rollback. Existing global lock already serializes registration allocation; earlier acquisition slightly extends held work. Do not add all-callers barrier inside acquired lock, which would deadlock.
+
+Acceptance: synchronized real PostgreSQL callers contend on held gate, two unforced exact same name+DOB yield one201/one409 and one patient/audit. Explicit force yields two unique MRNs. Same name/different DOB and different name/same DOB stay allowed. Foreign workspace does not cause duplicate disclosure. Invalid roles/disabled user remain rejected. Audit failure rolls back registration and releases lock, later retry succeeds. Actual restricted runtimePG17/18 and existing suites, source/hash review, exactCI, changed/new-file private export and hosted fictional proof. Reconcile stale verification/traceability claims using named release evidence and keep all remaining limits.
+
+## Local result
+
+Final actual PG17.12/18.7 restricted nonowner/FORCE RLS complete waitlist+prior17patient/waitlist+22clinical response suite and new duplicate batch pass with37source/build hashes. Default isolation asserted READ COMMITTED. Two HTTP requests demonstrably blocked at external held existing lock before release, one201/one409 with same winner ID and one audit; explicitforceboth201uniqueMRNs. Distinctname/DOB, foreignworkspace,401/six403,auditfailure503rollback/retry pass.230unit/62mockHTTP/21contract-dependency checks/build/lint pass. Added independent batch needs fresh61s rate window, never bypasses limiter. Earlier failed combined attempt429 is not accepted evidence. No patient-update-vs-registration guarantee or unique-patient constraint. ExactCI/hosted proof pending, not released.

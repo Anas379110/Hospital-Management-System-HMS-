@@ -1,0 +1,98 @@
+import {createRequire} from 'node:module';
+import {randomBytes} from 'node:crypto';
+import {spawn,spawnSync} from 'node:child_process';
+import {writeFileSync,mkdirSync} from 'node:fs';
+import {fileURLToPath} from 'node:url';
+import {chromium} from 'playwright';
+const require=createRequire(import.meta.url);
+const root=fileURLToPath(new URL('../../',import.meta.url)).replace(/\/$/,'');
+const backend=root+'/backend';
+const {PrismaClient}=require(backend+'/node_modules/@prisma/client');
+const password=randomBytes(24).toString('hex');
+const url=process.env.HMS_BROWSER_DATABASE_URL;
+if(!url||!new URL(url).pathname.includes('hms_test'))throw new Error('Set HMS_BROWSER_DATABASE_URL to an isolated disposable hms_test database');
+const artifacts=process.env.HMS_BROWSER_ARTIFACTS??root+'/frontend/browser-artifacts';mkdirSync(artifacts,{recursive:true});
+let prisma,app,browser,frontend;
+let currentPage;
+let viteOutput='';const results={scope:'real browser to Vite proxy to actual Nest AppModule/Prisma/PostgreSQL, isolated fictional data',checks:[]};
+try{
+ process.env.DATABASE_URL=url;
+ process.env.JWT_SECRET=randomBytes(32).toString('hex');
+ const migration=spawnSync('node',['node_modules/prisma/build/index.js','migrate','deploy'],{cwd:backend,env:process.env,encoding:'utf8'});if(migration.status!==0)throw new Error('migration failed');
+ prisma=new PrismaClient();await prisma.$queryRawUnsafe('SELECT hms_cleanup_expired_workspaces()');await prisma.$executeRawUnsafe("INSERT INTO demo_workspaces(id) VALUES('browser-test')");const hash=await require(backend+'/node_modules/bcrypt').hash(password,4);
+ await prisma.user.create({data:{username:'fictional_reception',passwordHash:hash,fullName:'Fictional Reception',role:'receptionist'}});
+ const nurse=await prisma.user.create({data:{username:'fictional_doctor',passwordHash:hash,fullName:'Fictional Doctor',role:'doctor'}});
+ const department=await prisma.department.create({data:{nameAr:'قسم تجريبي',nameEn:'Fictional Department',totalBeds:1}});
+ const bed=await prisma.bed.create({data:{departmentId:department.id,bedNumber:'DEMO-01'}});
+ const patient=await prisma.patient.create({data:{mrn:'DEMO-0001',fullName:'Fictional Browser Patient',dateOfBirth:new Date('2000-01-01'),gender:'male',phone:'0000000000',createdBy:nurse.id}});
+ app=await require(backend+'/dist/src/app.factory.js').createApplication({logger:false});await app.listen(0,'127.0.0.1');const api=await app.getUrl();
+ frontend=spawn('node',['node_modules/vite/bin/vite.js','--host','127.0.0.1','--port','5194','--strictPort'],{cwd:root+'/frontend',env:{...process.env,VITE_API_URL:api},stdio:'pipe'});
+ frontend.stdout.on('data',data=>{viteOutput+=data.toString()});frontend.stderr.on('data',data=>{viteOutput+=data.toString()});
+ let ready=false;
+ for(let attempt=0;attempt<100;attempt++){
+  if(frontend.exitCode!==null)throw new Error('Vite exited before readiness; see vite-output.log');
+  try{const response=await fetch('http://127.0.0.1:5194/login');if(response.ok){ready=true;break}}catch{}
+  await new Promise(resolve=>setTimeout(resolve,100));
+ }
+ if(!ready)throw new Error('Vite readiness timeout; see vite-output.log');
+ browser=await chromium.launch({headless:true,args:['--no-sandbox'],...(process.env.HMS_BROWSER_EXECUTABLE?{executablePath:process.env.HMS_BROWSER_EXECUTABLE}:{})});
+ for(const lang of ['en','ar']){
+  const page=currentPage=await browser.newPage({viewport:{width:lang==='ar'?390:1440,height:1000}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
+  await page.goto('http://127.0.0.1:5194/login');await page.evaluate(lang=>localStorage.setItem('hms_locale',lang),lang);await page.reload();
+  await page.getByRole('textbox',{name:lang==='ar'?'اسم المستخدم':'Username',exact:true}).fill('fictional_doctor');await page.locator('input[type=password]').fill(password);
+  await page.getByRole('button',{name:lang==='ar'?'تسجيل الدخول':'Log In',exact:true}).click();await page.waitForURL('**/patients');
+  await page.goto('http://127.0.0.1:5194/patients/'+patient.id);
+  await page.getByRole('textbox',{name:lang==='ar'?'الشكوى الرئيسية':'Chief complaint',exact:true}).fill('Fictional browser complaint');
+  await page.getByRole('textbox',{name:lang==='ar'?'التشخيص':'Diagnosis',exact:true}).fill('Fictional browser diagnosis');
+  await prisma.$executeRawUnsafe(`CREATE OR REPLACE FUNCTION hms_test_browser_audit_reject() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'synthetic audit failure'; END $$`);
+  await prisma.$executeRawUnsafe('CREATE TRIGGER hms_test_browser_audit_failure BEFORE INSERT ON audit_logs FOR EACH ROW EXECUTE FUNCTION hms_test_browser_audit_reject()');
+  const before=await prisma.encounter.count();
+  await page.getByRole('button',{name:lang==='ar'?'حفظ الزيارة':'Save encounter',exact:true}).click();
+  await page.getByText(lang==='ar'?'لم تُنفذ العملية لتعذر حفظ سجلها. يمكنك إعادة المحاولة.':'Operation was not performed because its audit record could not be saved. You can retry.',{exact:true}).waitFor();
+  if(await prisma.encounter.count()!==before)throw new Error('clinical browser audit rejection mutated state');
+  await page.getByRole('button',{name:lang==='ar'?'حفظ الزيارة':'Save encounter',exact:true}).waitFor({state:'visible'});
+  await page.waitForTimeout(300);
+  await page.screenshot({path:`${artifacts}/hms-clinical-failure-${lang}.png`,fullPage:true});
+  await prisma.$executeRawUnsafe('DROP TRIGGER hms_test_browser_audit_failure ON audit_logs');
+  await page.getByRole('button',{name:lang==='ar'?'حفظ الزيارة':'Save encounter',exact:true}).click();
+  await page.getByText(lang==='ar'?'حُفظت الزيارة.':'Encounter saved.',{exact:true}).waitFor();
+  await page.getByRole('textbox',{name:lang==='ar'?'اسم الدواء':'Medication name',exact:true}).fill('Fictional medication');
+  await page.getByRole('textbox',{name:lang==='ar'?'الجرعة':'Dose',exact:true}).fill('Test dose');
+  await page.getByRole('textbox',{name:lang==='ar'?'المدة':'Duration',exact:true}).fill('Test duration');
+  await page.getByRole('button',{name:lang==='ar'?'إضافة':'Add',exact:true}).click();
+  await page.getByText(lang==='ar'?'حُفظت الوصفة.':'Prescription saved.',{exact:true}).waitFor();
+  await page.waitForTimeout(300);await page.screenshot({path:`${artifacts}/hms-clinical-success-${lang}.png`,fullPage:true});
+  if(errors.length||await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth))throw new Error('clinical browser runtime/overflow');
+
+  if(lang==='ar')await page.getByRole('button',{name:"التنقل في مساحة العمل"}).click();
+  await page.getByRole('button',{name:lang==='ar'?'تسجيل الخروج':'Log Out',exact:true}).click();await page.waitForURL('**/login');
+  await page.getByRole('textbox',{name:lang==='ar'?'اسم المستخدم':'Username',exact:true}).fill('fictional_reception');await page.locator('input[type=password]').fill(password);
+  await page.getByRole('button',{name:lang==='ar'?'تسجيل الدخول':'Log In',exact:true}).click();await page.waitForURL('**/patients');await page.goto('http://127.0.0.1:5194/patients/new');
+  const invalidCount=await prisma.patient.count();let registrationRequests=0;
+  page.on('request',request=>{if(request.method()==='POST'&&new URL(request.url()).pathname.endsWith('/patients'))registrationRequests++});
+  await page.getByRole('textbox',{name:lang==='ar'?'الاسم الكامل':'Full Name',exact:true}).fill('ab');
+  await page.getByRole('textbox',{name:lang==='ar'?'رقم الهاتف':'Phone',exact:true}).fill('123');
+  await page.getByRole('button',{name:lang==='ar'?'حفظ':'Save',exact:true}).click();
+  for(const text of (lang==='ar'?['أدخل اسماً كاملاً من 3 أحرف على الأقل.','اختر تاريخ الميلاد.','أدخل رقم هاتف من 6 أحرف على الأقل.']:['Enter a full name with at least 3 characters.','Choose a date of birth.','Enter a phone number with at least 6 characters.']))await page.getByText(text,{exact:true}).waitFor();
+  if(registrationRequests!==0||await prisma.patient.count()!==invalidCount)throw new Error('invalid registration reached API');
+  await page.screenshot({path:artifacts+'/hms-registration-validation-'+lang+'.png',fullPage:true});
+  await page.getByRole('textbox',{name:lang==='ar'?'الاسم الكامل':'Full Name',exact:true}).fill('Fictional Registration '+lang);
+  await page.locator('input[type=date]').fill('1990-01-01');
+  await page.getByRole('textbox',{name:lang==='ar'?'رقم الهاتف':'Phone',exact:true}).fill('0000000000');
+  await prisma.$executeRawUnsafe('CREATE TRIGGER hms_test_browser_audit_failure BEFORE INSERT ON audit_logs FOR EACH ROW EXECUTE FUNCTION hms_test_browser_audit_reject()');
+  const patientsBefore=await prisma.patient.count();
+  await page.getByRole('button',{name:lang==='ar'?'حفظ':'Save',exact:true}).click();
+  await page.getByText(lang==='ar'?'لم تُنفذ العملية لتعذر حفظ سجلها. يمكنك إعادة المحاولة.':'Operation was not performed because its audit record could not be saved. You can retry.',{exact:true}).waitFor();
+  if(await prisma.patient.count()!==patientsBefore)throw new Error('registration audit failure mutated state');
+  await page.waitForTimeout(300);await page.screenshot({path:`${artifacts}/hms-registration-failure-${lang}.png`,fullPage:true});
+  await prisma.$executeRawUnsafe('DROP TRIGGER hms_test_browser_audit_failure ON audit_logs');
+  await page.getByRole('button',{name:lang==='ar'?'حفظ':'Save',exact:true}).click();await page.waitForURL('**/patients?highlight=*');
+  if(await prisma.patient.count()!==patientsBefore+1)throw new Error('registration retry failed');
+  await page.getByRole('textbox',{name:lang==='ar'?'ابحث عن مريض':'Find a patient',exact:true}).fill('Fictional Registration '+lang);
+  await page.getByRole('cell',{name:'Fictional Registration '+lang,exact:true}).waitFor();
+  await page.screenshot({path:artifacts+'/hms-registration-success-'+lang+'.png',fullPage:true});
+  results.checks.push({lang,realUILogin:true,clinicalAuditFailureNoMutation:true,translatedError:true,retrySucceeded:true,prescriptionSaved:true,registrationAuditFailureNoMutation:true,registrationRetrySucceeded:true,invalidRegistrationLocalizedNoRequest:true,runtimeErrors:0,overflow:false});await page.close();
+ }
+ results.assertionsPassed=true;console.log(JSON.stringify(results,null,2));
+}catch(e){if(currentPage)await currentPage.screenshot({path:artifacts+'/unexpected-failure.png',fullPage:true}).catch(()=>{});results.error=String(e?.stack??e).replaceAll(password,'[REDACTED]');console.error(results.error);process.exitCode=1}
+finally{writeFileSync(artifacts+'/vite-output.log',viteOutput.replaceAll(password,'[REDACTED]'));writeFileSync(artifacts+'/clinical-results.json',JSON.stringify(results,null,2));if(browser)await browser.close();if(frontend)frontend.kill();if(app)await app.close();if(prisma)await prisma.$disconnect()}

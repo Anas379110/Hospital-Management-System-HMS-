@@ -1,0 +1,50 @@
+{
+  "scope": "actual local PostgreSQL immediate process shutdown/restart with observed row/audit retention, not physical hardware power failure",
+  "source": "4d1f42d7f7ea2da12e97f52343350b19b13743f4",
+  "startedAt": "2026-11-27T17:50:48.117Z",
+  "pgCtlVersion": "pg_ctl (PostgreSQL) 18.7",
+  "checks": [
+    "Committed10040fictionalpatients/uniqueMRNs survived immediate process stop+restart",
+    "Committed40audits survived",
+    "Actual open uncommitted transaction did not persist its sentinel"
+  ],
+  "complete": true,
+  "postgres": "PostgreSQL 18.7 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 7.5.0-3ubuntu1~18.04) 7.5.0, 64-bit",
+  "disposableDataDirectory": "/tmp/hms_test_perf_20261127_review_crash_pg18",
+  "explicitPort": 55495,
+  "settings": [
+    {
+      "name": "fsync",
+      "setting": "on"
+    },
+    {
+      "name": "full_page_writes",
+      "setting": "on"
+    },
+    {
+      "name": "synchronous_commit",
+      "setting": "on"
+    }
+  ],
+  "before": {
+    "patients": 10040,
+    "unique_mrns": 10040,
+    "audits": 40
+  },
+  "immediateStopRequestedAt": "2026-11-27T17:50:48.172Z",
+  "restartCompletedAt": "2026-11-27T17:50:48.387Z",
+  "after": {
+    "patients": 10040,
+    "unique_mrns": 10040,
+    "uncommitted_sentinel": 0,
+    "audits": 40
+  },
+  "recoveryToQueryMs": 266,
+  "limitations": [
+    "Not a physical power cut or storage/controller failure",
+    "No claim about hosted provider crash/resume or hidden-resume heartbeat semantics",
+    "No app availability/auto-restart measurement: API process was stopped after the benchmark",
+    "No backup/restore/RPO/RTO/SLA certification; measured recovery is this local drill only"
+  ],
+  "finishedAt": "2026-11-27T17:50:48.444Z"
+}

@@ -1,0 +1,697 @@
+[
+  {
+    "method": "POST",
+    "path": "/admissions/{id}/discharge",
+    "controller": "modules/admissions/admissions.controller.ts",
+    "roles": [
+      "doctor",
+      "nurse"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/admissions",
+    "controller": "modules/admissions/admissions.controller.ts",
+    "roles": [
+      "doctor",
+      "nurse"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/appointments/{id}/attendance",
+    "controller": "modules/appointments/appointments.controller.ts",
+    "roles": [
+      "receptionist",
+      "admin"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/appointments/{id}/cancel",
+    "controller": "modules/appointments/appointments.controller.ts",
+    "roles": [
+      "receptionist",
+      "admin"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/appointments/{id}",
+    "controller": "modules/appointments/appointments.controller.ts",
+    "roles": [
+      "receptionist",
+      "admin"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/appointments/options",
+    "controller": "modules/appointments/appointments.controller.ts",
+    "roles": [
+      "receptionist",
+      "doctor",
+      "admin"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/appointments",
+    "controller": "modules/appointments/appointments.controller.ts",
+    "roles": [
+      "receptionist",
+      "doctor",
+      "admin"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/appointments",
+    "controller": "modules/appointments/appointments.controller.ts",
+    "roles": [
+      "receptionist",
+      "admin"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/auth/login",
+    "controller": "modules/auth/auth.controller.ts",
+    "roles": [],
+    "guards": []
+  },
+  {
+    "method": "POST",
+    "path": "/auth/logout",
+    "controller": "modules/auth/auth.controller.ts",
+    "roles": [],
+    "guards": [
+      "JwtAuthGuard"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/auth/me",
+    "controller": "modules/auth/auth.controller.ts",
+    "roles": [],
+    "guards": [
+      "JwtAuthGuard"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/demo/audit",
+    "controller": "modules/auth/demo.controller.ts",
+    "roles": [
+      "admin"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/demo/role",
+    "controller": "modules/auth/demo.controller.ts",
+    "roles": [],
+    "guards": [
+      "JwtAuthGuard"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/demo/start",
+    "controller": "modules/auth/demo.controller.ts",
+    "roles": [],
+    "guards": []
+  },
+  {
+    "method": "POST",
+    "path": "/departments/{departmentId}/waitlist/{id}/cancel",
+    "controller": "modules/waitlist/waitlist.controller.ts",
+    "roles": [
+      "doctor",
+      "nurse"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/departments/{departmentId}/waitlist",
+    "controller": "modules/waitlist/waitlist.controller.ts",
+    "roles": [
+      "doctor",
+      "nurse"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/departments/{departmentId}/waitlist",
+    "controller": "modules/waitlist/waitlist.controller.ts",
+    "roles": [
+      "doctor",
+      "nurse"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/departments/{id}/beds/{bedId}/maintenance",
+    "controller": "modules/departments/department-setup.controller.ts",
+    "roles": [
+      "admin"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/departments/{id}/beds/{bedId}",
+    "controller": "modules/departments/department-setup.controller.ts",
+    "roles": [
+      "admin"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/departments/{id}/beds/{bedId}",
+    "controller": "modules/departments/department-setup.controller.ts",
+    "roles": [
+      "admin"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/departments/{id}/beds/summary",
+    "controller": "modules/departments/departments.controller.ts",
+    "roles": [
+      "manager",
+      "admin"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/departments/{id}/beds",
+    "controller": "modules/departments/departments.controller.ts",
+    "roles": [
+      "doctor",
+      "nurse",
+      "admin",
+      "manager"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/departments/{id}/beds",
+    "controller": "modules/departments/department-setup.controller.ts",
+    "roles": [
+      "admin"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/departments/{id}",
+    "controller": "modules/departments/department-setup.controller.ts",
+    "roles": [
+      "admin"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/departments/{id}",
+    "controller": "modules/departments/department-setup.controller.ts",
+    "roles": [
+      "admin"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/departments/overview",
+    "controller": "modules/departments/departments.controller.ts",
+    "roles": [
+      "manager",
+      "admin"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/departments",
+    "controller": "modules/departments/departments.controller.ts",
+    "roles": [
+      "receptionist",
+      "doctor",
+      "nurse",
+      "admin",
+      "manager"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/departments",
+    "controller": "modules/departments/department-setup.controller.ts",
+    "roles": [
+      "admin"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/encounters/{id}/prescriptions",
+    "controller": "modules/encounters/encounters.controller.ts",
+    "roles": [
+      "doctor"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/encounters/{id}",
+    "controller": "modules/encounters/encounters.controller.ts",
+    "roles": [
+      "doctor",
+      "admin"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/encounters/{id}",
+    "controller": "modules/encounters/encounters.controller.ts",
+    "roles": [
+      "doctor",
+      "nurse",
+      "admin"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/encounters",
+    "controller": "modules/encounters/encounters.controller.ts",
+    "roles": [
+      "doctor"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/invoices/{id}/items",
+    "controller": "modules/billing/billing.controller.ts",
+    "roles": [
+      "billing_clerk",
+      "admin"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/invoices/{id}/payments",
+    "controller": "modules/billing/billing.controller.ts",
+    "roles": [
+      "billing_clerk",
+      "admin"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/invoices/{id}",
+    "controller": "modules/billing/billing.controller.ts",
+    "roles": [
+      "billing_clerk",
+      "admin",
+      "manager"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/invoices",
+    "controller": "modules/billing/billing.controller.ts",
+    "roles": [
+      "billing_clerk",
+      "admin"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/medications/{id}/stock",
+    "controller": "modules/pharmacy/pharmacy.controller.ts",
+    "roles": [
+      "pharmacist",
+      "admin"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/medications/low-stock",
+    "controller": "modules/pharmacy/pharmacy.controller.ts",
+    "roles": [
+      "pharmacist",
+      "admin"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/medications",
+    "controller": "modules/pharmacy/pharmacy.controller.ts",
+    "roles": [
+      "pharmacist",
+      "admin"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/medications",
+    "controller": "modules/pharmacy/pharmacy.controller.ts",
+    "roles": [
+      "pharmacist",
+      "admin"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/patients/{id}/records",
+    "controller": "modules/patients/patients.controller.ts",
+    "roles": [
+      "doctor",
+      "nurse",
+      "admin"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/patients/{id}/test-results",
+    "controller": "modules/lab/lab.controller.ts",
+    "roles": [
+      "doctor",
+      "nurse",
+      "admin",
+      "lab_tech"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/patients/{id}",
+    "controller": "modules/patients/patients.controller.ts",
+    "roles": [
+      "receptionist",
+      "doctor",
+      "nurse",
+      "admin",
+      "manager"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/patients/{id}",
+    "controller": "modules/patients/patients.controller.ts",
+    "roles": [
+      "admin",
+      "receptionist"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/patients/billing-lookup",
+    "controller": "modules/patients/patients.controller.ts",
+    "roles": [
+      "billing_clerk",
+      "admin"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/patients",
+    "controller": "modules/patients/patients.controller.ts",
+    "roles": [
+      "receptionist",
+      "doctor",
+      "nurse",
+      "admin",
+      "manager"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/patients",
+    "controller": "modules/patients/patients.controller.ts",
+    "roles": [
+      "admin",
+      "receptionist"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/prescriptions/{id}/dispense",
+    "controller": "modules/pharmacy/pharmacy.controller.ts",
+    "roles": [
+      "pharmacist",
+      "admin"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/prescriptions/pending",
+    "controller": "modules/pharmacy/pharmacy.controller.ts",
+    "roles": [
+      "pharmacist",
+      "admin"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/test-orders/{id}/result",
+    "controller": "modules/lab/lab.controller.ts",
+    "roles": [
+      "lab_tech",
+      "admin"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/test-orders/pending",
+    "controller": "modules/lab/lab.controller.ts",
+    "roles": [
+      "lab_tech",
+      "admin"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/test-orders",
+    "controller": "modules/lab/lab.controller.ts",
+    "roles": [
+      "doctor"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/users/{id}/status",
+    "controller": "modules/users/users.controller.ts",
+    "roles": [
+      "admin"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/users",
+    "controller": "modules/users/users.controller.ts",
+    "roles": [
+      "admin"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/users",
+    "controller": "modules/users/users.controller.ts",
+    "roles": [
+      "admin"
+    ],
+    "guards": [
+      "JwtAuthGuard",
+      "RolesGuard"
+    ]
+  }
+]
