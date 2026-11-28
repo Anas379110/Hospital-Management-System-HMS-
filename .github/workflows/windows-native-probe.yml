@@ -1,0 +1,32 @@
+name: HMS Windows native feasibility probe
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/windows-native-probe.yml'
+      - 'tools/windows-probe/**'
+permissions:
+  contents: read
+concurrency:
+  group: hms-windows-probe-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  probe:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: windows-2022
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Prepare pinned native dependencies
+        shell: powershell
+        run: ./tools/windows-probe/prepare.ps1
+      - name: Probe native identity privacy network and PostgreSQL
+        shell: powershell
+        run: ./tools/windows-probe/probe.ps1
+      - name: Upload sanitized probe report only
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: windows-server-2022-native-probe
+          path: ${{ runner.temp }}/hms-windows-probe-report.json
+          if-no-files-found: warn
+          retention-days: 7
