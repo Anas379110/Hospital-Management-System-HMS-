@@ -1,11 +1,13 @@
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Alert, Button, Card, CardContent, Stack, TextField, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../hooks/useAuth';
-import { useCreateMedication, useMedications } from '../hooks/usePharmacy';
+import { useCreateMedication } from '../hooks/usePharmacy';
 import { getApiErrorCode, getApiErrorMessage } from '../api/client';
 import { isCurrentSession, sessionEpoch } from '../api/sessionIsolation';
-import { emptyMedicationDraft, medicationCreateHeld, medicationCreateKey, medicationInput, type MedicationDraft } from './medicationCreate';
+import { emptyMedicationDraft, medicationCreateHeld, medicationInput, type MedicationDraft } from './medicationCreate';
+import { acknowledgeMedicationCreate } from '../api/medicationCreateWrite';
 import type { Medication } from '../types/pharmacy';
 
 export default function MedicationCreate({ onCreated }: { onCreated: (medication: Medication) => void }) {
@@ -21,7 +23,7 @@ function MedicationCreateForm({ userId, onCreated }: { userId: string; onCreated
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const create = useCreateMedication();
-  const medications = useMedications();
+  const queryClient = useQueryClient();
   const [mountedEpoch] = useState(sessionEpoch);
   const input = medicationInput(draft);
   const disabled = held || checking || create.isPending;
@@ -35,10 +37,9 @@ function MedicationCreateForm({ userId, onCreated }: { userId: string; onCreated
   async function acknowledge() {
     setChecking(true);setError(null);
     try {
-      const result = await medications.refetch();
+      await acknowledgeMedicationCreate({ userId, epoch: mountedEpoch }, queryClient);
       if (!isCurrentSession(mountedEpoch)) return;
-      if (!result.isSuccess) { setError(t('errors.generic'));return; }
-      sessionStorage.removeItem(medicationCreateKey(userId));setHeld(false);setDraft({ ...emptyMedicationDraft });
+      setHeld(false);setDraft({ ...emptyMedicationDraft });
     } catch { if (isCurrentSession(mountedEpoch)) setError(t('errors.generic')); }
     finally { if (isCurrentSession(mountedEpoch)) setChecking(false); }
   }

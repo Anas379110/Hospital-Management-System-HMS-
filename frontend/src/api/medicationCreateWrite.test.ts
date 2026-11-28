@@ -2,9 +2,11 @@ import { beforeEach, expect, it, vi } from 'vitest';
 import axios from 'axios';
 vi.mock('../i18n/i18n', () => ({ default: { t: (key: string) => key } }));
 import { apiClient } from './client';
-import { sendMedicationCreate } from './medicationCreateWrite';
+import { acknowledgeMedicationCreate as acknowledge, sendMedicationCreate } from './medicationCreateWrite';
 import { clearSessionQueries, sessionEpoch } from './sessionIsolation';
 import { medicationCreateHeld } from '../components/medicationCreate';
+import { QueryClient } from '@tanstack/react-query';
+const acknowledgeMedicationCreate = (request: Parameters<typeof acknowledge>[0], client = new QueryClient()) => acknowledge(request, client);
 const input = { name: 'Fictional medicine', unit: 'box', currentStock: 0 };
 const medication = { id: '00000000-0000-4000-a000-000000000099', ...input, reorderThreshold: 10 };
 let identity: string;
@@ -26,3 +28,33 @@ it('clears only verified current201 and preserves stale valid201 without clearin
   let finish!: () => void;apiClient.defaults.adapter = config => new Promise(resolve => { finish = () => resolve({ data: medication, status: 201, statusText: 'Created', headers: {}, config }); });const sending = sendMedicationCreate({ input, userId: 'u', epoch: sessionEpoch() });await Promise.resolve();await Promise.resolve();clearSessionQueries();finish();expect(await sending).toEqual(medication);expect(medicationCreateHeld('u')).toBe(true);
 });
 it('received400 clears marker but propagates original error', async () => { apiClient.defaults.adapter = async config => { throw new axios.AxiosError('invalid', undefined, config, undefined, { data: {}, status: 400, statusText: 'Bad Request', headers: {}, config }); };await expect(sendMedicationCreate({ input, userId: 'u', epoch: sessionEpoch() })).rejects.toThrow('invalid');expect(medicationCreateHeld('u')).toBe(false); });
+
+it('dedicated acknowledgment does not join initial pending inventory and failure retains hold', async () => {
+  const { QueryClient, QueryObserver } = await import('@tanstack/react-query');
+  let completeInitial!: () => void, reads = 0;
+  const client = new QueryClient({ defaultOptions: { queries: { retry: 1, staleTime: 30000 } } });
+  const observer = new QueryObserver(client, { queryKey: ['medications'], queryFn: () => new Promise(resolve => { completeInitial = () => resolve([medication]); }) });
+  const unsubscribe = observer.subscribe(() => {});
+  sessionStorage.setItem('hms_medication_create_unknown:u', 'true');
+  apiClient.defaults.adapter = async config => { reads++;completeInitial();throw new axios.AxiosError('read failed', undefined, config, undefined, { data: {}, status: 503, statusText: 'Unavailable', headers: {}, config }); };
+  await expect(acknowledgeMedicationCreate({ userId: 'u', epoch: sessionEpoch() })).rejects.toThrow('read failed');
+  expect(reads).toBe(1);expect(medicationCreateHeld('u')).toBe(true);
+  apiClient.defaults.adapter = async config => { reads++;return { data: [medication], status: 200, statusText: 'OK', headers: {}, config }; };
+  await acknowledgeMedicationCreate({ userId: 'u', epoch: sessionEpoch() });expect(reads).toBe(2);expect(medicationCreateHeld('u')).toBe(false);unsubscribe();client.clear();
+});
+it.each([[204, []], [200, {}], [200, [{ id: 'invalid' }]], [200, [{ ...medication, currentStock: '1' }]]])('invalid acknowledgment response retains marker %s', async (status, data) => {
+  sessionStorage.setItem('hms_medication_create_unknown:u', 'true');apiClient.defaults.adapter = async config => ({ data, status: status as number, statusText: 'OK', headers: {}, config });await expect(acknowledgeMedicationCreate({ userId: 'u', epoch: sessionEpoch() })).rejects.toThrow('Unverified');expect(medicationCreateHeld('u')).toBe(true);
+});
+it('stale dedicated read cannot clear old or new owner marker', async () => {
+  sessionStorage.setItem('hms_medication_create_unknown:u', 'true');sessionStorage.setItem('hms_medication_create_unknown:other', 'true');
+  apiClient.defaults.adapter = async config => { clearSessionQueries();identity = 'other';return { data: [], status: 200, statusText: 'OK', headers: {}, config }; };
+  await expect(acknowledgeMedicationCreate({ userId: 'u', epoch: sessionEpoch() })).rejects.toThrow();expect(medicationCreateHeld('u')).toBe(true);expect(medicationCreateHeld('other')).toBe(true);
+});
+
+it('publishes fresh inventory and prevents an older initial response overwriting it, accepts legacy strings', async () => {
+  const { QueryObserver } = await import('@tanstack/react-query');const client = new QueryClient();let old!: () => void;
+  const observer = new QueryObserver(client, { queryKey: ['medications'], queryFn: () => new Promise(resolve => { old = () => resolve([]); }) });const unsubscribe = observer.subscribe(() => {});
+  const legacy = { ...medication, name: '', unit: '' };sessionStorage.setItem('hms_medication_create_unknown:u', 'true');
+  apiClient.defaults.adapter = async config => ({ data: [legacy], status: 200, statusText: 'OK', headers: {}, config });
+  await acknowledgeMedicationCreate({ userId: 'u', epoch: sessionEpoch() }, client);old();await Promise.resolve();await Promise.resolve();expect(client.getQueryData(['medications'])).toEqual([legacy]);expect(medicationCreateHeld('u')).toBe(false);unsubscribe();client.clear();
+});
