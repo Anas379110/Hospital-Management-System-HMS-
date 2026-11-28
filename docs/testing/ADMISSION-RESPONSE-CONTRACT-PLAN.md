@@ -1,0 +1,8 @@
+# Admission scalar response contracts
+
+November28 after98c706a. OriginalFR5.2/5.3/OpenAPI qualification using supplied Backend/QA/Security/Writer roles. Annotate only existing admission create/discharge full scalar row, no patient nested identity. Required nullable discharge timestamp/notes accurately describe current JSON. No service/query/serializer/role/schema/config/dependency or admission/waitlist behavior change. Do not imply one-admission-per-patient rule or new discharge policy.
+
+Qualify native allowlist/required-nullable fields and actual restrictedPG17/18 create/discharge success, omitted/null/string notes, current401/403/404/409/isolation semantics. Existing audit/concurrency checks remain separately named evidence, not newly reproduced by annotation. ExactCI/source-only review/privatechanged-newexport/actualhostedpayload+modelpixels gates remain. NationalID policy answer pending separately, do not implement from this plan. WholeHMS incomplete.
+
+## Local execution
+Fresh restrictednonownerPG17.12/18.7 complete runner pass, each33new named admission HTTP cases, existing53pharmacy22clinical17patient/waitlist and patientrace preserved.47source/buildhashes bound and revalidated. Cases admission/discharge with omitted/null/string notes, occupied409, repeateddischarge409,401/400/missingpatientbedadmission404, sixdisallowedrolesbothroutes403, crossworkspacecreate/discharge404 plus originaldischarge.230unit62mockHTTP24metadata/validator/dependency/build/lint pass. Local documentation-only320/390/1280model overflow checks pass,390/1280pixels inspected with all eight scalar names readable. Independentreview/exactCI/hostedproof pending.

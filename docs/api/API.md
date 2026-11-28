@@ -181,3 +181,6 @@ Nine additional success responses are described: encounter create/soft-delete sc
 
 ### Pharmacy response contracts, November28 candidate
 Six existing pharmacy success responses now have explicit native schemas: medication create/list/low-stock scalar rows, stock-adjustment row with required delta and optional nullable echoed reason, pending prescriptions with only nested encounter patient fullName/MRN and doctor fullName, and dispensed prescription scalar. No query, serializer, role, database or workflow change. Inventory and pending lists are unbounded. Free-text reason is echoed when supplied (null allowed), omitted when absent, and remains redacted in audit. The prescription enum includes unavailable as stored schema vocabulary only, not an implemented unavailable workflow. Existing conflict/notfound/auth error envelopes are tested without claiming every service failure is exhaustively annotated.
+
+### Admission response contracts, November28 candidate
+Admission create and discharge describe existing complete scalar Admission row, with required nullable dischargedAt/dischargeNotes and date-time serialization. No nested patient/doctor identity or new policy. Omitted/null notes persist as null; supplied string is echoed. Existing conflicts/auth/isolation unchanged. No service/query/serializer/audience change or new one-admission-per-patient rule.

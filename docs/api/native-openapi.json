@@ -58,6 +58,53 @@
         ],
         "type": "object"
       },
+      "AdmissionResponseDto": {
+        "properties": {
+          "admittedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "admittedBy": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "bedId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "dischargeNotes": {
+            "nullable": true,
+            "type": "string"
+          },
+          "dischargedAt": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "patientId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "workspaceId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "workspaceId",
+          "id",
+          "patientId",
+          "bedId",
+          "admittedBy",
+          "admittedAt",
+          "dischargedAt",
+          "dischargeNotes"
+        ],
+        "type": "object"
+      },
       "ApiErrorDetailResponseDto": {
         "properties": {
           "code": {
@@ -1516,7 +1563,14 @@
         },
         "responses": {
           "201": {
-            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdmissionResponseDto"
+                }
+              }
+            },
+            "description": "Existing admission scalar row, including required nullable discharge fields."
           },
           "400": {
             "description": "Invalid request"
@@ -1573,7 +1627,14 @@
         },
         "responses": {
           "201": {
-            "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdmissionResponseDto"
+                }
+              }
+            },
+            "description": "Existing admission scalar row, including required nullable discharge fields."
           },
           "400": {
             "description": "Invalid request"

@@ -1,6 +1,6 @@
 # HMS verification and open requirements
 
-Reconciled28 November2026 07:40 Istanbul. Fictional-data demonstration, not hospital readiness or compliance certification. Latest verified public release552ddc845cf7abcc44f05511a1b8ed6150670567. Earlier evidence remains historical and does not establish newer source execution.
+Reconciled28 November2026 07:40 Istanbul. Fictional-data demonstration, not hospital readiness or compliance certification. Latest verified public release98c706a1e7b4063721bf17a35019bf16df3bf721. Earlier evidence remains historical and does not establish newer source execution.
 
 ## Executed release evidence
 
@@ -33,3 +33,6 @@ No auto-delete/credential rotation, disruptive hosted test or paid infrastructur
 
 ## Pharmacy response documentation candidate November28
 Six unchanged service outputs annotated, local48schemas55operations23successcontracts.230unit62mockHTTP23metadata/validator/dependency tests pass; actual restrictedPG17.12/18.7 each53named pharmacy HTTP cases and full existing waitlist/clinical/patient/race suite pass. Input43hashes bind reports. No service/query/role/DB/config/dependency change. Local model pixels320/390/1280 inspected in scope; Independent source-only review accepted final bundle and552ddc8 baseline comparison07:39; no independent runtime reproduction. ExactCI and hosted proof pending. WholeHMS remains incomplete.
+
+## Released pharmacy reconciliation and admission candidate
+Pharmacy98c706a fullCI46108642762bothPG success; RenderactualLive07:53:37duration1m53 and hosted53responses/native48schemas55operations/modelpixels07:54:15 passed. See PR17 release comment https://github.com/Anas379110/Hospital-Management-System-HMS-/pull/17#issuecomment-7234335250 for superseding evidence. Admission candidate adds two unchanged scalar response contracts, native49schemas55operations25successcontracts. Local230unit62mockHTTP24metadata/validator/dependency/build/lint and restrictedPG17/18 each33new named admission HTTP checks plus existing suites pass47boundinputs. Local320/390/1280modelpixels checked. Independentreview/exactCI/hostedproof pending for admission, not released. No service/query/role/schema/config/dependency change. WholeHMS incomplete.

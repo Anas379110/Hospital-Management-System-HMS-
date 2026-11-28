@@ -152,3 +152,6 @@ Move the existing global MRN advisory transaction lock before the unchanged exac
 
 ### Pharmacy output documentation, November28 candidate
 CONFIRMED from current service/schema: annotate existing six pharmacy output shapes without changing behavior. Preserve optional/null echoed stock reason rather than declaring it universally required; keep narrow nested identity projections and reuse existing prescription scalar. No new patient matching, clinical state, privilege, dependency or live DB decision. Runtime acceptance requires restricted PG17/18, review, exact CI and hosted proof, not annotation alone.
+
+### Admission scalar documentation, November28 candidate
+CONFIRMED from unchanged service/schema: annotate both admission outputs with one scalar DTO and required nullable discharge fields. No new authorization or admission/discharge/waitlist policy. Qualify actual existing JSON and errors before release, independently of unresolved patient-ID/demographic/billing decisions.

@@ -1,3 +1,4 @@
+import { AdmissionResponseDto } from './dto/admission-response.dto';
 import { ApiOperation, ApiResponse, ApiExtension } from '@nestjs/swagger';
 import { Body, Controller, Param, Post, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -29,7 +30,7 @@ export class AdmissionsController {
   @ApiOperation({"summary": "AdmissionsController.create", "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization."})
   @ApiExtension('x-roles', ["doctor", "nurse"])
   @ApiExtension('x-auth', 'roles')
-  @ApiResponse({"status": 201, "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."})
+  @ApiResponse({"status": 201, type: AdmissionResponseDto, description: 'Existing admission scalar row, including required nullable discharge fields.'})
   @ApiResponse({"status": 400, "description": "Invalid request"})
   @ApiResponse({"status": 401, "description": "Missing/expired token, inactive current user, or invalid/expired workspace"})
   @ApiResponse({"status": 403, "description": "Current persisted role is not permitted"})
@@ -45,7 +46,7 @@ export class AdmissionsController {
   @ApiOperation({"summary": "AdmissionsController.discharge", "description": "Role permissions and service-level limits are described in docs/api/API.md. This annotation does not alter authorization."})
   @ApiExtension('x-roles', ["doctor", "nurse"])
   @ApiExtension('x-auth', 'roles')
-  @ApiResponse({"status": 201, "description": "Successful JSON response. Result shape is service-defined; no unverified response schema is asserted."})
+  @ApiResponse({"status": 201, type: AdmissionResponseDto, description: 'Existing admission scalar row, including required nullable discharge fields.'})
   @ApiResponse({"status": 400, "description": "Invalid request"})
   @ApiResponse({"status": 401, "description": "Missing/expired token, inactive current user, or invalid/expired workspace"})
   @ApiResponse({"status": 403, "description": "Current persisted role is not permitted"})
