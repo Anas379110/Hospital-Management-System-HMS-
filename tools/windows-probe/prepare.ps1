@@ -41,6 +41,9 @@ New-Item $app -ItemType Directory | Out-Null
 Copy-Item backend/package.json,backend/package-lock.json $app
 New-Item (Join-Path $app 'prisma') -ItemType Directory | Out-Null
 Copy-Item backend/prisma/schema.prisma (Join-Path $app 'prisma/schema.prisma')
+Copy-Item backend/prisma/migrations (Join-Path $app 'prisma/migrations') -Recurse
+Copy-Item backend/prisma/demo (Join-Path $app 'prisma/demo') -Recurse
+Copy-Item backend/src,backend/tsconfig.json,backend/nest-cli.json $app -Recurse
 $env:PATH = (Join-Path $root 'node-archive/node-v22.23.5-win-x64') + ';' + $env:PATH
 $env:PRISMA_SCHEMA_ENGINE_BINARY = Join-Path $bin 'schema-engine.exe'
 $env:PRISMA_QUERY_ENGINE_LIBRARY = Join-Path $bin 'query_engine.dll.node'
@@ -50,6 +53,8 @@ try {
   if ($LASTEXITCODE -ne 0) { throw 'Locked install failed' }
   & (Join-Path $bin 'node.exe') node_modules/prisma/build/index.js generate
   if ($LASTEXITCODE -ne 0) { throw 'Native generation failed' }
+  & npm.cmd run build
+  if ($LASTEXITCODE -ne 0) { throw 'Locked backend build failed' }
 } finally { Pop-Location }
-Copy-Item tools/windows-probe/child.ps1,tools/windows-probe/native.cjs $bin
+Copy-Item tools/windows-probe/child.ps1,tools/windows-probe/native.cjs,tools/windows-probe/roundtrip.cjs,tools/windows-probe/app-child.cjs,tools/windows-probe/roundtrip-seed.sql $bin
 Write-Output 'Pinned native probe preparation complete. No package or application launch claimed.'
