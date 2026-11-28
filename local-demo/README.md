@@ -13,6 +13,14 @@ From repository root:
 
 Use an unprivileged OS user, not root. PostgreSQL binary directory must contain initdb, postgres, pg_ctl, psql, createdb, pg_dump and pg_restore of the same major. No new database/architecture choice is made here.
 
+## Check this machine before initialization
+
+```sh
+node local-demo/check-ready.mjs --pg-bin /absolute/postgresql/bin --dir /absolute/private/hms-demo
+```
+
+This standalone Node22checker runs even without installed app dependencies. It reports each missing tool/build/dependency, matching PostgreSQLmajor, native dependency loading, futuretarget and loopbackport availability. It does not install/build, initialize/connect to a database or create the target. Port checks briefly bind127.0.0.1andclose, no guarantee against another process taking the port later. Installed PostgreSQLtools and Prisma/bcrypt code execute in bounded subprocesses, not a sandbox; use trusted installations. Timeouts kill only the directchild, not a processgroup or descendants. Checker-controlled actions do not write the inspected project or target; this is not a universal no-side-effects guarantee for third-party code. Buildprovenance and actualDB/nativeenginecompatibility remain unverified. The pinnedbcrypt6package includes prebuiltaddons, loaded at runtime via node-gyp-build; the testedLinuxx64buildrecipe works with npm ci --ignore-scripts. OtherOS/architectures may require a trusted native rebuild, and the checker will report loadfailure. Prisma generate may download a matchingengine and npm ci needs registry/cache access, so preparation is not offline. Use the build commands above to prepare dependencies, then run the checker again. A ready result is prerequisite diagnostics, not proof of offline installation or hospital suitability. Linux/macOS paths only, macOSnativeexecution not qualified by currentLinuxruns. Tests: `node --test local-demo/check-ready.test.mjs`.
+
 ## Start a new private local demo
 
 Choose directories that do not exist and unused unprivileged ports. Examples below are placeholders, not existing user folders.

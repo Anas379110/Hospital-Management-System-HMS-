@@ -1,0 +1,7 @@
+# Local readiness checker plan
+
+No new dependencies or architecture choice. Separate worktree from released141347b, leaving reviewed performance candidate unchanged. Standalone Node script must still report when node_modules is missing, unlike the existing runtime's top-level Prisma import.
+
+Read-only diagnostics for Node22, unprivileged Linux/macOS, matching PostgreSQL17/18 tools, compiled assets and dependency/native readiness, source/lock identity and proposed target/loopback ports. No database connection, initialization, target-directory creation, package installation or outbound network request. Loopback bind-and-close verifies port availability and is an explicit local network operation. Third-party module/native load happens only in bounded child processes and executes dependency code; no universal filesystem/no-network sandbox claim. Snapshot checker-controlled fixture files in tests. Normal user provisioning/retention and offline installer remain out of scope.
+
+A source/lock/build manifest does not yet exist in released base. Report this as unverified build provenance, not an invented match or blocker on running a fictional demo. A later build-attestation feature is separate. Do not install or rebuild anything from the checker. Return per-check actionable results and exit nonzero for failed requirements, warnings for unverified provenance. Tests include absent/mixed tools, missing build/dependency files, existing target, reserved ports and native probe failure.

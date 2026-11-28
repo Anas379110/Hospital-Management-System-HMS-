@@ -36,6 +36,8 @@ jobs:
           cache-dependency-path: |
             backend/package-lock.json
             frontend/package-lock.json
+      - name: Standalone local readiness diagnostics
+        run: node --test local-demo/check-ready.test.mjs
       - run: npm ci --ignore-scripts --no-fund
         working-directory: backend
       - run: node node_modules/prisma/build/index.js generate
