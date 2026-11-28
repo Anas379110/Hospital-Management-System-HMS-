@@ -39,11 +39,18 @@ function Cleanup-Result($component,$ok,$errorRecord) {
   }
 function Scan-PrivateReport {
   param($candidate)
-  $script:scanDiagnostic=@{reason='missing-list';reportMatches=0;childLogMatches=0;postgresLogMatches=0;otherLogMatches=0}
+  $script:scanDiagnostic=@{reason='missing-list';reportMatches=0;childLogMatches=0;postgresLogMatches=0;otherLogMatches=0;listCount=0;nonStringCount=0}
   $secretPath=Join-Path $probeHome 'roundtrip-secrets.json'
   if (-not (Test-Path $secretPath)) {return $false}
   try {
-    $secrets=@(Get-Content $secretPath -Raw | ConvertFrom-Json)
+    $raw=[IO.File]::ReadAllText($secretPath)
+    $root=ConvertFrom-Json -InputObject $raw
+    if ($root -isnot [object[]]) {$script:scanDiagnostic.reason='invalid-list';return $false}
+    $script:scanDiagnostic.listCount=[int]$root.Count
+    foreach ($item in $root) {if ($item -isnot [string]) {$script:scanDiagnostic.nonStringCount++}}
+    if ($root.Count -notin @(6,8,10) -or $script:scanDiagnostic.nonStringCount -ne 0) {$script:scanDiagnostic.reason='invalid-list';return $false}
+    foreach ($item in $root) {if ($item.Length -le 12) {$script:scanDiagnostic.reason='invalid-list';return $false}}
+    $secrets=$root
     $scan=@(@{category='reportMatches';text=($candidate | ConvertTo-Json -Depth 10)})
     foreach ($f in @(Get-ChildItem $probeHome -File | Where-Object {$_.Name -match '\.(log|err)$'})) {
       $category=if ($f.Name -like 'child-*') {'childLogMatches'} elseif ($f.Name -eq 'postgres-private.log') {'postgresLogMatches'} else {'otherLogMatches'}
@@ -225,7 +232,8 @@ try {
     $helperFailurePath=Join-Path $probeHome 'helper-failure.json'
     if (Test-Path $helperFailurePath) {
       try {$helperFailure=Get-Content $helperFailurePath -Raw | ConvertFrom-Json
-        if ($helperFailure.phase -in @('preflight','migrate','seed','roles','snapshot','dump','restore','compare','api','close')) {$report['helperFailure']=$helperFailure.phase} else {$report['helperFailure']='invalid'}
+        if ($helperFailure.phase -in @('preflight','preflight-path','migrate','seed','roles','snapshot','dump','restore','compare','api-env','api-cleanup','api-runtime','api-ddl','api-fork','api-fork-load','api-fork-create','api-fork-listen','api-health','api-demo','api-patients','close')) {$report['helperFailure']=$helperFailure.phase} else {$report['helperFailure']='invalid'}
+        if ($helperFailure.childTermination -in @('not-started','running','exit-zero','exit-startup','exit-deadline','exit-close','exit-other','signal')) {$report['childTermination']=$helperFailure.childTermination} else {$report['childTermination']='invalid'}
       } catch {}
     }
     Remove-Item (Join-Path $probeHome 'roundtrip-secrets.json') -Force -ErrorAction SilentlyContinue
