@@ -106,6 +106,7 @@ export default function AppointmentsPage() {
         <Stack alignItems="flex-start" gap={1}>
           {user && canAccessPage(user.role, 'patients') && <Button variant="outlined" component={Link} to={`/patients/${appt.patientId}`} sx={{ minHeight: 44, textTransform: 'none' }}>{t('appointments.openPatient')}</Button>}
           <Chip label={t(`appointments.states.${appt.status}`)} size="small" color={statusColor[appt.status]} />
+          {user?.role==='doctor' && appt.doctorId===user.userId && ['scheduled','completed'].includes(appt.status) && !appt.encounter && <Button component={Link} to={`/patients/${appt.patientId}?${new URLSearchParams({appointment:appt.id,appointmentAt:appt.scheduledAt})}`} variant="contained">{t('emr.startAppointment')}</Button>}
           {appt.encounter && <Typography variant="caption">{t('appointments.linked')}</Typography>}
           {writable && appt.status === 'scheduled' && !appt.encounter && <Button sx={{ textTransform: 'none' }} onClick={() => { setEditing(appt); setFormError(null); setDepartmentId(appt.departmentId); setFormDoctorId(appt.doctorId); const time = new Date(appt.scheduledAt); setScheduledAt(new Date(time.getTime() - time.getTimezoneOffset() * 60000).toISOString().slice(0,16)); setDialogOpen(true); }}>{t('appointments.edit')}</Button>}
           {writable && appt.status === 'scheduled' && <Button onClick={() => {setAttendanceTarget({id:appt.id,status:'completed'});setActionError(null);}}>{t('appointments.markAttended')}</Button>}

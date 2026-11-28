@@ -5,3 +5,5 @@ describe('clinical notes existing API input', () => {
  it('preserves whitespace, newlines and literal markup without normalization', () => { const notes = '  First\nثاني <script>literal</script>  ';expect(encounterInput('p','cc','dx',notes).notes).toBe(notes); });
  it('does not add historical editing or unrelated fields', () => expect(Object.keys(encounterInput('p','cc','dx','n'))).toEqual(['patientId','chiefComplaint','diagnosis','notes']));
 });
+
+it('preserves explicit appointment link and omits it for standalone',()=>{expect(encounterInput('p','c','d','','a').appointmentId).toBe('a');expect(Object.prototype.hasOwnProperty.call(encounterInput('p','c','d',''),'appointmentId')).toBe(false)});
