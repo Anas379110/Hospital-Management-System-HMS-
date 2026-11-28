@@ -6,6 +6,7 @@ $root = Join-Path $env:RUNNER_TEMP ('hms-native-' + $env:GITHUB_RUN_ID + '-' + $
 $bin = Join-Path $root 'runtime'
 $reportPath = Join-Path $env:RUNNER_TEMP 'hms-windows-probe-report.json'
 $report = [ordered]@{ complete=$false; head=$env:GITHUB_SHA; os=(Get-CimInstance Win32_OperatingSystem).Caption; build=[Environment]::OSVersion.VersionString; architecture=$env:PROCESSOR_ARCHITECTURE; image=$env:ImageVersion; checks=@(); cleanup=$false }
+$cleanupDetails=@(); $childProcesses=@(); $probeSids=@(); $cleanupOk=$true
 $users = @(); $ruleNames = @(); $credentials = @{}
 $prefix = 'hms' + ($env:GITHUB_RUN_ID.Substring([Math]::Max(0,$env:GITHUB_RUN_ID.Length-9)))
 function Add-Check($name,$value) { $script:report.checks += @{name=$name;value=$value} }
@@ -30,6 +31,54 @@ function Assert-AclValue($actual,$sid) {
   if ($rules.Count -ne 3 -or @($rules | Where-Object {$_.IdentityReference.Value -notin @($sid,'S-1-5-18','S-1-5-32-544') -or $_.AccessControlType -ne 'Allow'}).Count) { throw 'Private SID allowlist mismatch' }
   Add-Check 'privateAcl' @{owner=$actual.GetOwner([Security.Principal.SecurityIdentifier]).Value;protected=$true;allowSids=@($rules | ForEach-Object {$_.IdentityReference.Value})}
 }
+function Cleanup-Result($component,$ok,$errorRecord) {
+    $item=@{component=$component;ok=[bool]$ok}
+    if ($null -ne $errorRecord) { $item.exceptionType=$errorRecord.Exception.GetType().FullName; $item.hresult=[int]$errorRecord.Exception.HResult }
+    $script:cleanupDetails += $item
+    if (-not $ok) { $script:cleanupOk=$false }
+  }
+function Read-PgStages($stageDir) {
+  $path=Join-Path $stageDir 'postgres-stages.txt'
+  $result=@{count=0}
+  if (Test-Path $path) {
+    $tokens=@([IO.File]::ReadAllLines($path))
+    $allowed=@('entered','initdb-before','initdb-after','hba-before','hba-after','config-before','config-after','start-before','start-after','query-before','query-after','modules-before','modules-after','listener-before','listener-after','dump-before','dump-after','restore-before','restore-after','stop-before','stop-after','initdb-failed','start-failed','dump-failed','restore-failed','stop-failed')
+    if ($tokens.Count -le 32 -and @($tokens | Where-Object {$_ -notin $allowed}).Count -eq 0) {
+      $result.count=$tokens.Count
+      if ($tokens.Count) {$result.last=$tokens[-1]}
+    } else {$result.invalid=$true}
+  }
+  return $result
+}
+function Scoped-Processes {
+  foreach ($process in @(Get-CimInstance Win32_Process -ErrorAction Stop)) {
+    $staged=$process.ExecutablePath -and $process.ExecutablePath.StartsWith($bin+'\',[StringComparison]::OrdinalIgnoreCase)
+    $owned=$false
+    # Query owner SID, never command line. Scope external hosts by the ephemeral users.
+    $owner=Invoke-CimMethod -InputObject $process -MethodName GetOwnerSid -ErrorAction SilentlyContinue
+    if ($null -ne $owner -and $owner.ReturnValue -eq 0) {$owned=$owner.Sid -in $script:probeSids}
+    if ($staged -or $owned) { $process }
+  }
+}
+function Stop-ScopedProcesses {
+  $before=@(Scoped-Processes)
+  $safe=@($before | ForEach-Object {@{name=[IO.Path]::GetFileName($_.Name);pid=[int]$_.ProcessId;parentPid=[int]$_.ParentProcessId}})
+  foreach ($process in $before) {
+    try {
+      $handle=Get-Process -Id $process.ProcessId -ErrorAction Stop
+      # Revalidate CIM PID against creation time to avoid killing an unrelated reused PID.
+      $current=Get-CimInstance Win32_Process -Filter ('ProcessId='+[int]$process.ProcessId)
+      if ($null -ne $current -and $current.CreationDate -eq $process.CreationDate) {
+        Stop-Process -InputObject $handle -Force -ErrorAction Stop
+        $null=$handle.WaitForExit(10000)
+      }
+    } catch {
+      if (Get-Process -Id $process.ProcessId -ErrorAction SilentlyContinue) {Cleanup-Result 'process-stop' $false $_}
+    }
+  }
+  $after=@(Scoped-Processes)
+  return @{before=$safe;remaining=$after.Count}
+}
 function Child($mode,$probeHome,$credential) {
   $logBase=if ($mode -eq 'identity') {$bootstrap} else {$probeHome}
   $log=Join-Path $logBase ('child-'+$mode+'.log')
@@ -38,10 +87,20 @@ function Child($mode,$probeHome,$credential) {
   if ($mode -ne 'negative') { $start.RedirectStandardOutput=$log; $start.RedirectStandardError=($log+'.err') }
   $p=Start-Process @start
   $null=$p.Handle
-  if (-not $p.WaitForExit(180000)) { Stop-Process -Id $p.Id -Force; throw 'Credential child timeout' }
+  $script:childProcesses += $p.Id
+  if (-not $p.WaitForExit(180000)) {
+    $timeout=@{mode=$mode;seconds=180}
+    if ($mode -eq 'postgres') {$timeout.pgStages=Read-PgStages $probeHome}
+    $timeout.probePortListenerCount=@(Get-NetTCPConnection -LocalPort 55773 -State Listen -ErrorAction SilentlyContinue).Count
+    Add-Check 'childTimeout' $timeout
+    $snapshot=Stop-ScopedProcesses
+    Add-Check 'timeoutProcesses' $snapshot
+    throw 'Credential child timeout'
+  }
   $p.Refresh()
   if ($p.ExitCode -ne 0) {
     $failure=@{mode=$mode;exitCode=$p.ExitCode}
+    if ($mode -eq 'postgres') {$failure.pgStages=Read-PgStages $probeHome}
     $diagnosticPath=Join-Path $probeHome ($mode+'.failure.json')
     if (-not (Test-Path $diagnosticPath) -and $mode -eq 'identity') { $diagnosticPath=Join-Path $bootstrap ($mode+'.failure.json') }
     if (Test-Path $diagnosticPath) {
@@ -57,6 +116,7 @@ try {
   if ($report.architecture -ne 'AMD64') { throw 'Windows x64 required' }
   $a=New-Credential ($prefix+'a'); $b=New-Credential ($prefix+'b')
   $credentials.a=$a.credential; $credentials.b=$b.credential
+  $probeSids=@($a.sid,$b.sid)
   # Grant traversal only on the unique root, RX on staged runtime only.
   & icacls.exe $root /grant ('*'+$a.sid+':(RX)') ('*'+$b.sid+':(RX)') | Out-Null
   if ($LASTEXITCODE -ne 0) { throw 'Stage traversal grant failed' }
@@ -110,24 +170,34 @@ try {
   $report['failure']=@{exceptionType=$_.Exception.GetType().FullName;line=[int]$_.InvocationInfo.ScriptLineNumber;hresult=[int]$_.Exception.HResult}
   throw 'Bounded Windows native probe failed; sanitized report retained'
 } finally {
-  $cleanupOk=$true
+  $cleanupOk=@($cleanupDetails | Where-Object {-not $_.ok}).Count -eq 0
   foreach ($name in $ruleNames) {
-    try { Remove-NetFirewallRule -Name $name -ErrorAction Stop; if (Get-NetFirewallRule -Name $name -ErrorAction SilentlyContinue) { $cleanupOk=$false } } catch {$cleanupOk=$false}
+    try { Remove-NetFirewallRule -Name $name -ErrorAction Stop; Cleanup-Result 'firewall-rule' (-not [bool](Get-NetFirewallRule -Name $name -ErrorAction SilentlyContinue)) $null } catch {Cleanup-Result 'firewall-rule' $false $_}
   }
-  # Kill only remaining descendants whose executable path is inside this unique staging root.
-  foreach ($p in @(Get-CimInstance Win32_Process | Where-Object {$_.ExecutablePath -and $_.ExecutablePath.StartsWith($bin+'\',[StringComparison]::OrdinalIgnoreCase)})) {
-    try { Stop-Process -Id $p.ProcessId -Force -ErrorAction Stop } catch {$cleanupOk=$false}
-  }
+  try {
+    $state=Stop-ScopedProcesses
+    $report['cleanupProcesses']=$state
+    Cleanup-Result 'processes-absent' ($state.remaining -eq 0) $null
+  } catch {Cleanup-Result 'process-enumeration' $false $_}
   foreach ($name in $users) {
+    $sid=$null
+    try { $sid=(Get-LocalUser -Name $name -ErrorAction Stop).SID.Value } catch {Cleanup-Result 'user-lookup' $false $_}
     try {
-      $u=Get-LocalUser -Name $name -ErrorAction Stop
-      $sid=$u.SID.Value
       Remove-LocalUser -Name $name -ErrorAction Stop
-      Get-CimInstance Win32_UserProfile | Where-Object {$_.SID -eq $sid} | Remove-CimInstance -ErrorAction Stop
-      if (Get-LocalUser -Name $name -ErrorAction SilentlyContinue) {$cleanupOk=$false}
-    } catch {$cleanupOk=$false}
+      Cleanup-Result 'user-absent' (-not [bool](Get-LocalUser -Name $name -ErrorAction SilentlyContinue)) $null
+    } catch {Cleanup-Result 'user-remove' $false $_}
+    if ($null -ne $sid) {
+      try {
+        Get-CimInstance Win32_UserProfile | Where-Object {$_.SID -eq $sid} | Remove-CimInstance -ErrorAction Stop
+        Cleanup-Result 'profile-absent' (-not [bool](Get-CimInstance Win32_UserProfile | Where-Object {$_.SID -eq $sid})) $null
+      } catch {Cleanup-Result 'profile-remove' $false $_}
+    }
   }
   $credentials.Clear()
+  $report['cleanupDetails']=$cleanupDetails
+  if (@($cleanupDetails | Where-Object {-not $_.ok}).Count) {$cleanupOk=$false}
+  $report['remainingStagedProcessCount']=@(Get-CimInstance Win32_Process | Where-Object {$_.ExecutablePath -and $_.ExecutablePath.StartsWith($bin+'\',[StringComparison]::OrdinalIgnoreCase)}).Count
+  if ($report.remainingStagedProcessCount -ne 0) {$cleanupOk=$false}
   $report.cleanup=$cleanupOk
   if (-not $cleanupOk) {$report.complete=$false}
   $report | ConvertTo-Json -Depth 10 | Set-Content $reportPath -Encoding UTF8
