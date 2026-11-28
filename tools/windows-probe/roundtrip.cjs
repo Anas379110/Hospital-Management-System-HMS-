@@ -58,7 +58,7 @@ function snapshot(db) {
   process.env.PGCLIENTENCODING='UTF8';
   assert.ok(home && ownerPassword);
   phase='preflight-path';
-  assert.ok(fs.existsSync(path.join(appDir,'dist','src','app.factory.js')));
+  assert.ok(fs.existsSync(path.join(appDir,'dist','app.factory.js')));
   process.env.DATABASE_URL=dburl('hms_roundtrip','hms_probe',ownerPassword);
   process.env.PRISMA_SCHEMA_ENGINE_BINARY=path.join(base,'schema-engine.exe');
   process.env.PRISMA_QUERY_ENGINE_LIBRARY=path.join(base,'query_engine.dll.node');
