@@ -11,6 +11,7 @@ const home = process.env.HMS_PROBE_HOME;
 const pg = path.join(base, 'pg', 'bin');
 const appDir = path.join(base, 'deps');
 let app;
+let phase='preflight';
 let appClosed=false;
 const secrets=[];
 function saveSecrets(){fs.writeFileSync(path.join(home,'roundtrip-secrets.json'),JSON.stringify(secrets.flatMap(v=>[v,encodeURIComponent(v)])));}
@@ -43,29 +44,29 @@ function snapshot(db) {
   });
 }
 (async () => {
-  assert.equal(process.platform,'win32');
-  assert.equal(process.env.GITHUB_ACTIONS,'true');
-  assert.equal(process.env.PGHOST,'127.0.0.1');
-  assert.equal(process.env.PGPORT,'55773');
-  assert.equal(process.env.PGUSER,'hms_probe');
-  process.env.PGCLIENTENCODING='UTF8';
-  assert.ok(home && process.env.PGPASSWORD);
   const ownerPassword=process.env.PGPASSWORD;
   const runtimePassword=crypto.randomBytes(32).toString('hex');
   const cleanupPassword=crypto.randomBytes(32).toString('hex');
   secrets.push(ownerPassword,runtimePassword,cleanupPassword);
   saveSecrets();
+  assert.equal(process.platform,'win32');
+  assert.equal(process.env.HMS_PROBE_CI,'1');
+  assert.equal(process.env.PGHOST,'127.0.0.1');
+  assert.equal(process.env.PGPORT,'55773');
+  assert.equal(process.env.PGUSER,'hms_probe');
+  process.env.PGCLIENTENCODING='UTF8';
+  assert.ok(home && ownerPassword);
   process.env.DATABASE_URL=dburl('hms_roundtrip','hms_probe',ownerPassword);
   process.env.PRISMA_SCHEMA_ENGINE_BINARY=path.join(base,'schema-engine.exe');
   process.env.PRISMA_QUERY_ENGINE_LIBRARY=path.join(base,'query_engine.dll.node');
-  stage('migrate-before');
+  phase='migrate';stage('migrate-before');
   run(path.join(pg,'createdb.exe'), ['hms_roundtrip']);
   run(process.execPath,[path.join(appDir,'node_modules','prisma','build','index.js'),'migrate','deploy']);
   const applied=Number(sql('SELECT count(*) FROM _prisma_migrations WHERE finished_at IS NOT NULL AND rolled_back_at IS NULL'));
   const expected=fs.readdirSync(path.join(appDir,'prisma','migrations'),{withFileTypes:true}).filter(e=>e.isDirectory()).length;
   assert.equal(applied,expected); assert.ok(applied>0);
   stage('migrate-after');
-  stage('backup-before');
+  phase='seed';stage('backup-before');
   sql("SELECT hms_cleanup_expired_workspaces(); SELECT hms_create_demo_workspace('11111111-1111-4111-8111-111111111111');");
   sql(fs.readFileSync(path.join(base,'roundtrip-seed.sql'),'utf8'));
   const arabicHex='d8a7d8aed8aad8a8d8a7d8b120d8aad8b1d985d98ad8b220d988d987d985d98a';
@@ -73,6 +74,7 @@ function snapshot(db) {
   assertArabic('hms_roundtrip');
   assert.equal(sql('SELECT count(*) FROM users'),'8');
   assert.equal(sql('SELECT count(*) FROM patients'),'1');
+  phase='roles';
   // Roles are cluster-global; same names exist for source and restored DB.
   sql(`CREATE ROLE hms_runtime LOGIN PASSWORD '${runtimePassword}' NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS NOINHERIT;
 CREATE ROLE hms_cleanup LOGIN PASSWORD '${cleanupPassword}' NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS NOINHERIT;`);
@@ -82,6 +84,7 @@ CREATE ROLE hms_cleanup LOGIN PASSWORD '${cleanupPassword}' NOSUPERUSER NOCREATE
   assert.equal(sql("SELECT has_schema_privilege('hms_runtime','public','CREATE')::text"),'false');
   assert.equal(sql("SELECT has_table_privilege('hms_runtime','_prisma_migrations','SELECT')::text"),'false');
   assert.equal(sql("SELECT has_function_privilege('hms_runtime','hms_cleanup_expired_workspaces()','EXECUTE')::text"),'false');
+  phase='snapshot';
   const before=snapshot('hms_roundtrip');
   assert.deepEqual(before.filter(t=>t.count===0),[]);
   const catalog=db=>sql("SELECT (SELECT count(*) FROM pg_enum e JOIN pg_type t ON t.oid=e.enumtypid WHERE t.typnamespace='public'::regnamespace)||':'||(SELECT count(*) FROM pg_indexes WHERE schemaname='public')||':'||(SELECT count(*) FROM pg_constraint WHERE connamespace='public'::regnamespace)",db);
@@ -89,12 +92,15 @@ CREATE ROLE hms_cleanup LOGIN PASSWORD '${cleanupPassword}' NOSUPERUSER NOCREATE
   const sequences=db=>sql("SELECT coalesce(string_agg(sequencename||':'||coalesce(last_value::text,'null'),',' ORDER BY sequencename),'none') FROM pg_sequences WHERE schemaname='public'",db);
   const sequenceBefore=sequences('hms_roundtrip');
   const archive=path.join(home,'fictional-roundtrip.dump');
+  phase='dump';
   run(path.join(pg,'pg_dump.exe'),['--format=custom','--file',archive,'hms_roundtrip']);
   assert.ok(fs.statSync(archive).size>0);
   const contents=run(path.join(pg,'pg_restore.exe'),['--list',archive]);
   for(const t of before)assert.ok(contents.includes('TABLE public '+t.table+' '));
   run(path.join(pg,'createdb.exe'),['hms_restored']);
+  phase='restore';
   run(path.join(pg,'pg_restore.exe'),['--exit-on-error','--dbname=hms_restored',archive]);
+  phase='compare';
   const restored=snapshot('hms_restored');
   assertArabic('hms_restored');
   assert.deepEqual(restored,before);
@@ -106,7 +112,7 @@ CREATE ROLE hms_cleanup LOGIN PASSWORD '${cleanupPassword}' NOSUPERUSER NOCREATE
   assert.deepEqual(snapshot('hms_restored'),before);
   assert.deepEqual(snapshot('hms_roundtrip'),before);
   stage('backup-after');
-  stage('api-before');
+  phase='api';stage('api-before');
   process.env.DATABASE_URL=dburl('hms_restored','hms_runtime',runtimePassword);
   process.env.JWT_SECRET=crypto.randomBytes(48).toString('hex');
   process.env.HMS_PUBLIC_DEMO='true';
@@ -149,7 +155,7 @@ CREATE ROLE hms_cleanup LOGIN PASSWORD '${cleanupPassword}' NOSUPERUSER NOCREATE
   const patients=await fetch(url+'/api/v1/patients',{headers:{Authorization:'Bearer '+session.accessToken},signal:AbortSignal.timeout(5000)});
   assert.equal(patients.status,200);
   stage('api-after');
-  stage('app-stop-before');
+  phase='close';stage('app-stop-before');
   const closed=nextMessage(); const exited=once(app,'exit'); app.send({type:'close'});
   assert.equal((await closed).type,'closed');
   const [code,signal]=await Promise.race([exited,new Promise((_,reject)=>setTimeout(()=>reject(Error('Close timeout')),10000).unref())]);
@@ -166,6 +172,7 @@ CREATE ROLE hms_cleanup LOGIN PASSWORD '${cleanupPassword}' NOSUPERUSER NOCREATE
   fs.rmSync(archive);assert.equal(fs.existsSync(archive),false);
   fs.writeFileSync(path.join(home,'roundtrip-result.json'),safeText);
 })().catch(() => {
+  try{fs.writeFileSync(path.join(home,'helper-failure.json'),JSON.stringify({phase}));}catch{}
   // Force termination is cleanup only, never a graceful-close pass.
   if(app&&!appClosed)app.kill();
   clearTimeout(timeout);
