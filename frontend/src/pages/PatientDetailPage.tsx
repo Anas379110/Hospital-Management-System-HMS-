@@ -1,3 +1,4 @@
+import { prescriptionInput } from './prescriptionDraft';
 import { acknowledgePrescriptionCreate, prescriptionHeld } from '../api/prescriptionCreateWrite';
 import { useQueryClient } from '@tanstack/react-query';
 import { acknowledgeEncounterCreate } from '../api/encounterCreateWrite';
@@ -82,6 +83,7 @@ function PatientDetailWorkspace() {
   const [medicationName, setMedicationName] = useState('');
   const [dosage, setDosage] = useState('');
   const [duration, setDuration] = useState('');
+  const [prescriptionNotes, setPrescriptionNotes] = useState('');
 
   const isDoctor = user?.role === 'doctor';
   const locale = i18n.language === 'ar' ? 'ar-SY' : 'en-US';
@@ -101,7 +103,7 @@ function PatientDetailWorkspace() {
 
   async function reconcilePrescription() {
     if (!id || !user || rxChecking) return;setRxChecking(true);setError(null);
-    try { await acknowledgePrescriptionCreate({ userId: user.userId, patientId: id, epoch: mountedEpoch }, queryClient);if (!callbackIsCurrent()) return;setRxHeld(false);setMedicationName('');setDosage('');setDuration('');setActiveEncounterId(null); }
+    try { await acknowledgePrescriptionCreate({ userId: user.userId, patientId: id, epoch: mountedEpoch }, queryClient);if (!callbackIsCurrent()) return;setRxHeld(false);setMedicationName('');setDosage('');setDuration('');setPrescriptionNotes('');setActiveEncounterId(null); }
     catch { if (callbackIsCurrent()) setError(t('errors.generic')); } finally { if (callbackIsCurrent()) setRxChecking(false); }
   }
 
@@ -109,11 +111,11 @@ function PatientDetailWorkspace() {
     if (!id || !user || !activeEncounterId || !medicationName || !dosage || !duration || rxHeld || rxChecking || addPrescription.isPending) return;
     setError(null); setSuccess(null);
     try {
-    await addPrescription.mutateAsync({ userId: user.userId, patientId: id, epoch: mountedEpoch, input: { encounterId: activeEncounterId, medicationName, dosage, duration } });
+    await addPrescription.mutateAsync({ userId: user.userId, patientId: id, epoch: mountedEpoch, input: prescriptionInput(activeEncounterId, medicationName, dosage, duration, prescriptionNotes) });
     if (!callbackIsCurrent()) return;
     setMedicationName('');
     setDosage('');
-    setDuration('');
+    setDuration('');setPrescriptionNotes('');
     setActiveEncounterId(null);
     setSuccess(t('emr.prescriptionSaved'));
     } catch (err) { if (!callbackIsCurrent()) return;setRxHeld(prescriptionHeld(user.userId, id));mutationError(err); }
@@ -190,6 +192,7 @@ function PatientDetailWorkspace() {
                     onChange={(e) => setDuration(e.target.value)}
                     size="small"
                   />
+                  <TextField fullWidth multiline minRows={3} label={t('emr.prescriptionNotes')} value={prescriptionNotes} onChange={e => setPrescriptionNotes(e.target.value)} disabled={rxHeld || rxChecking || addPrescription.isPending} />
                   <Button variant="outlined" disabled={rxHeld || rxChecking || addPrescription.isPending || !medicationName || !dosage || !duration} onClick={handleAddPrescription}>
                     {t('emr.add')}
                   </Button>
@@ -231,12 +234,14 @@ function PatientDetailWorkspace() {
                   <Divider sx={{ my: 1 }} />
                   <Stack direction="row" gap={1} flexWrap="wrap">
                     {encounter.prescriptions.map((rx) => (
+                      <Box key={rx.id}>
                       <Chip
-                        key={rx.id}
                         label={`${rx.medicationName} — ${rx.dosage} (${rx.duration})`}
                         size="small"
                         sx={{ maxWidth: '100%', height: 'auto', '& .MuiChip-label': { whiteSpace: 'normal', overflowWrap: 'anywhere', py: 0.5 } }}
                       />
+                      {rx.notes && <Box sx={{ mt: 1 }}><Typography variant="subtitle2">{t('emr.prescriptionNotesSaved')}</Typography><Typography sx={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{rx.notes}</Typography></Box>}
+                      </Box>
                     ))}
                   </Stack>
                 </>

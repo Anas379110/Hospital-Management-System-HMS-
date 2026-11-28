@@ -122,7 +122,9 @@
     "encounterUnknown": "The encounter save outcome is unknown. Do not submit again. Check the patient records and audit log. Readback cannot prove a delayed request has finished. This hold applies only to this tab. Acknowledging discards the draft.",
     "checkEncounter": "I checked, reload records and discard draft",
     "prescriptionUnknown": "The prescription save outcome is unknown. Do not submit again. Check the patient records and audit log. Readback cannot prove a delayed request has finished. This hold applies only to this tab. Acknowledging discards the prescription draft.",
-    "checkPrescription": "I checked, reload records and discard prescription draft"
+    "checkPrescription": "I checked, reload records and discard prescription draft",
+    "prescriptionNotes": "Prescription notes, optional",
+    "prescriptionNotesSaved": "Prescription notes"
   },
   "stock": {
     "title": "Stock adjustment",
