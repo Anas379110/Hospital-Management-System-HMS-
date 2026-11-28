@@ -13,6 +13,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { spawnSync } from "node:child_process";
 import { createServer } from "node:net";
 import { createHash } from "node:crypto";
+import { verifyManifest, RECIPE } from "./build-manifest.mjs";
 const defaultRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 export async function inspect({
   root = defaultRoot,
@@ -224,10 +225,12 @@ export async function inspect({
       hashes[f] = h;
       return h;
     });
+  const snapshot = verifyManifest(root, hashes);
+  checks.push({ id: "build-provenance", ...snapshot });
   add(
-    "build-provenance",
+    "runtime-dependency-contents",
     "warn",
-    "No signed/source-linked build manifest in released kit. Current hashes identify inputs only, not proof built assets match them.",
+    "Installed node_modules, generated Prisma client/engine and bcrypt addon contents are not covered by the unsigned snapshot. Separate presence/load checks are not dependency-content verification.",
   );
   if (pgPort === httpPort)
     add("ports-distinct", "fail", "PostgreSQL and HTTP ports must differ.");
@@ -262,10 +265,7 @@ export async function inspect({
     ready: checks.every((c) => c.status !== "fail"),
     checks,
     inputHashes: hashes,
-    commands: [
-      "(cd backend && npm ci --ignore-scripts && node node_modules/prisma/build/index.js generate && npm run build)",
-      "(cd frontend && npm ci --ignore-scripts && VITE_PUBLIC_DEMO=true npm run build)",
-    ],
+    commands: [...RECIPE],
     limits: [
       "No database connection/init, target creation, install/build or outbound request by checker-controlled code.",
       "--version tools and module load execute installed code, not a sandbox or universal no-side-effects guarantee. Use trusted installations.",
