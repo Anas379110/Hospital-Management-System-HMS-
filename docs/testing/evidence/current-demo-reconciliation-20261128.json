@@ -1,0 +1,115 @@
+{
+  "scope": "Existing evidence inspection only, no new execution. Current source is tree-equivalent to exact CI head.",
+  "exactCIHead": "c7fb2ee91a5574a5c65cf6e85382ba2d8d737128",
+  "ciURL": "https://github.com/Anas379110/Hospital-Management-System-HMS-/actions/runs/46169159959",
+  "tree": "992c1ff0866f06cf8f434eef34243547b4e57588",
+  "versions": {
+    "17": {
+      "reportSHA256": "42b5d522fd7660c1bc73df7f0a890876afbbbaf97c70fcac2cab6a1cd97fe568",
+      "complete": true,
+      "sourceManifestMatches": {
+        "local-demo/hms-local.mjs": true,
+        "backend/src/main.ts": true,
+        "frontend/src/components/EncounterTestOrder.tsx": true,
+        "frontend/src/components/testOrderOutcome.ts": true,
+        "frontend/src/hooks/useLab.ts": true,
+        "frontend/src/pages/PatientDetailPage.tsx": true
+      },
+      "scriptMatches": true,
+      "checks": [
+        {
+          "lang": "en",
+          "patientPath": "/patients/02d5bc56-9938-43c0-bec7-9f8f7ee6b4dc",
+          "createdPatient": true,
+          "doctorLabAndImaging": true,
+          "labAndImagingResults": true,
+          "prescribedAndDispensed": true,
+          "appointmentAndAttendance": true,
+          "fictionalInvoiceAndPayment": true,
+          "testOrderRefusalsAndUnknownHold": true,
+          "unknownHoldAfterActualReloadNoDuplicate": true,
+          "waitlistAdmitDischarge": true
+        },
+        {
+          "lang": "ar",
+          "patientPath": "/patients/4a296c9f-8989-4cfb-b8d0-0163351e29c5",
+          "createdPatient": true,
+          "doctorLabAndImaging": true,
+          "labAndImagingResults": true,
+          "prescribedAndDispensed": true,
+          "appointmentAndAttendance": true,
+          "fictionalInvoiceAndPayment": true,
+          "testOrderRefusalsAndUnknownHold": true,
+          "unknownHoldAfterActualReloadNoDuplicate": true,
+          "waitlistAdmitDischarge": true
+        }
+      ],
+      "sameOriginExistingSessionRecovery": true,
+      "externalAttempts": [],
+      "pageErrors": [],
+      "tables": 18,
+      "runtimeProof": {
+        "runtimeRole": "hms_runtime",
+        "nonownerNoBypass": true,
+        "auditMutationsDenied": 3,
+        "cleanupTableDenied": true,
+        "unscopedPatients": 0
+      },
+      "limits": "Same host independent cluster, trusted unencrypted backup with private recovery key, dependencies already installed; not daily backups/independent physical storage/power-loss/clean offline install."
+    },
+    "18": {
+      "reportSHA256": "61a3f41fec2003f33beac04bb6a870800a9eed7742824be483ce6c97484dce37",
+      "complete": true,
+      "sourceManifestMatches": {
+        "local-demo/hms-local.mjs": true,
+        "backend/src/main.ts": true,
+        "frontend/src/components/EncounterTestOrder.tsx": true,
+        "frontend/src/components/testOrderOutcome.ts": true,
+        "frontend/src/hooks/useLab.ts": true,
+        "frontend/src/pages/PatientDetailPage.tsx": true
+      },
+      "scriptMatches": true,
+      "checks": [
+        {
+          "lang": "en",
+          "patientPath": "/patients/743aaee6-f0dd-4897-adce-e8c6aaa2738a",
+          "createdPatient": true,
+          "doctorLabAndImaging": true,
+          "labAndImagingResults": true,
+          "prescribedAndDispensed": true,
+          "appointmentAndAttendance": true,
+          "fictionalInvoiceAndPayment": true,
+          "testOrderRefusalsAndUnknownHold": true,
+          "unknownHoldAfterActualReloadNoDuplicate": true,
+          "waitlistAdmitDischarge": true
+        },
+        {
+          "lang": "ar",
+          "patientPath": "/patients/ba9e34c6-276a-4c96-b20b-a5b3d7d7bf64",
+          "createdPatient": true,
+          "doctorLabAndImaging": true,
+          "labAndImagingResults": true,
+          "prescribedAndDispensed": true,
+          "appointmentAndAttendance": true,
+          "fictionalInvoiceAndPayment": true,
+          "testOrderRefusalsAndUnknownHold": true,
+          "unknownHoldAfterActualReloadNoDuplicate": true,
+          "waitlistAdmitDischarge": true
+        }
+      ],
+      "sameOriginExistingSessionRecovery": true,
+      "externalAttempts": [],
+      "pageErrors": [],
+      "tables": 18,
+      "runtimeProof": {
+        "runtimeRole": "hms_runtime",
+        "nonownerNoBypass": true,
+        "auditMutationsDenied": 3,
+        "cleanupTableDenied": true,
+        "unscopedPatients": 0
+      },
+      "limits": "Same host independent cluster, trusted unencrypted backup with private recovery key, dependencies already installed; not daily backups/independent physical storage/power-loss/clean offline install."
+    }
+  },
+  "qualification": "d13de91aea6b2f17844bbe7594aa2f1133bf32d2"
+}
