@@ -19,3 +19,5 @@ it('known cleanup rejection is not an uncertain write',()=>{
  expect(isUnknownWriteOutcome({isAxiosError:true,config:{method:'post',url:'/demo/start'},response:{status:503,data:{error:{code:'DEMO_CLEANUP_PENDING'}}}})).toBe(false);
  expect(isUnknownWriteOutcome({isAxiosError:true,config:{method:'post',url:'/invoices'},response:{status:503,data:{error:{code:'DEMO_CLEANUP_PENDING'}}}})).toBe(false);
 });
+
+it.each([undefined,500,502,503,504])('encounter creation holds network/server outcome %s',status=>{expect(isUnknownWriteOutcome({isAxiosError:true,config:{method:'post',url:'/encounters'},...(status?{response:{status,data:{error:{code:'AUDIT_PERSISTENCE_FAILED'}}}}:{})})).toBe(true)});

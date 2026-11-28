@@ -1,3 +1,4 @@
+import { encounterInput } from './encounterDraft';
 import EncounterTestOrder from '../components/EncounterTestOrder';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
@@ -21,7 +22,7 @@ import {
   useCreateEncounter,
   useAddPrescription,
 } from '../hooks/useEncounters';
-import { getApiErrorCode, getApiErrorMessage } from '../api/client';
+import { getApiErrorCode, getApiErrorMessage, isUnknownWriteOutcome } from '../api/client';
 import { usePatient } from '../hooks/usePatients';
 import { usePatientTestResults } from '../hooks/useLab';
 
@@ -30,17 +31,28 @@ export default function PatientDetailPage() {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const patient = usePatient(id);
-  const recordsQuery = usePatientRecords(id);
+  const canReadClinical = ['doctor', 'nurse', 'admin'].includes(user?.role ?? '');
+  const recordsQuery = usePatientRecords(id, canReadClinical);
   const { data: records, isLoading } = recordsQuery;
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   function mutationError(err: unknown) { setError(getApiErrorCode(err) === 'AUDIT_PERSISTENCE_FAILED' ? t('departments.auditFailure') : getApiErrorMessage(err, t('errors.generic'))); }
-  const { data: testResults } = usePatientTestResults(id);
+  const { data: testResults } = usePatientTestResults(id, canReadClinical);
   const createEncounter = useCreateEncounter();
   const addPrescription = useAddPrescription();
 
   const [chiefComplaint, setChiefComplaint] = useState('');
   const [diagnosis, setDiagnosis] = useState('');
+  const [notes, setNotes] = useState('');
+  const lockKey = 'hms_encounter_unknown:' + user?.userId + ':' + id;
+  const [held, setHeld] = useState(() => sessionStorage.getItem(lockKey) === 'true');
+  const [checking, setChecking] = useState(false);
+  useEffect(() => { setHeld(sessionStorage.getItem(lockKey) === 'true');setChiefComplaint('');setDiagnosis('');setNotes(''); }, [lockKey]);
+  async function reconcileEncounter() {
+    setChecking(true);setError(null);
+    try { const result = await recordsQuery.refetch();if (result.isSuccess) { sessionStorage.removeItem(lockKey);setHeld(false);setChiefComplaint('');setDiagnosis('');setNotes(''); } else setError(t('errors.generic')); }
+    catch { setError(t('errors.generic')); } finally { setChecking(false); }
+  }
   const testTargetKey = 'hms_test_order_encounter:' + user?.userId + ':' + id;
   const [testEncounterId, setTestEncounterId] = useState<string | null>(() => sessionStorage.getItem(testTargetKey));
   useEffect(() => { setTestEncounterId(sessionStorage.getItem(testTargetKey)); }, [testTargetKey]);
@@ -53,15 +65,15 @@ export default function PatientDetailPage() {
   const locale = i18n.language === 'ar' ? 'ar-SY' : 'en-US';
 
   async function handleCreateEncounter() {
-    if (!id || !chiefComplaint || !diagnosis) return;
+    if (!id || chiefComplaint.length < 2 || diagnosis.length < 2 || held || createEncounter.isPending || checking) return;
     setError(null); setSuccess(null);
     try {
-    const encounter = await createEncounter.mutateAsync({ patientId: id, chiefComplaint, diagnosis });
+    const encounter = await createEncounter.mutateAsync(encounterInput(id, chiefComplaint, diagnosis, notes));
     setActiveEncounterId(encounter.id); setTestEncounterId(encounter.id); sessionStorage.setItem(testTargetKey, encounter.id);
     setChiefComplaint('');
-    setDiagnosis('');
+    setDiagnosis('');setNotes('');
     setSuccess(t('emr.encounterSaved'));
-    } catch (err) { mutationError(err); }
+    } catch (err) { if(isUnknownWriteOutcome(err)){sessionStorage.setItem(lockKey,'true');setHeld(true);}mutationError(err); }
   }
 
   async function handleAddPrescription() {
@@ -90,7 +102,7 @@ export default function PatientDetailPage() {
 
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
       {success && <Alert severity="success" role="status" sx={{ mb: 2 }}>{success}</Alert>}
-      {recordsQuery.isError && <Alert severity="error" action={<Button onClick={() => void recordsQuery.refetch()}>{t('patients.retry')}</Button>}>{t('errors.generic')}</Alert>}
+      {canReadClinical && recordsQuery.isError && <Alert severity="error" action={<Button onClick={() => void recordsQuery.refetch()}>{t('patients.retry')}</Button>}>{t('errors.generic')}</Alert>}
       {patient.data && <Typography sx={{ mb: 2 }}>{patient.data.fullName} ({patient.data.mrn})</Typography>}
       {/* FR-4.1: طبيب فقط يسجل زيارة جديدة — الفحص هنا واجهي فقط، RolesGuard بالـ Backend هو الحماية الفعلية */}
       {isDoctor && patient.data && (
@@ -99,10 +111,12 @@ export default function PatientDetailPage() {
             <Typography variant="subtitle1" fontWeight={600} mb={2}>
               {t('emr.newEncounter')}
             </Typography>
+            {held && <Alert severity="warning">{t('emr.encounterUnknown')}<Button disabled={checking} onClick={() => void reconcileEncounter()}>{t('emr.checkEncounter')}</Button></Alert>}
             <TextField
               fullWidth
               margin="normal"
               label={t('emr.complaint')}
+              disabled={held || checking || createEncounter.isPending}
               value={chiefComplaint}
               onChange={(e) => setChiefComplaint(e.target.value)}
             />
@@ -110,14 +124,16 @@ export default function PatientDetailPage() {
               fullWidth
               margin="normal"
               label={t('emr.diagnosis')}
+              disabled={held || checking || createEncounter.isPending}
               value={diagnosis}
               onChange={(e) => setDiagnosis(e.target.value)}
             />
+            <TextField fullWidth multiline minRows={3} margin="normal" label={t('emr.clinicalNotes')} value={notes} disabled={held || checking || createEncounter.isPending} onChange={e => setNotes(e.target.value)} />
             <Button
               variant="contained"
               sx={{ mt: 2 }}
               onClick={handleCreateEncounter}
-              disabled={createEncounter.isPending || !chiefComplaint || !diagnosis}
+              disabled={createEncounter.isPending || held || checking || chiefComplaint.length < 2 || diagnosis.length < 2}
             >
               {t('emr.saveEncounter')}
             </Button>
@@ -162,18 +178,18 @@ export default function PatientDetailPage() {
         {t('emr.records')}
       </Typography>
 
-      {isLoading && (
+      {canReadClinical && isLoading && (
         <Box display="flex" justifyContent="center" py={4}>
           <CircularProgress />
         </Box>
       )}
 
-      {!isLoading && records && records.length === 0 && (
+      {canReadClinical && !isLoading && records && records.length === 0 && (
         <Typography color="text.secondary">{t('emr.empty')}</Typography>
       )}
 
       <Stack gap={2}>
-        {records?.map((encounter) => (
+        {canReadClinical && records?.map((encounter) => (
           <Card key={encounter.id} variant="outlined">
             <CardContent>
               <Typography variant="caption" color="text.secondary">
@@ -183,6 +199,7 @@ export default function PatientDetailPage() {
               <Typography color="text.secondary" mb={1}>
                 {encounter.chiefComplaint}
               </Typography>
+              {encounter.notes && <Box sx={{ mt: 1, mb: 2 }}><Typography variant="subtitle2">{t('emr.clinicalNotesSaved')}</Typography><Typography sx={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{encounter.notes}</Typography></Box>}
               {encounter.prescriptions.length > 0 && (
                 <>
                   <Divider sx={{ my: 1 }} />
@@ -204,7 +221,7 @@ export default function PatientDetailPage() {
       </Stack>
 
       {/* FR-7.4: نتائج المختبر/الأشعة تظهر مباشرة هنا — لا شاشة منفصلة يبحث عنها الطبيب */}
-      {testResults && testResults.length > 0 && (
+      {canReadClinical && testResults && testResults.length > 0 && (
         <>
           <Typography variant="subtitle1" fontWeight={600} mt={4} mb={2}>
             {t('emr.results')}

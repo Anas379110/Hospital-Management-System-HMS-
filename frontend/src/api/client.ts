@@ -1,5 +1,7 @@
+import { clearSessionQueries, sessionEpoch, isCurrentSession, stampResponse } from './sessionIsolation';
 import i18n from '../i18n/i18n';
 import axios, { AxiosError } from 'axios';
+declare module 'axios' { interface InternalAxiosRequestConfig { hmsSessionEpoch?: number } }
 import type { ApiErrorShape } from '../types/api';
 
 export const apiClient = axios.create({
@@ -9,6 +11,7 @@ export const apiClient = axios.create({
 });
 
 apiClient.interceptors.request.use((config) => {
+  config.hmsSessionEpoch = sessionEpoch();
   const token = localStorage.getItem('hms_token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -17,9 +20,11 @@ apiClient.interceptors.request.use((config) => {
 });
 
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => { stampResponse(response.data,response.config.hmsSessionEpoch);if (!['post','put','patch','delete'].includes(response.config.method?.toLowerCase() ?? '') && !isCurrentSession(response.config.hmsSessionEpoch)) return Promise.reject(new axios.CanceledError('Previous session response discarded'));return response; },
   (error: AxiosError<ApiErrorShape>) => {
+    if (error.config && !isCurrentSession(error.config.hmsSessionEpoch)) return Promise.reject(['post','put','patch','delete'].includes(error.config.method?.toLowerCase() ?? '') ? error : new axios.CanceledError('Previous session error discarded'));
     if (error.response?.status === 401) {
+      clearSessionQueries();
       // الجلسة منتهية أو غير صالحة — تسجيل خروج فوري وإعادة توجيه
       localStorage.removeItem('hms_token');
       localStorage.removeItem('hms_user');

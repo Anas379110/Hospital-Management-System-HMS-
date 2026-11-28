@@ -1,3 +1,4 @@
+import { installSessionQueryClient } from './api/sessionIsolation';
 import { StrictMode, useMemo } from 'react';
 import { createRoot } from 'react-dom/client';
 import { CacheProvider } from '@emotion/react';
@@ -12,6 +13,8 @@ import App from './App';
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30_000 } },
 });
+
+installSessionQueryClient(queryClient);
 
 function Root() {
   const { i18n } = useTranslation();

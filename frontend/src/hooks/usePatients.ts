@@ -1,3 +1,4 @@
+import { responseIsCurrent } from '../api/sessionIsolation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../api/client';
 import type { Patient } from '../types/api';
@@ -50,6 +51,7 @@ export function useUpdatePatient(id: string) {
   return useMutation({
     mutationFn: async (input: import('../pages/patientEdit').PatientPatch) => (await apiClient.patch<Patient>(`/patients/${id}`, input)).data,
     onSuccess: updated => {
+      if (!responseIsCurrent(updated)) return;
       queryClient.setQueryData(['patients', 'edit', id], updated);
       void queryClient.invalidateQueries({ queryKey: ['patients'], predicate: query => query.queryKey[1] !== 'edit' });
     },

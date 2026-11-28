@@ -11,8 +11,9 @@ import { getApiErrorCode, getApiErrorMessage, isUnknownWriteOutcome } from '../a
 
 export default function LoginPage() {
   const { t } = useTranslation();
-  const { login, startDemo } = useAuth();
+  const { user, login, startDemo } = useAuth();
   const navigate = useNavigate();
+  useEffect(() => { if(user) navigate(landingPath(user.role), { replace: true }); }, [user,navigate]);
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');

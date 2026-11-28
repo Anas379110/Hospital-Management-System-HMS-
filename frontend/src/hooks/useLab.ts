@@ -9,12 +9,12 @@ export function usePendingTestOrders() {
   });
 }
 
-export function usePatientTestResults(patientId: string | undefined) {
+export function usePatientTestResults(patientId: string | undefined, enabled = true) {
   return useQuery({
     queryKey: ['patients', patientId, 'test-results'],
     queryFn: async () =>
       (await apiClient.get<TestResult[]>(`/patients/${patientId}/test-results`)).data,
-    enabled: !!patientId,
+    enabled: !!patientId && enabled,
   });
 }
 
