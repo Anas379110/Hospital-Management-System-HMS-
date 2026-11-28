@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {applyValidatedWaitlistUpgrade} from '../prisma/demo/waitlist-upgrade-transaction.mjs';
 import {createHash,randomUUID} from 'node:crypto';
 import {createRequire} from 'node:module';
-import {readFileSync,readdirSync,writeFileSync,realpathSync,mkdtempSync,chmodSync} from 'node:fs';
+import {readFileSync,readdirSync,writeFileSync,realpathSync,mkdtempSync,chmodSync,mkdirSync,copyFileSync} from 'node:fs';
 import {spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 const require=createRequire(import.meta.url),{Client}=require('../../frontend/node_modules/pg');
@@ -72,7 +72,13 @@ try{
  stage='restore';run(process.env.HMS_TEST_PG_RESTORE??'pg_restore',['--exit-on-error','--single-transaction','--dbname='+target.pathname.slice(1),archive],target);
  assert.deepEqual(await snapshot(b),snapshotBefore);assert.deepEqual(await catalog(b),catalogBefore);assert.deepEqual(await snapshot(c),snapshotBefore);
  for(const client of [c,b]){await client.query('BEGIN; SET LOCAL ROLE hms_runtime');await client.query("SELECT set_config('hms.workspace_id',$1,true)",[workspace]);assert.equal((await client.query('SELECT count(*)::int n FROM waitlist_requests')).rows[0].n,1);await assert.rejects(client.query('DELETE FROM waitlist_requests'));await client.query('ROLLBACK');}
- const status=spawnSync(process.execPath,['node_modules/prisma/build/index.js','migrate','status'],{cwd:root,env:{...process.env,DATABASE_URL:u.toString()},encoding:'utf8',timeout:30000});assert.equal(status.status,0,status.stderr);assert.ok(status.stdout.includes('Database schema is up to date'));checks.push('Prisma migrate status independently recognizes exact completed migration history');
+ stage='historical-migration-status';
+ // This fixture deliberately stops at the waitlist release, not later index migrations.
+ const historical=mkdtempSync('/tmp/hms_test_perf_waitlist_history_');chmodSync(historical,0o700);mkdirSync(historical+'/migrations');copyFileSync(root+'prisma/schema.prisma',historical+'/schema.prisma');copyFileSync(root+'prisma/migrations/migration_lock.toml',historical+'/migrations/migration_lock.toml');
+ const historicalNames=readdirSync(root+'prisma/migrations').filter(x=>/^\d/.test(x)&&x<='20261128005000_department_waitlist').sort();
+ const historyRows=(await c.query('SELECT migration_name,checksum,finished_at IS NOT NULL finished,rolled_back_at IS NOT NULL rolled_back FROM _prisma_migrations ORDER BY migration_name')).rows;assert.deepEqual(historyRows.map(r=>r.migration_name),historicalNames);
+ for(const name of historicalNames){assert.ok(historyRows.find(r=>r.migration_name===name&&r.finished&&!r.rolled_back&&r.checksum===hash(sql('prisma/migrations/'+name+'/migration.sql'))));mkdirSync(historical+'/migrations/'+name);copyFileSync(root+'prisma/migrations/'+name+'/migration.sql',historical+'/migrations/'+name+'/migration.sql');}
+ const status=spawnSync(process.execPath,['node_modules/prisma/build/index.js','migrate','status','--schema',historical+'/schema.prisma'],{cwd:root,env:{...process.env,DATABASE_URL:u.toString()},encoding:'utf8',timeout:30000});assert.equal(status.status,0,status.stderr);assert.ok(status.stdout.includes('Database schema is up to date'));report.historicalMigrationNames=historicalNames;checks.push('Prisma migrate status independently recognizes exact historical waitlist migration slice; later release migrations excluded by explicit fixture scope');
  checks.push('Matching-version custom-format dump/empty distinct restore match all rows+catalog; source unchanged, restored runtime scoped read works andDELETE denied');report.complete=true;
 }catch(error){report.error=error.message;report.failedStage=stage;process.exitCode=1}
 finally{report.finishedAt=new Date().toISOString();await c.query('ROLLBACK');await c.query('RESET ROLE');if(ci){for(const client of [c,b]){for(const role of roles){await client.query('REASSIGN OWNED BY '+role+' TO CURRENT_USER');await client.query('DROP OWNED BY '+role);}}for(const role of roles)await c.query('DROP ROLE '+role);}
