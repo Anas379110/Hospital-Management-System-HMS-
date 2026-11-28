@@ -7,7 +7,7 @@ let phase='load';
 const deadline=setTimeout(()=>{process.exit(23);},45000);
 (async()=>{
   assert.equal(process.platform,'win32');assert.equal(process.env.HMS_PROBE_CI,'1');
-  const {createApplication}=require(path.join(__dirname,'deps/dist/src/app.factory.js'));
+  const {createApplication}=require(path.join(__dirname,'deps/dist/app.factory.js'));
   phase='create';
   app=await createApplication({logger:false});
   phase='listen';
