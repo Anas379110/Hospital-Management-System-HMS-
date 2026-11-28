@@ -120,6 +120,7 @@ if ($Mode -eq 'identity') {
     Stage 'listener-after'
     if ($Mode -eq 'roundtrip') {
       [IO.File]::WriteAllText((Join-Path $probeHome 'roundtrip-generator-entered.txt'),'entered')
+      $env:HMS_PROBE_CI='1'
       $env:HMS_PROBE_HOME=$probeHome
       $env:PGOPTIONS='-c timezone=UTC -c datestyle=ISO,YMD'
       $env:PGCLIENTENCODING='UTF8'
