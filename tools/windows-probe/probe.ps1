@@ -42,7 +42,7 @@ function Read-PgStages($stageDir) {
   $result=@{count=0}
   if (Test-Path $path) {
     $tokens=@([IO.File]::ReadAllLines($path))
-    $allowed=@('entered','initdb-before','initdb-after','hba-before','hba-after','config-before','config-after','start-before','start-after','query-before','query-after','modules-before','modules-after','listener-before','listener-after','dump-before','dump-after','restore-before','restore-after','stop-before','stop-after','initdb-failed','start-failed','dump-failed','restore-failed','stop-failed')
+    $allowed=@('entered','initdb-before','initdb-after','hba-before','hba-after','config-before','config-after','start-before','start-after','query-before','query-after','modules-before','modules-after','listener-before','listener-after','dump-before','dump-after','restore-before','restore-after','stop-before','stop-after','initdb-failed','start-failed','start-timeout','dump-failed','restore-failed','stop-failed')
     if ($tokens.Count -le 32 -and @($tokens | Where-Object {$_ -notin $allowed}).Count -eq 0) {
       $result.count=$tokens.Count
       if ($tokens.Count) {$result.last=$tokens[-1]}
@@ -160,7 +160,7 @@ try {
   Add-Check 'native' (Get-Content (Join-Path $probeHome 'native.json') -Raw | ConvertFrom-Json)
   Child 'postgres' $probeHome $a.credential
   $pg=Get-Content (Join-Path $probeHome 'postgres.json') -Raw | ConvertFrom-Json
-  Add-Check 'postgres' @{query=$pg.query;loopback=$pg.loopback;modules=$pg.modules}
+  Add-Check 'postgres' @{query=$pg.query;loopback=$pg.loopback;listenerAddress=$pg.listenerAddress;modules=$pg.modules}
   if (@(Get-NetTCPConnection -LocalPort $pg.port -State Listen -ErrorAction SilentlyContinue).Count) { throw 'Probe listener remains' }
   Assert-PrivateAcl $probeHome $a.sid
   if ((Get-Acl -LiteralPath $probeHome).GetOwner([Security.Principal.SecurityIdentifier]).Value -ne $a.sid) { throw 'Final owner mismatch' }
