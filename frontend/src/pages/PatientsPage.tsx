@@ -76,7 +76,7 @@ export default function PatientsPage() {
               {patients.map((p) => (
                 <TableRow key={p.id} hover>
                   <TableCell><Button component={RouterLink} to={`/patients/${p.id}`}>{p.mrn}</Button></TableCell>
-                  <TableCell>{p.fullName}</TableCell>
+                  <TableCell><RouterLink to={`/patients/${p.id}`} style={{ color: 'inherit' }}>{p.fullName}</RouterLink></TableCell>
                   <TableCell>{p.phone}</TableCell>
                   {canRegister && <TableCell><Button component={RouterLink} to={`/patients/${p.id}/edit`} onClick={event => event.stopPropagation()}>{t('patientEdit.edit')}</Button></TableCell>}
                 </TableRow>
