@@ -39,15 +39,26 @@ function Cleanup-Result($component,$ok,$errorRecord) {
   }
 function Scan-PrivateReport {
   param($candidate)
+  $script:scanDiagnostic=@{reason='missing-list';reportMatches=0;childLogMatches=0;postgresLogMatches=0;otherLogMatches=0}
   $secretPath=Join-Path $probeHome 'roundtrip-secrets.json'
   if (-not (Test-Path $secretPath)) {return $false}
-  $secrets=@(Get-Content $secretPath -Raw | ConvertFrom-Json)
-  $scan=@(($candidate | ConvertTo-Json -Depth 10))
-  foreach ($f in @(Get-ChildItem $probeHome -File | Where-Object {$_.Name -match '\.(log|err)$'})) {$scan += [IO.File]::ReadAllText($f.FullName)}
-  foreach ($secret in $secrets) {
-    if ($secret.Length -gt 12 -and @($scan | Where-Object {$_.Contains($secret)}).Count) {return $false}
-  }
-  return $true
+  try {
+    $secrets=@(Get-Content $secretPath -Raw | ConvertFrom-Json)
+    $scan=@(@{category='reportMatches';text=($candidate | ConvertTo-Json -Depth 10)})
+    foreach ($f in @(Get-ChildItem $probeHome -File | Where-Object {$_.Name -match '\.(log|err)$'})) {
+      $category=if ($f.Name -like 'child-*') {'childLogMatches'} elseif ($f.Name -eq 'postgres-private.log') {'postgresLogMatches'} else {'otherLogMatches'}
+      $scan += @{category=$category;text=[IO.File]::ReadAllText($f.FullName)}
+    }
+    foreach ($secret in $secrets) {
+      if ($secret -isnot [string]) {$script:scanDiagnostic.reason='invalid-list';return $false}
+      if ($secret.Length -gt 12) {
+        foreach ($entry in $scan) {if ($entry.text.Contains($secret)) {$script:scanDiagnostic[$entry.category]++}}
+      }
+    }
+    $matches=$script:scanDiagnostic.reportMatches+$script:scanDiagnostic.childLogMatches+$script:scanDiagnostic.postgresLogMatches+$script:scanDiagnostic.otherLogMatches
+    $script:scanDiagnostic.reason=if ($matches) {'value-detected'} else {'clean'}
+    return ($matches -eq 0)
+  } catch {$script:scanDiagnostic.reason='scan-read-error';return $false}
 }
 function Read-PgStages($stageDir) {
   $path=Join-Path $stageDir 'postgres-stages.txt'
@@ -201,6 +212,8 @@ try {
   throw 'Bounded Windows native probe failed; sanitized report retained'
 } finally {
   if ($script:roundtripAttempted) {
+    $null=Scan-PrivateReport $report
+    $scanSummary=$script:scanDiagnostic
     $listExists=Test-Path (Join-Path $probeHome 'roundtrip-secrets.json')
     $generatorEntered=Test-Path (Join-Path $probeHome 'roundtrip-generator-entered.txt')
     $stages=Read-PgStages $probeHome
@@ -208,7 +221,13 @@ try {
     $provenBeforeGenerator=(-not $generatorEntered -and -not $listExists -and -not $report.complete -and $stages.ContainsKey('last') -and $stages.last -in $preGenerator)
     if ($provenBeforeGenerator) {$report['secretScan']='helper-generator-not-entered';Add-Check 'roundtripStages' $stages}
     elseif ($listExists -and (Scan-PrivateReport $report)) {$report['secretScan']=$true}
-    else {$report=[ordered]@{complete=$false;head=$env:GITHUB_SHA;secretScan=$false;scanFailure='missing-list-or-value-detected';checks=@()}}
+    else {$report=[ordered]@{complete=$false;head=$env:GITHUB_SHA;secretScan=$false;scanFailure=$scanSummary.reason;scanDiagnostic=$scanSummary;markerPresent=[bool]$generatorEntered;listPresent=[bool]$listExists;checks=@(@{name='roundtripStages';value=$stages})}}
+    $helperFailurePath=Join-Path $probeHome 'helper-failure.json'
+    if (Test-Path $helperFailurePath) {
+      try {$helperFailure=Get-Content $helperFailurePath -Raw | ConvertFrom-Json
+        if ($helperFailure.phase -in @('preflight','migrate','seed','roles','snapshot','dump','restore','compare','api','close')) {$report['helperFailure']=$helperFailure.phase} else {$report['helperFailure']='invalid'}
+      } catch {}
+    }
     Remove-Item (Join-Path $probeHome 'roundtrip-secrets.json') -Force -ErrorAction SilentlyContinue
   }
   $cleanupOk=@($cleanupDetails | Where-Object {-not $_.ok}).Count -eq 0
