@@ -1,3 +1,9 @@
+## Bounded whole-demo local outcome, 28 November 2026
+
+Independent R2 plan and R3 source/local-outcome reviews accepted the bounded extension. Actual local PostgreSQL17r7 and18r1 both complete EN1280 and AR390 with eight fictional roles, captured entity states, one actual committed DELETE lost-reply/hold/reload/review without resend per language, stopped-source same-host independent-cluster restore, 18-table/security checks and same-origin existing sessions. Manager coverage is sequential end-state only; optional409 scenarios were not newly run. New runner helper is hashed in each report. Failed setup/observer/selector attempts are preserved, not counted as passes. No application, schema, role, retention or policy change. Exact remote CI for this changed runner is pending, not inferred from local success; deployed application remains qualificationd13de91 and no test/docs-only redeploy is required. See `docs/testing/evidence/whole-demo-local-20261128.json` (repository-root path). Whole HMS incomplete; no humanUAT, hosted-recovery, independent-media, physical power-loss, offline-installer or legal-compliance acceptance implied.
+
+> Current28November evidence: exactCI46169159959 PG17/18 includes this production local journey/recovery runner. Reports complete EN/AR and18table independent-cluster restore. This supersedes candidate/pending status only, not original evidence limits. Latest national-ID warning is released; DOB/gender/zero-invoice decisions remain open. See docs/requirements/TRACEABILITY.md. No new execution is claimed by this documentation update.
+
 # Local fictional demo and recovery qualification
 
 Candidate, 28 November 2026. Not a whole-project completion or real-hospital readiness statement.
